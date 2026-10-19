@@ -49,9 +49,13 @@ PalateLog follows Google's recommended **Clean Architecture** with MVVM / MVI Un
 palatelog/
 ├── app/                        # Main Android application module
 │   ├── src/main/java/com/karthik/palatelog/
-│   │   ├── core/               # Database, Network, Sync, Design System
+│   │   ├── core/               # Database, Location, Sync, Design System
 │   │   └── feature/            # Quick Capture, Map, Explore, Details, Settings
 │   └── build.gradle.kts
+├── doc/                        # Technical design & architecture documentation
+│   ├── architecture_and_design.md
+│   ├── decisions_and_tradeoffs.md
+│   └── requirements_traceability_and_roadmap.md
 ├── gradle/
 │   └── libs.versions.toml      # Dependency Version Catalog
 ├── .editorconfig               # Code formatting conventions
@@ -60,6 +64,15 @@ palatelog/
 ├── LICENSE                     # MIT License
 └── README.md
 ```
+
+---
+
+## 📚 Technical Documentation
+
+Comprehensive documentation is available in the [`doc/`](doc/) directory:
+* [Architecture & Technical Design](doc/architecture_and_design.md): Deep dive into Clean Architecture, Room schemas, and UDF patterns.
+* [Decisions & Trade-offs (ADRs)](doc/decisions_and_tradeoffs.md): Why we chose OpenStreetMap + Google Maps intent, 3-second quick logging, serverless Drive sync, and OpenJDK 21 LTS.
+* [Requirements Traceability & Roadmap](doc/requirements_traceability_and_roadmap.md): Complete traceability matrix mapping original user requirements against the code, with next-step priorities.
 
 ---
 
