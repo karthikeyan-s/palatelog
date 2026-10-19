@@ -161,12 +161,12 @@ class QuickCaptureViewModel @Inject constructor(
                 restaurantDao.insert(restaurantEntity)
 
                 val visitId = UUID.randomUUID().toString()
-                val visitChannel = if (state.isHighwayStop) Channel.HIGHWAY_STOP else Channel.WALK_IN
+                val visitChannel = if (state.isHighwayStop) Channel.HIGHWAY_STOP.displayName else Channel.WALK_IN.displayName
                 val visitEntity = VisitEntryEntity(
                     id = visitId,
                     restaurantId = restaurantId,
                     visitDate = now,
-                    channel = visitChannel.name,
+                    channel = visitChannel,
                     visitVerdict = state.selectedVerdict.name,
                     billAmount = 0.0,
                     billReceiptPhotoUri = null,

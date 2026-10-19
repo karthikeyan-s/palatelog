@@ -98,8 +98,12 @@ class DashboardViewModel @Inject constructor(
                 it.highwayOrRoute.isNotBlank() || it.restaurantType.name == "DHABA"
             }
             DashboardFilter.DELIVERY -> {
+                val deliveryKeywords = setOf("zomato", "swiggy", "ownly", "eatclub", "magicpin", "ubereats", "door", "dunzo", "delivery", "cloud")
                 val deliveryRestaurantIds = visitEntities
-                    .filter { it.channel == Channel.ZOMATO.name || it.channel == Channel.SWIGGY.name }
+                    .filter { visit ->
+                        val lower = visit.channel.lowercase()
+                        deliveryKeywords.any { lower.contains(it) }
+                    }
                     .map { it.restaurantId }
                     .toSet()
                 searchFiltered.filter { it.id in deliveryRestaurantIds || it.restaurantType.name == "CLOUD_KITCHEN" }

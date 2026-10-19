@@ -93,14 +93,17 @@ fun DishVerdictBadge(
 
 @Composable
 fun ChannelBadge(
-    channel: Channel,
+    channel: String,
     modifier: Modifier = Modifier
 ) {
-    val icon = when (channel) {
-        Channel.WALK_IN -> Icons.Default.Restaurant
-        Channel.HIGHWAY_STOP -> Icons.Default.DirectionsCar
-        Channel.ZOMATO, Channel.SWIGGY -> Icons.Default.DeliveryDining
-        Channel.TAKEAWAY, Channel.DRIVE_THRU -> Icons.Default.Restaurant
+    val displayName = Channel.getChannelDisplayName(channel)
+    val lower = displayName.lowercase()
+    val icon = when {
+        lower.contains("highway") || lower.contains("drive") -> Icons.Default.DirectionsCar
+        lower.contains("zomato") || lower.contains("swiggy") || lower.contains("ownly") ||
+        lower.contains("eatclub") || lower.contains("magicpin") || lower.contains("delivery") ||
+        lower.contains("ubereats") || lower.contains("door") || lower.contains("dunzo") -> Icons.Default.DeliveryDining
+        else -> Icons.Default.Restaurant
     }
 
     Row(
@@ -118,11 +121,19 @@ fun ChannelBadge(
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = channel.displayName,
+            text = displayName,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+@Composable
+fun ChannelBadge(
+    channel: Channel,
+    modifier: Modifier = Modifier
+) {
+    ChannelBadge(channel = channel.displayName, modifier = modifier)
 }
 
 @Composable
