@@ -1,5 +1,6 @@
 package com.karthik.palatelog.feature.entry_editor
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,12 +14,12 @@ import com.karthik.palatelog.core.database.VisitEntryEntity
 import com.karthik.palatelog.core.location.LocationClient
 import com.karthik.palatelog.core.model.Channel
 import com.karthik.palatelog.core.model.DishCategory
-import com.karthik.palatelog.core.model.DishFeedback
 import com.karthik.palatelog.core.model.DishVerdict
 import com.karthik.palatelog.core.model.FamilyMember
 import com.karthik.palatelog.core.model.RestaurantType
 import com.karthik.palatelog.core.model.Verdict
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -46,7 +47,9 @@ data class EntryEditorUiState(
     val restaurantName: String = "",
     val existingRestaurants: List<RestaurantEntity> = emptyList(),
     val previousDishes: List<DishFeedbackEntity> = emptyList(),
-    val channel: Channel = Channel.WALK_IN,
+    val channel: String = Channel.WALK_IN.displayName,
+    val availableChannels: List<String> = Channel.DEFAULT_CHANNELS,
+    val showAddChannelDialog: Boolean = false,
     val overallVerdict: Verdict = Verdict.GO,
     val cuisine: String = "",
     val address: String = "",
@@ -71,6 +74,7 @@ sealed interface EntryEditorEvent {
 @HiltViewModel
 class EntryEditorViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context,
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
     private val dishDao: DishFeedbackDao,
@@ -90,16 +94,34 @@ class EntryEditorViewModel @Inject constructor(
         loadInitialData()
     }
 
+    private fun getSavedCustomChannels(): Set<String> {
+        val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
+        return prefs.getStringSet("custom_channels", emptySet()) ?: emptySet()
+    }
+
+    private fun saveCustomChannel(channelName: String) {
+        val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
+        val current = prefs.getStringSet("custom_channels", emptySet())?.toMutableSet() ?: mutableSetOf()
+        current.add(channelName)
+        prefs.edit().putStringSet("custom_channels", current).apply()
+    }
+
     private fun loadInitialData() {
         viewModelScope.launch {
             // Load existing restaurants for suggestions
             val allRestaurants = restaurantDao.getAllRestaurants().firstOrNull() ?: emptyList()
             // Load family members
             val members = memberDao.getAllMembers().firstOrNull()?.map { it.toDomain() } ?: emptyList()
+            // Load distinct channels from DB and custom channels from prefs
+            val dbChannels = visitDao.getDistinctChannels().map { Channel.getChannelDisplayName(it) }
+            val customChannels = getSavedCustomChannels()
+            val allChannels = (Channel.DEFAULT_CHANNELS + dbChannels + customChannels)
+                .distinctBy { it.lowercase() }
 
             _uiState.value = _uiState.value.copy(
                 existingRestaurants = allRestaurants,
-                familyMembers = members
+                familyMembers = members,
+                availableChannels = allChannels
             )
 
             // If a restaurantId was passed, load its details
@@ -152,8 +174,25 @@ class EntryEditorViewModel @Inject constructor(
         }
     }
 
-    fun onChannelSelected(channel: Channel) {
-        _uiState.value = _uiState.value.copy(channel = channel)
+    fun onChannelSelected(channelName: String) {
+        _uiState.value = _uiState.value.copy(channel = channelName)
+    }
+
+    fun showAddChannelDialog(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showAddChannelDialog = show)
+    }
+
+    fun addCustomChannel(channelName: String) {
+        val trimmed = channelName.trim()
+        if (trimmed.isBlank()) return
+        val displayName = Channel.getChannelDisplayName(trimmed)
+        saveCustomChannel(displayName)
+        val updatedChannels = (_uiState.value.availableChannels + displayName).distinctBy { it.lowercase() }
+        _uiState.value = _uiState.value.copy(
+            availableChannels = updatedChannels,
+            channel = displayName,
+            showAddChannelDialog = false
+        )
     }
 
     fun onVerdictSelected(verdict: Verdict) {
@@ -224,10 +263,13 @@ class EntryEditorViewModel @Inject constructor(
                 val now = System.currentTimeMillis()
                 val restaurantId = state.restaurantId ?: UUID.randomUUID().toString()
 
-                val restaurantType = when (state.channel) {
-                    Channel.HIGHWAY_STOP -> RestaurantType.DHABA
-                    Channel.ZOMATO, Channel.SWIGGY -> RestaurantType.CLOUD_KITCHEN
-                    Channel.DRIVE_THRU -> RestaurantType.DRIVE_THRU
+                val channelLower = state.channel.lowercase()
+                val restaurantType = when {
+                    channelLower.contains("highway") -> RestaurantType.DHABA
+                    channelLower.contains("zomato") || channelLower.contains("swiggy") ||
+                    channelLower.contains("ownly") || channelLower.contains("eatclub") ||
+                    channelLower.contains("cloud") || channelLower.contains("delivery") -> RestaurantType.CLOUD_KITCHEN
+                    channelLower.contains("drive") -> RestaurantType.DRIVE_THRU
                     else -> RestaurantType.DINE_IN
                 }
 
@@ -259,7 +301,7 @@ class EntryEditorViewModel @Inject constructor(
                     id = visitId,
                     restaurantId = restaurantId,
                     visitDate = now,
-                    channel = state.channel.name,
+                    channel = state.channel,
                     visitVerdict = state.overallVerdict.name,
                     billAmount = billAmount,
                     billReceiptPhotoUri = state.billPhotoUri,

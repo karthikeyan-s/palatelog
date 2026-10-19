@@ -19,6 +19,9 @@ interface VisitDao {
     @Query("SELECT * FROM visit_entries WHERE id = :id AND isDeleted = 0")
     fun getVisitById(id: String): Flow<VisitEntryEntity?>
 
+    @Query("SELECT DISTINCT channel FROM visit_entries WHERE isDeleted = 0")
+    suspend fun getDistinctChannels(): List<String>
+
     @Query("SELECT * FROM visit_entries WHERE updatedAt > :sinceTimestamp")
     suspend fun getModifiedSince(sinceTimestamp: Long): List<VisitEntryEntity>
 

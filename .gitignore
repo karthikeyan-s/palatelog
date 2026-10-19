@@ -82,3 +82,4 @@ vcs.xml
 # Captures / Memory dumps
 *.hprof
 captures/
+device-dump/
