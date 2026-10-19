@@ -1,6 +1,6 @@
 package com.karthik.palatelog.feature.map
 
-import android.preference.PreferenceManager
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.MyLocation
@@ -61,7 +61,7 @@ fun MapScreen(
     val context = LocalContext.current
 
     val mapView = remember {
-        Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
+        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
@@ -218,7 +218,7 @@ fun MapScreen(
                             ) {
                                 Text("Insights")
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
