@@ -8,15 +8,15 @@ plugins {
 }
 
 android {
-    namespace = "com.karthik.palatelog"
+    namespace = "com.prismpixelvertex.palatelog"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.karthik.palatelog"
+        applicationId = "com.prismpixelvertex.palatelog"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

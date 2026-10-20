@@ -2,5 +2,7 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-files-path name="palatelog_photos" path="Pictures" />
     <files-path name="internal_photos" path="photos" />
+    <files-path name="internal_files" path="." />
     <cache-path name="cache_photos" path="temp_photos" />
+    <cache-path name="cache_files" path="." />
 </paths>

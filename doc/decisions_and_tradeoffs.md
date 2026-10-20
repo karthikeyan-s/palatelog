@@ -16,7 +16,7 @@ We needed an identity that conveys both positive discoveries and negative warnin
 4. **PalateLog** *(Selected)*: Clean, gourmet, journal-like, balances recommendations with warnings.
 
 ### Decision
-Adopted **PalateLog** with application ID `com.karthik.palatelog` and tagline:  
+Adopted **PalateLog** with application ID `com.prismpixelvertex.palatelog` and tagline:  
 > *"Never repeat a dining regret; remember every family favorite."*
 
 ---
