@@ -40,10 +40,36 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
     object Dashboard : Screen("dashboard", "Explore", Icons.Default.Explore)
     object Map : Screen("map", "Map", Icons.Default.Map)
     object Settings : Screen("settings", "Settings", Icons.Default.Settings)
-    object QuickCapture : Screen("quick_capture", "Quick Log")
-    object EntryEditor : Screen("entry_editor?restaurantId={restaurantId}", "Edit Entry") {
-        fun createRoute(restaurantId: String? = null): String {
-            return if (restaurantId != null) "entry_editor?restaurantId=$restaurantId" else "entry_editor"
+    object QuickCapture : Screen("quick_capture?lat={lat}&lng={lng}&address={address}&city={city}", "Quick Log") {
+        fun createRoute(
+            lat: Double? = null,
+            lng: Double? = null,
+            address: String? = null,
+            city: String? = null
+        ): String {
+            val params = mutableListOf<String>()
+            if (lat != null) params.add("lat=$lat")
+            if (lng != null) params.add("lng=$lng")
+            if (!address.isNullOrBlank()) params.add("address=${android.net.Uri.encode(address)}")
+            if (!city.isNullOrBlank()) params.add("city=${android.net.Uri.encode(city)}")
+            return if (params.isNotEmpty()) "quick_capture?${params.joinToString("&")}" else "quick_capture"
+        }
+    }
+    object EntryEditor : Screen("entry_editor?restaurantId={restaurantId}&lat={lat}&lng={lng}&address={address}&city={city}", "Edit Entry") {
+        fun createRoute(
+            restaurantId: String? = null,
+            lat: Double? = null,
+            lng: Double? = null,
+            address: String? = null,
+            city: String? = null
+        ): String {
+            val params = mutableListOf<String>()
+            if (!restaurantId.isNullOrBlank()) params.add("restaurantId=$restaurantId")
+            if (lat != null) params.add("lat=$lat")
+            if (lng != null) params.add("lng=$lng")
+            if (!address.isNullOrBlank()) params.add("address=${android.net.Uri.encode(address)}")
+            if (!city.isNullOrBlank()) params.add("city=${android.net.Uri.encode(city)}")
+            return if (params.isNotEmpty()) "entry_editor?${params.joinToString("&")}" else "entry_editor"
         }
     }
     object RestaurantDetail : Screen("restaurant_detail/{restaurantId}", "Restaurant Details") {
@@ -119,6 +145,12 @@ fun PalateLogNavGraph(
                     viewModel = viewModel,
                     onNavigateToRestaurantDetail = { restaurantId ->
                         navController.navigate(Screen.RestaurantDetail.createRoute(restaurantId))
+                    },
+                    onNavigateToQuickCapture = { lat, lng, address, city ->
+                        navController.navigate(Screen.QuickCapture.createRoute(lat = lat, lng = lng, address = address, city = city))
+                    },
+                    onNavigateToEntryEditor = { restaurantId, lat, lng, address, city ->
+                        navController.navigate(Screen.EntryEditor.createRoute(restaurantId = restaurantId, lat = lat, lng = lng, address = address, city = city))
                     }
                 )
             }
@@ -130,7 +162,15 @@ fun PalateLogNavGraph(
             }
 
             // Sub-Screen: 3-Second Quick Logger
-            composable(Screen.QuickCapture.route) {
+            composable(
+                route = Screen.QuickCapture.route,
+                arguments = listOf(
+                    navArgument("lat") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("lng") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("address") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("city") { type = NavType.StringType; nullable = true; defaultValue = null }
+                )
+            ) {
                 val viewModel: QuickCaptureViewModel = hiltViewModel()
                 QuickCaptureScreen(
                     viewModel = viewModel,
@@ -146,7 +186,11 @@ fun PalateLogNavGraph(
                         type = NavType.StringType
                         nullable = true
                         defaultValue = null
-                    }
+                    },
+                    navArgument("lat") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("lng") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("address") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("city") { type = NavType.StringType; nullable = true; defaultValue = null }
                 )
             ) {
                 val viewModel: EntryEditorViewModel = hiltViewModel()

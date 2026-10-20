@@ -83,6 +83,10 @@ class EntryEditorViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val initialRestaurantId: String? = savedStateHandle["restaurantId"]
+    private val navLat: Double? = savedStateHandle.get<String>("lat")?.toDoubleOrNull()
+    private val navLng: Double? = savedStateHandle.get<String>("lng")?.toDoubleOrNull()
+    private val navAddress: String? = savedStateHandle.get<String>("address")
+    private val navCity: String? = savedStateHandle.get<String>("city")
 
     private val _uiState = MutableStateFlow(EntryEditorUiState(restaurantId = initialRestaurantId))
     val uiState: StateFlow<EntryEditorUiState> = _uiState.asStateFlow()
@@ -130,6 +134,13 @@ class EntryEditorViewModel @Inject constructor(
                 if (existing != null) {
                     selectExistingRestaurant(existing)
                 }
+            } else if (navLat != null && navLng != null) {
+                _uiState.value = _uiState.value.copy(
+                    latitude = navLat,
+                    longitude = navLng,
+                    address = navAddress ?: "",
+                    city = navCity ?: ""
+                )
             } else {
                 // Fetch GPS location to pre-fill coordinates
                 val loc = locationClient.getCurrentLocation()
@@ -143,6 +154,14 @@ class EntryEditorViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun onAddressChanged(address: String) {
+        _uiState.value = _uiState.value.copy(address = address)
+    }
+
+    fun onCityChanged(city: String) {
+        _uiState.value = _uiState.value.copy(city = city)
     }
 
     fun onRestaurantNameChanged(name: String) {
