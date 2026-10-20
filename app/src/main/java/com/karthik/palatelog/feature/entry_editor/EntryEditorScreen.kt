@@ -176,6 +176,40 @@ fun EntryEditorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // Location / Address Details
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = uiState.address,
+                    onValueChange = { viewModel.onAddressChanged(it) },
+                    label = { Text("Area / Street") },
+                    placeholder = { Text("e.g. Indiranagar") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+
+                OutlinedTextField(
+                    value = uiState.city,
+                    onValueChange = { viewModel.onCityChanged(it) },
+                    label = { Text("City") },
+                    placeholder = { Text("e.g. Bengaluru") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (uiState.latitude != 0.0 || uiState.longitude != 0.0) {
+                Text(
+                    text = "📍 Pinned Map Location: ${String.format(java.util.Locale.US, "%.4f", uiState.latitude)}, ${String.format(java.util.Locale.US, "%.4f", uiState.longitude)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             // Previous Dishes Chips for this restaurant
             if (uiState.previousDishes.isNotEmpty()) {
                 Column {

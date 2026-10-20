@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +18,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Directions
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -42,19 +46,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.karthik.palatelog.core.designsystem.AmberPrimary
 import com.karthik.palatelog.core.designsystem.VerdictBadge
+import com.karthik.palatelog.core.designsystem.VerdictNoGoRed
 import com.karthik.palatelog.core.location.GeoUtils
 import com.karthik.palatelog.core.navigation.ExternalMapNavigator
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
     onNavigateToRestaurantDetail: (String) -> Unit,
+    onNavigateToQuickCapture: (lat: Double, lng: Double, address: String, city: String) -> Unit,
+    onNavigateToEntryEditor: (restaurantId: String?, lat: Double?, lng: Double?, address: String?, city: String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -70,6 +80,20 @@ fun MapScreen(
         }
     }
 
+    val eventsOverlay = remember {
+        MapEventsOverlay(object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
+                viewModel.onMapTapped(p.latitude, p.longitude)
+                return true
+            }
+
+            override fun longPressHelper(p: GeoPoint): Boolean {
+                viewModel.onMapTapped(p.latitude, p.longitude)
+                return true
+            }
+        })
+    }
+
     DisposableEffect(Unit) {
         mapView.onResume()
         onDispose {
@@ -83,6 +107,7 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize(),
             update = { map ->
                 map.overlays.clear()
+                map.overlays.add(eventsOverlay)
 
                 // Add User Location Marker
                 if (uiState.isLocationReady) {
@@ -92,6 +117,17 @@ fun MapScreen(
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                     }
                     map.overlays.add(userMarker)
+                }
+
+                // Add Selected Custom Location Marker
+                uiState.selectedCustomLocation?.let { customLoc ->
+                    val customMarker = Marker(map).apply {
+                        position = GeoPoint(customLoc.latitude, customLoc.longitude)
+                        title = if (customLoc.street.isNotBlank()) customLoc.street else "Selected Spot 📍"
+                        snippet = "Tap actions below to log"
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    }
+                    map.overlays.add(customMarker)
                 }
 
                 // Add Restaurant Markers
@@ -125,6 +161,108 @@ fun MapScreen(
                 .padding(16.dp)
         ) {
             Icon(Icons.Default.MyLocation, contentDescription = "Center on my location")
+        }
+
+        // Bottom Card when a custom location on map is tapped
+        AnimatedVisibility(
+            visible = uiState.selectedCustomLocation != null,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        ) {
+            uiState.selectedCustomLocation?.let { customLoc ->
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = AmberPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (customLoc.isLoadingAddress) "Acquiring Address..."
+                                    else listOfNotNull(customLoc.street.ifBlank { null }, customLoc.city.ifBlank { null })
+                                        .joinToString(", ").ifBlank { "Selected Location Spot" },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                            }
+                            IconButton(
+                                onClick = { viewModel.clearCustomLocation() },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = "Close")
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "📍 Coordinates: ${String.format(java.util.Locale.US, "%.4f", customLoc.latitude)}, ${String.format(java.util.Locale.US, "%.4f", customLoc.longitude)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    onNavigateToQuickCapture(
+                                        customLoc.latitude,
+                                        customLoc.longitude,
+                                        customLoc.street,
+                                        customLoc.city
+                                    )
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = VerdictNoGoRed),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.FlashOn, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Quick Log (3s)")
+                            }
+
+                            Button(
+                                onClick = {
+                                    onNavigateToEntryEditor(
+                                        null,
+                                        customLoc.latitude,
+                                        customLoc.longitude,
+                                        customLoc.street,
+                                        customLoc.city
+                                    )
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Full Log")
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Bottom Preview Card when a restaurant marker is tapped
@@ -192,9 +330,28 @@ fun MapScreen(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Button(
+                                onClick = {
+                                    onNavigateToEntryEditor(
+                                        restaurant.id,
+                                        restaurant.latitude,
+                                        restaurant.longitude,
+                                        restaurant.address,
+                                        restaurant.city
+                                    )
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Log Visit")
+                            }
+
+                            OutlinedButton(
                                 onClick = {
                                     ExternalMapNavigator.navigateTo(
                                         context = context,
@@ -217,7 +374,7 @@ fun MapScreen(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text("Insights")
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(2.dp))
                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                             }
                         }

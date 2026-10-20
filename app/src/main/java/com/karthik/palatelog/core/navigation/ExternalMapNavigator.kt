@@ -8,28 +8,43 @@ import android.widget.Toast
 object ExternalMapNavigator {
 
     /**
-     * Opens turn-by-turn navigation in the official Google Maps app for driving directions.
+     * Opens turn-by-turn navigation using Google Maps app, any installed map app,
+     * or as an ultimate web fallback in a browser.
      * Zero API keys or cloud billing required.
      */
     fun navigateTo(context: Context, latitude: Double, longitude: Double, label: String) {
         val encodedLabel = Uri.encode(label)
-        // Try Google Navigation intent first
+
+        // Tier 1: Try direct Google Maps app driving navigation intent
         val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude&mode=d")
-        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
+        val googleMapsIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
             setPackage("com.google.android.apps.maps")
         }
 
-        if (mapIntent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(mapIntent)
-        } else {
-            // Fallback to standard geo URI for any installed map application (Waze, Apple Maps, browser)
-            val fallbackUri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude($encodedLabel)")
-            val fallbackIntent = Intent(Intent.ACTION_VIEW, fallbackUri)
-            try {
-                context.startActivity(fallbackIntent)
-            } catch (e: Exception) {
-                Toast.makeText(context, "No map application found to navigate", Toast.LENGTH_SHORT).show()
-            }
+        try {
+            context.startActivity(googleMapsIntent)
+            return
+        } catch (_: Exception) {
+            // Native Google Maps app intent not available
+        }
+
+        // Tier 2: Try standard geo: scheme for any installed map application (Waze, OsmAnd, etc.)
+        val geoUri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude($encodedLabel)")
+        val geoIntent = Intent(Intent.ACTION_VIEW, geoUri)
+        try {
+            context.startActivity(geoIntent)
+            return
+        } catch (_: Exception) {
+            // Standard geo intent handler not available
+        }
+
+        // Tier 3: Ultimate Fallback - Open directions in Web Browser
+        val webMapsUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude")
+        val webIntent = Intent(Intent.ACTION_VIEW, webMapsUri)
+        try {
+            context.startActivity(webIntent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "No map application or browser found to navigate", Toast.LENGTH_SHORT).show()
         }
     }
 }

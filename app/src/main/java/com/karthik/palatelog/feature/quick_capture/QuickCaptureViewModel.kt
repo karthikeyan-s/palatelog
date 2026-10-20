@@ -1,5 +1,6 @@
 package com.karthik.palatelog.feature.quick_capture
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.karthik.palatelog.core.database.DishFeedbackDao
@@ -49,6 +50,7 @@ sealed interface QuickCaptureEvent {
 
 @HiltViewModel
 class QuickCaptureViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val locationClient: LocationClient,
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
@@ -62,7 +64,34 @@ class QuickCaptureViewModel @Inject constructor(
     val events: SharedFlow<QuickCaptureEvent> = _events.asSharedFlow()
 
     init {
-        acquireLocation()
+        val navLat = savedStateHandle.get<String>("lat")?.toDoubleOrNull()
+        val navLng = savedStateHandle.get<String>("lng")?.toDoubleOrNull()
+        val navAddress = savedStateHandle.get<String>("address")
+        val navCity = savedStateHandle.get<String>("city")
+
+        if (navLat != null && navLng != null) {
+            _uiState.value = _uiState.value.copy(
+                latitude = navLat,
+                longitude = navLng,
+                streetOrArea = navAddress ?: "",
+                city = navCity ?: "",
+                isLocationLoading = false
+            )
+            checkNearbyRestaurant(navLat, navLng)
+        } else {
+            acquireLocation()
+        }
+    }
+
+    private fun checkNearbyRestaurant(lat: Double, lng: Double) {
+        viewModelScope.launch {
+            val bbox = GeoUtils.getBoundingBox(lat, lng, 0.1) // 100m
+            val nearby = restaurantDao.getRestaurantsInBoundingBox(bbox.minLat, bbox.maxLat, bbox.minLng, bbox.maxLng)
+            val closest = nearby.minByOrNull {
+                GeoUtils.calculateDistanceKm(lat, lng, it.latitude, it.longitude)
+            }
+            _uiState.value = _uiState.value.copy(nearbyExistingRestaurant = closest)
+        }
     }
 
     fun acquireLocation() {
