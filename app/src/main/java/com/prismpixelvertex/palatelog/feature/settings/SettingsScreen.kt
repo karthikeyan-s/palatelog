@@ -1,7 +1,10 @@
 package com.prismpixelvertex.palatelog.feature.settings
 
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.prismpixelvertex.palatelog.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +39,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -82,6 +85,15 @@ fun SettingsScreen(
 
     var showImportDialog by remember { mutableStateOf(false) }
     var importJsonText by remember { mutableStateOf("") }
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.importBackupFromUri(context, it)
+            showImportDialog = false
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -373,22 +385,55 @@ fun SettingsScreen(
             onDismissRequest = { showImportDialog = false },
             title = { Text("Import JSON Backup") },
             text = {
-                OutlinedTextField(
-                    value = importJsonText,
-                    onValueChange = { importJsonText = it },
-                    label = { Text("Paste JSON Backup") },
-                    modifier = Modifier.height(150.dp)
-                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = { filePickerLauncher.launch("*/*") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Select Backup File 📁")
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "  OR PASTE JSON  ",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        HorizontalDivider(modifier = Modifier.weight(1f))
+                    }
+
+                    OutlinedTextField(
+                        value = importJsonText,
+                        onValueChange = { importJsonText = it },
+                        label = { Text("Paste JSON Text") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(110.dp)
+                    )
+                }
             },
             confirmButton = {
-                Button(onClick = {
-                    if (importJsonText.isNotBlank()) {
-                        viewModel.importBackup(importJsonText)
-                        importJsonText = ""
-                        showImportDialog = false
-                    }
-                }) {
-                    Text("Restore")
+                Button(
+                    onClick = {
+                        if (importJsonText.isNotBlank()) {
+                            viewModel.importBackup(importJsonText)
+                            importJsonText = ""
+                            showImportDialog = false
+                        }
+                    },
+                    enabled = importJsonText.isNotBlank()
+                ) {
+                    Text("Restore Text")
                 }
             },
             dismissButton = {

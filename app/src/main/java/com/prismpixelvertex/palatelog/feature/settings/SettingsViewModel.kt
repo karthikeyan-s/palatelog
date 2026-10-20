@@ -1,5 +1,7 @@
 package com.prismpixelvertex.palatelog.feature.settings
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.FamilyMemberDao
@@ -8,6 +10,7 @@ import com.prismpixelvertex.palatelog.core.model.FamilyMember
 import com.prismpixelvertex.palatelog.core.sync.SyncRepository
 import com.prismpixelvertex.palatelog.core.sync.SyncStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
 import javax.inject.Inject
@@ -143,6 +147,22 @@ class SettingsViewModel @Inject constructor(
     fun importBackup(jsonString: String) {
         viewModelScope.launch {
             try {
+                syncRepository.importFromJsonString(jsonString)
+                _events.emit(SettingsEvent.ShowToast("Data restored successfully!"))
+            } catch (e: Exception) {
+                _events.emit(SettingsEvent.ShowToast("Import failed: ${e.localizedMessage}"))
+            }
+        }
+    }
+
+    fun importBackupFromUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val jsonString = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        stream.bufferedReader().readText()
+                    } ?: throw IllegalStateException("Could not open file stream")
+                }
                 syncRepository.importFromJsonString(jsonString)
                 _events.emit(SettingsEvent.ShowToast("Data restored successfully!"))
             } catch (e: Exception) {
