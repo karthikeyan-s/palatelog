@@ -5,10 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.karthik.palatelog.core.database.DishFeedbackDao
 import com.karthik.palatelog.core.database.RestaurantDao
+import com.karthik.palatelog.core.database.RestaurantEntity
 import com.karthik.palatelog.core.database.VisitDao
+import com.karthik.palatelog.core.database.VisitEntryEntity
+import com.karthik.palatelog.core.location.LocationClient
+import com.karthik.palatelog.core.location.LocationResult
 import com.karthik.palatelog.core.model.DishFeedback
 import com.karthik.palatelog.core.model.DishVerdict
 import com.karthik.palatelog.core.model.Restaurant
+import com.karthik.palatelog.core.model.RestaurantType
+import com.karthik.palatelog.core.model.Verdict
 import com.karthik.palatelog.core.model.VisitEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,7 +38,8 @@ class RestaurantDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
-    private val dishDao: DishFeedbackDao
+    private val dishDao: DishFeedbackDao,
+    private val locationClient: LocationClient
 ) : ViewModel() {
 
     val restaurantId: String = checkNotNull(savedStateHandle["restaurantId"])
@@ -67,6 +74,91 @@ class RestaurantDetailViewModel @Inject constructor(
     fun deleteRestaurant() {
         viewModelScope.launch {
             restaurantDao.softDelete(restaurantId)
+        }
+    }
+
+    fun updateRestaurant(
+        name: String,
+        address: String,
+        city: String,
+        highwayOrRoute: String,
+        latitude: Double,
+        longitude: Double,
+        cuisine: String,
+        restaurantType: RestaurantType,
+        overallVerdict: Verdict
+    ) {
+        val current = uiState.value.restaurant ?: return
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            val updatedEntity = RestaurantEntity(
+                id = current.id,
+                name = name.trim(),
+                latitude = latitude,
+                longitude = longitude,
+                address = address.trim(),
+                city = city.trim(),
+                highwayOrRoute = highwayOrRoute.trim(),
+                cuisine = cuisine.trim(),
+                restaurantType = restaurantType.name,
+                overallVerdict = overallVerdict.name,
+                tags = current.tags,
+                isShared = current.isShared,
+                createdAt = current.createdAt,
+                updatedAt = now,
+                isDeleted = false
+            )
+            restaurantDao.update(updatedEntity)
+        }
+    }
+
+    fun updateVisit(
+        visitId: String,
+        channel: String,
+        billAmount: Double,
+        visitVerdict: Verdict,
+        generalNotes: String
+    ) {
+        viewModelScope.launch {
+            val currentVisits = uiState.value.visits
+            val existing = currentVisits.firstOrNull { it.id == visitId } ?: return@launch
+            val now = System.currentTimeMillis()
+            val updatedEntity = VisitEntryEntity(
+                id = existing.id,
+                restaurantId = existing.restaurantId,
+                visitDate = existing.visitDate,
+                channel = channel,
+                visitVerdict = visitVerdict.name,
+                billAmount = billAmount,
+                billReceiptPhotoUri = existing.billReceiptPhotoUri,
+                generalNotes = generalNotes.trim(),
+                createdByMemberId = existing.createdByMemberId,
+                createdByMemberName = existing.createdByMemberName,
+                isShared = existing.isShared,
+                updatedAt = now,
+                isDeleted = false
+            )
+            visitDao.insert(updatedEntity)
+        }
+    }
+
+    fun deleteVisit(visitId: String) {
+        viewModelScope.launch {
+            visitDao.softDelete(visitId)
+        }
+    }
+
+    fun getCurrentLocation(onResult: (LocationResult?) -> Unit) {
+        viewModelScope.launch {
+            val location = locationClient.getCurrentLocation()
+            onResult(location)
+        }
+    }
+
+    fun reverseGeocode(latitude: Double, longitude: Double, onResult: (placeName: String, street: String, city: String) -> Unit) {
+        viewModelScope.launch {
+            val (place, street, city) = locationClient.reverseGeocode(latitude, longitude)
+            onResult(place, street, city)
         }
     }
 }

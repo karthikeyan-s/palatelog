@@ -2,7 +2,6 @@ package com.karthik.palatelog.feature.entry_editor
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -65,6 +64,7 @@ import com.karthik.palatelog.core.designsystem.AmberPrimary
 import com.karthik.palatelog.core.designsystem.DishVerdictBadge
 import com.karthik.palatelog.core.designsystem.VerdictCautionAmber
 import com.karthik.palatelog.core.designsystem.VerdictCautionAmberContainer
+import com.karthik.palatelog.core.designsystem.VerdictChoiceChip
 import com.karthik.palatelog.core.designsystem.VerdictGoGreen
 import com.karthik.palatelog.core.designsystem.VerdictGoGreenContainer
 import com.karthik.palatelog.core.designsystem.VerdictNoGoRed
@@ -571,36 +571,5 @@ private fun DishEditorCard(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-    }
-}
-
-@Composable
-private fun VerdictChoiceChip(
-    label: String,
-    isSelected: Boolean,
-    color: Color,
-    containerColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(if (isSelected) containerColor else MaterialTheme.colorScheme.surfaceVariant)
-            .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) color else Color.Transparent,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = if (isSelected) color else MaterialTheme.colorScheme.onSurface
-        )
     }
 }

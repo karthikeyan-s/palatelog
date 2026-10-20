@@ -103,3 +103,21 @@ Android Studio's bundled internal JBR is version 25 (`25.0.3` preview). Android 
 ### Decision
 We installed **Microsoft OpenJDK 21 LTS** (`C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot`) via winget, set `org.gradle.java.home` in `gradle.properties`, and updated `gradlew.bat`.  
 This guarantees clean, repeatable, LTS-backed Gradle builds across command line and Android Studio.
+
+---
+
+## ADR 007: In-Place Metadata & Geolocation Correction vs. Immutable Logging
+
+### Context
+When logging entries or quick regrets in the field, GPS precision might vary or address geocoding might yield inaccurate street names/coordinates (e.g., misidentified "California Burrito" address). Users need a simple way to edit restaurant metadata (Name, Address, City, Highway/Route, Map Latitude/Longitude, Cuisine, Type, Verdict) and visit records without deleting and recreating entities or creating duplicates.
+
+### Options Considered
+* **Option A: Immutable Log Entries**: Disallow editing past entities. Require deleting and recreating a restaurant or visit entry. High user friction and risk of orphaned records.
+* **Option B: In-Place Contextual Editing in Restaurant Detail View (Selected)**:
+  - Provide an "Edit Restaurant Details" dialog in `RestaurantDetailScreen` with editable fields for address, city, route, cuisine, type, overall verdict, and precise map coordinates (lat/lng) supported by a 1-tap "Use Current GPS Location" button.
+  - Provide inline edit and delete actions on `VisitHistoryCard` components for past visits.
+  - Retain the entity's UUID primary key (`id`) and update the `updatedAt` timestamp to ensure Last-Write-Wins (LWW) conflict resolution compatibility during offline-first JSON delta syncs.
+
+### Decision & Trade-offs
+* **Benefits**: High flexibility, instantaneous correction of address/coordinate errors, zero orphaned child entities (dishes/visits remain correctly linked), and full sync compatibility.
+

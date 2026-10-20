@@ -293,24 +293,46 @@ class EntryEditorViewModel @Inject constructor(
                 }
 
                 // 1. Insert or Update Restaurant
-                val restaurantEntity = RestaurantEntity(
-                    id = restaurantId,
-                    name = state.restaurantName.trim(),
-                    latitude = state.latitude,
-                    longitude = state.longitude,
-                    address = state.address,
-                    city = state.city,
-                    highwayOrRoute = state.highwayOrRoute,
-                    cuisine = state.cuisine,
-                    restaurantType = restaurantType.name,
-                    overallVerdict = state.overallVerdict.name,
-                    tags = emptyList(),
-                    isShared = state.isShared,
-                    createdAt = now,
-                    updatedAt = now,
-                    isDeleted = false
-                )
-                restaurantDao.insert(restaurantEntity)
+                val existing = if (!state.restaurantId.isNullOrBlank()) restaurantDao.getRestaurantByIdSync(state.restaurantId) else null
+                if (existing != null) {
+                    val restaurantEntity = RestaurantEntity(
+                        id = existing.id,
+                        name = state.restaurantName.trim(),
+                        latitude = if (state.latitude != 0.0) state.latitude else existing.latitude,
+                        longitude = if (state.longitude != 0.0) state.longitude else existing.longitude,
+                        address = if (state.address.isNotBlank()) state.address else existing.address,
+                        city = if (state.city.isNotBlank()) state.city else existing.city,
+                        highwayOrRoute = if (state.highwayOrRoute.isNotBlank()) state.highwayOrRoute else existing.highwayOrRoute,
+                        cuisine = if (state.cuisine.isNotBlank()) state.cuisine else existing.cuisine,
+                        restaurantType = restaurantType.name,
+                        overallVerdict = state.overallVerdict.name,
+                        tags = existing.tags,
+                        isShared = state.isShared,
+                        createdAt = existing.createdAt,
+                        updatedAt = now,
+                        isDeleted = false
+                    )
+                    restaurantDao.update(restaurantEntity)
+                } else {
+                    val restaurantEntity = RestaurantEntity(
+                        id = restaurantId,
+                        name = state.restaurantName.trim(),
+                        latitude = state.latitude,
+                        longitude = state.longitude,
+                        address = state.address,
+                        city = state.city,
+                        highwayOrRoute = state.highwayOrRoute,
+                        cuisine = state.cuisine,
+                        restaurantType = restaurantType.name,
+                        overallVerdict = state.overallVerdict.name,
+                        tags = emptyList(),
+                        isShared = state.isShared,
+                        createdAt = now,
+                        updatedAt = now,
+                        isDeleted = false
+                    )
+                    restaurantDao.insert(restaurantEntity)
+                }
 
                 // 2. Insert Visit Entry
                 val visitId = UUID.randomUUID().toString()
