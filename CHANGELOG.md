@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-09
+
+### Changed
+- **Application ID & Namespace Rename**:
+  - Refactored package name and app ID from `com.karthik.palatelog` to `com.prismpixelvertex.palatelog` across Gradle scripts, source code, and project documentation.
+
+### Fixed
+- **JSON Export & Share Crash**:
+  - Added root cache path (`<cache-path name="cache_files" path="." />`) and files path (`<files-path name="internal_files" path="." />`) to `res/xml/file_paths.xml` so `FileProvider` can grant URI access to generated backup JSON files.
+  - Wrapped `FileProvider.getUriForFile` and `startActivity` share intent chooser inside `SettingsScreen.kt` in a `try-catch` block to prevent app crashes if sharing fails or if no sharing application is available.
+
 ## [1.0.2] - 2025-02-23
 
 ### Added

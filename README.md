@@ -2,7 +2,7 @@
 
 > **Never repeat a dining regret; remember every family favorite.**
 
-**PalateLog** (`com.karthik.palatelog`) is an offline-first Android application designed to track, organize, and resurface personal and family dining learnings—from roadside tea stalls and outstation highway dhabas to online food delivery orders (Zomato/Swiggy).
+**PalateLog** (`com.prismpixelvertex.palatelog`) is an offline-first Android application designed to track, organize, and resurface personal and family dining learnings—from roadside tea stalls and outstation highway dhabas to online food delivery orders (Zomato/Swiggy).
 
 ---
 
