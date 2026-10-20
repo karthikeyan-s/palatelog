@@ -2,6 +2,7 @@ package com.karthik.palatelog.feature.settings
 
 import android.content.Intent
 import android.widget.Toast
+import com.karthik.palatelog.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -316,7 +317,7 @@ fun SettingsScreen(
                         )
                     }
                     Text(
-                        text = "Application ID: com.karthik.palatelog\nVersion: 1.0.0\nLicense: MIT License",
+                        text = "Application ID: ${BuildConfig.APPLICATION_ID}\nVersion: ${BuildConfig.VERSION_NAME}\nLicense: MIT License",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

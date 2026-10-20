@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-02-23
+
+### Added
+- **Interactive Map Location Picker**:
+  - Added a **Pick on Map 🗺️** button in `EditRestaurantDialog` launching `LocationPickerDialog`.
+  - Embedded an interactive OSMDroid map view in a modal dialog with single-tap and long-press pin placement and real-time reverse geocoding via `LocationClient`.
+- **Restaurant Details & Geolocation Editing**:
+  - Added an **Edit Restaurant ✏️** action in the top app bar of `RestaurantDetailScreen`.
+  - Added an `EditRestaurantDialog` allowing users to edit restaurant name, street address, city, highway/route, cuisine, restaurant type, and overall verdict.
+  - Added precise geolocation editing with latitude and longitude numeric fields and a 1-tap **Use GPS** action to fetch live GPS coordinates and auto-fill address/city.
+  - Updated `RestaurantDetailViewModel` to use `restaurantDao.update` (and `EntryEditorViewModel` for existing restaurant edits).
+- **Visit Entry Editing & Deletion**:
+  - Added **Edit ✏️** and **Delete 🗑️** action icons to each `VisitHistoryCard` in `RestaurantDetailScreen`.
+  - Added `EditVisitDialog` allowing users to modify order channel, total bill amount, visit verdict, and general notes.
+  - Added soft-deletion for individual visit entries via `deleteVisit` in `RestaurantDetailViewModel`.
+- **Reusable Verdict Choice Chips**:
+  - Extracted `VerdictChoiceChip` into `com.karthik.palatelog.core.designsystem` for consistent design system usage across `EntryEditorScreen` and `RestaurantDetailScreen`.
+- **Documentation & Architecture Decision Records (ADR)**:
+  - Added **ADR 007: In-Place Metadata & Geolocation Correction vs. Immutable Logging** in `doc/decisions_and_tradeoffs.md`.
+  - Updated requirements traceability matrix in `doc/requirements_traceability_and_roadmap.md`.
+
+### Fixed
+- **Foreign Key Cascade Deletion on Restaurant Updates**:
+  - Fixed an issue where updating an existing restaurant replaced the parent row in SQLite via `OnConflictStrategy.REPLACE` (`DELETE` + `INSERT`), triggering foreign key `ON DELETE CASCADE` and wiping child visit history and dish feedback records. Replaced `restaurantDao.insert` with `restaurantDao.update` for existing entity updates, keeping all visit history completely intact.
+
 ## [1.0.1] - 2025-02-23
 
 ### Added
