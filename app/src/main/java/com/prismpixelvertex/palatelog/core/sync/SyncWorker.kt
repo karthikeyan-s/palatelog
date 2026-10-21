@@ -16,10 +16,10 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            val lastSynced = syncRepository.getLastSyncTimestamp()
-            // Generate payload of local modifications
-            val payload = syncRepository.exportSharedPayload(lastSynced)
-            // If connected to Google Drive or external repository, push and pull here
+            val email = syncRepository.getGoogleAccountEmail()
+            if (!email.isNullOrBlank()) {
+                syncRepository.performGoogleDriveSync()
+            }
             Result.success()
         } catch (e: Exception) {
             if (runAttemptCount < 3) {

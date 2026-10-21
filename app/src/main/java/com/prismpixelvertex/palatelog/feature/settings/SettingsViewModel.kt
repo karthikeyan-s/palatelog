@@ -1,12 +1,14 @@
 package com.prismpixelvertex.palatelog.feature.settings
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.FamilyMemberDao
 import com.prismpixelvertex.palatelog.core.database.FamilyMemberEntity
 import com.prismpixelvertex.palatelog.core.model.FamilyMember
+import com.prismpixelvertex.palatelog.core.sync.GoogleAuthException
 import com.prismpixelvertex.palatelog.core.sync.SyncRepository
 import com.prismpixelvertex.palatelog.core.sync.SyncStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +19,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -28,6 +29,8 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val members: List<FamilyMember> = emptyList(),
+    val googleAccountEmail: String? = null,
+    val isSignedInWithGoogle: Boolean = false,
     val lastSyncedAt: Long = 0L,
     val isSyncing: Boolean = false,
     val syncMessage: String = ""
@@ -36,6 +39,7 @@ data class SettingsUiState(
 sealed interface SettingsEvent {
     data class JsonExported(val file: File) : SettingsEvent
     data class ShowToast(val message: String) : SettingsEvent
+    data class LaunchAuthConsent(val intent: Intent, val pendingEmail: String) : SettingsEvent
 }
 
 @HiltViewModel
@@ -47,10 +51,13 @@ class SettingsViewModel @Inject constructor(
     private val _events = MutableSharedFlow<SettingsEvent>()
     val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
+    private val _googleAccountEmail = MutableStateFlow<String?>(syncRepository.getGoogleAccountEmail())
+
     val uiState: StateFlow<SettingsUiState> = combine(
         memberDao.getAllMembers(),
-        syncRepository.syncStatus
-    ) { memberEntities, syncStatus ->
+        syncRepository.syncStatus,
+        _googleAccountEmail
+    ) { memberEntities, syncStatus, googleEmail ->
         val members = memberEntities.map { it.toDomain() }
         val isSyncing = syncStatus is SyncStatus.Syncing
         val message = when (syncStatus) {
@@ -61,6 +68,8 @@ class SettingsViewModel @Inject constructor(
 
         SettingsUiState(
             members = members,
+            googleAccountEmail = googleEmail,
+            isSignedInWithGoogle = !googleEmail.isNullOrBlank(),
             lastSyncedAt = syncRepository.getLastSyncTimestamp(),
             isSyncing = isSyncing,
             syncMessage = message
@@ -68,7 +77,10 @@ class SettingsViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SettingsUiState()
+        initialValue = SettingsUiState(
+            googleAccountEmail = syncRepository.getGoogleAccountEmail(),
+            isSignedInWithGoogle = !syncRepository.getGoogleAccountEmail().isNullOrBlank()
+        )
     )
 
     init {
@@ -121,14 +133,74 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun onGoogleSignInSuccess(email: String) {
+        viewModelScope.launch {
+            connectAndSyncGoogleDrive(email, forceFullExport = true)
+        }
+    }
+
+    fun onAuthConsentGranted(pendingEmail: String) {
+        viewModelScope.launch {
+            connectAndSyncGoogleDrive(pendingEmail, forceFullExport = true)
+        }
+    }
+
+    private suspend fun connectAndSyncGoogleDrive(email: String, forceFullExport: Boolean) {
+        try {
+            // Temporarily configure email in repository for token request
+            syncRepository.setGoogleAccountEmail(email)
+            syncRepository.performGoogleDriveSync(forceFullExport = forceFullExport)
+            // Auth & Sync succeeded! Permanently save state
+            _googleAccountEmail.value = email
+            _events.emit(SettingsEvent.ShowToast("Connected & Synced with Google Drive!"))
+        } catch (e: GoogleAuthException) {
+            // Clear account so state remains disconnected
+            syncRepository.setGoogleAccountEmail(null)
+            _googleAccountEmail.value = null
+            if (e.userRecoverableIntent != null) {
+                _events.emit(SettingsEvent.LaunchAuthConsent(e.userRecoverableIntent, email))
+            } else {
+                _events.emit(SettingsEvent.ShowToast("Google Auth error: ${e.message}"))
+            }
+        } catch (e: Exception) {
+            syncRepository.setGoogleAccountEmail(null)
+            _googleAccountEmail.value = null
+            _events.emit(SettingsEvent.ShowToast("Drive Sync failed: ${e.localizedMessage}"))
+        }
+    }
+
+    fun onGoogleSignOut() {
+        syncRepository.setGoogleAccountEmail(null)
+        _googleAccountEmail.value = null
+        viewModelScope.launch {
+            _events.emit(SettingsEvent.ShowToast("Signed out of Google Drive"))
+        }
+    }
+
     fun triggerSync() {
         viewModelScope.launch {
-            try {
-                val payload = syncRepository.exportSharedPayload(syncRepository.getLastSyncTimestamp())
-                syncRepository.importPayload(payload)
-                _events.emit(SettingsEvent.ShowToast("Synced successfully!"))
-            } catch (e: Exception) {
-                _events.emit(SettingsEvent.ShowToast("Sync failed: ${e.localizedMessage}"))
+            val email = syncRepository.getGoogleAccountEmail()
+            if (!email.isNullOrBlank()) {
+                try {
+                    syncRepository.performGoogleDriveSync(forceFullExport = false)
+                    _events.emit(SettingsEvent.ShowToast("Google Drive Sync completed!"))
+                } catch (e: GoogleAuthException) {
+                    if (e.userRecoverableIntent != null) {
+                        _events.emit(SettingsEvent.LaunchAuthConsent(e.userRecoverableIntent, email))
+                    } else {
+                        _events.emit(SettingsEvent.ShowToast("Auth error: ${e.message}"))
+                    }
+                } catch (e: Exception) {
+                    _events.emit(SettingsEvent.ShowToast("Sync error: ${e.localizedMessage}"))
+                }
+            } else {
+                try {
+                    val payload = syncRepository.exportSharedPayload(syncRepository.getLastSyncTimestamp())
+                    syncRepository.importPayload(payload)
+                    _events.emit(SettingsEvent.ShowToast("Local sync complete. Connect Google Drive for cloud sync!"))
+                } catch (e: Exception) {
+                    _events.emit(SettingsEvent.ShowToast("Sync failed: ${e.localizedMessage}"))
+                }
             }
         }
     }
