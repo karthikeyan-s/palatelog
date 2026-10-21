@@ -15,8 +15,8 @@ android {
         applicationId = "com.prismpixelvertex.palatelog"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.1.0"
+        versionCode = 6
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -95,10 +95,12 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
 
-    // Credentials & Identity
+    // Credentials, Identity & HTTP
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.google.id)
+    implementation(libs.play.services.auth)
+    implementation(libs.okhttp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -1,7 +1,10 @@
 package com.prismpixelvertex.palatelog.feature.settings
 
+import android.accounts.AccountManager
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
@@ -66,6 +70,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.google.android.gms.common.AccountPicker
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -86,6 +91,38 @@ fun SettingsScreen(
     var showImportDialog by remember { mutableStateOf(false) }
     var importJsonText by remember { mutableStateOf("") }
 
+    var pendingConsentEmail by remember { mutableStateOf<String?>(null) }
+
+    val accountPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        Log.d("PalateLog_Sync", "accountPickerLauncher returned resultCode: ${result.resultCode}")
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
+            Log.d("PalateLog_Sync", "Selected Google Account: $email")
+            if (!email.isNullOrBlank()) {
+                viewModel.onGoogleSignInSuccess(email)
+            } else {
+                Toast.makeText(context, "No Google Account selected", Toast.LENGTH_SHORT).show()
+            }
+        } else if (result.resultCode != Activity.RESULT_CANCELED) {
+            Toast.makeText(context, "Account selection cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val authConsentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        Log.d("PalateLog_Sync", "authConsentLauncher returned resultCode: ${result.resultCode}")
+        if (result.resultCode == Activity.RESULT_OK) {
+            pendingConsentEmail?.let { email ->
+                viewModel.onAuthConsentGranted(email)
+            } ?: viewModel.triggerSync()
+        } else {
+            Toast.makeText(context, "Google Drive access permission was not granted", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -100,6 +137,10 @@ fun SettingsScreen(
             when (event) {
                 is SettingsEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is SettingsEvent.LaunchAuthConsent -> {
+                    pendingConsentEmail = event.pendingEmail
+                    authConsentLauncher.launch(event.intent)
                 }
                 is SettingsEvent.JsonExported -> {
                     try {
@@ -239,10 +280,71 @@ fun SettingsScreen(
                     }
 
                     Text(
-                        text = "Synchronizes shared food learnings across your family devices with zero monthly server costs.",
+                        text = "Synchronizes shared food learnings across your family devices via Google Drive with zero server costs.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    if (uiState.isSignedInWithGoogle) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = AmberPrimary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Google Drive Connected",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Text(
+                                    text = uiState.googleAccountEmail ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = { viewModel.onGoogleSignOut() },
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Disconnect", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                Log.d("PalateLog_Sync", "Launching Google AccountPicker dialog...")
+                                val intent = AccountPicker.newChooseAccountIntent(
+                                    AccountPicker.AccountChooserOptions.Builder()
+                                        .setAllowableAccountsTypes(listOf("com.google"))
+                                        .setTitleOverrideText("Select Google Account for Drive Sync")
+                                        .setAlwaysShowAccountPicker(true)
+                                        .build()
+                                )
+                                accountPickerLauncher.launch(intent)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Connect Google Drive for Cloud Sync")
+                        }
+                    }
 
                     val syncTimeText = if (uiState.lastSyncedAt > 0) {
                         SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(uiState.lastSyncedAt))

@@ -5,9 +5,15 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.0] - 2026-10-21
 
 ### Added
+- **Google Shared Drive Direct Cloud Sync (Phase 2B)**:
+  - Integrated Google Account selection (`com.google.android.gms.common.AccountPicker`) and OAuth2 authorization (`https://www.googleapis.com/auth/drive.file` scope) for seamless cloud sync.
+  - Implemented `GoogleDriveSyncClient` using OkHttp REST API calls to search, create, upload, list, and download JSON delta payloads to/from a dedicated `PalateLog_Family` folder in Google Drive.
+  - Updated `SyncRepository` with 2-way delta merge capability (`performGoogleDriveSync()`) using Last-Write-Wins (LWW) conflict resolution and unique per-device delta files (`changes_<deviceId>_<timestamp>.json`).
+  - Updated `SyncWorker` to run Google Drive cloud sync automatically in the background via WorkManager when connected.
+  - Enhanced `SettingsScreen` with Google Drive Connection Card showing signed-in Google account email, connection status, Disconnect button, and manual "Sync Now" trigger.
 - **JSON Backup File Import Picker**:
   - Added a **Select Backup File 📁** button in the Settings Import Dialog launching Android's system file picker (`ActivityResultContracts.GetContent()`), allowing users to restore backup files directly from device storage or cloud drives.
 

@@ -32,7 +32,8 @@ class SyncRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
-    private val dishDao: DishFeedbackDao
+    private val dishDao: DishFeedbackDao,
+    private val googleDriveSyncClient: GoogleDriveSyncClient
 ) {
 
     private val json = Json {
@@ -53,12 +54,81 @@ class SyncRepository @Inject constructor(
         }
     }
 
+    fun getGoogleAccountEmail(): String? {
+        return prefs.getString("google_account_email", null)
+    }
+
+    fun setGoogleAccountEmail(email: String?) {
+        if (email.isNullOrBlank()) {
+            prefs.edit().remove("google_account_email").apply()
+        } else {
+            prefs.edit().putString("google_account_email", email).apply()
+        }
+    }
+
     fun getLastSyncTimestamp(): Long {
         return prefs.getLong("last_synced_at", 0L)
     }
 
     private fun setLastSyncTimestamp(timestamp: Long) {
         prefs.edit().putLong("last_synced_at", timestamp).apply()
+    }
+
+    /**
+     * Executes 2-way Google Shared Drive Sync.
+     */
+    suspend fun performGoogleDriveSync(forceFullExport: Boolean = false): Unit = withContext(Dispatchers.IO) {
+        val accountEmail = getGoogleAccountEmail()
+        if (accountEmail.isNullOrBlank()) {
+            _syncStatus.value = SyncStatus.Error("No Google account connected.")
+            return@withContext
+        }
+
+        _syncStatus.value = SyncStatus.Syncing
+        try {
+            // 1. Obtain OAuth Token
+            val accessToken = googleDriveSyncClient.getAccessToken(accountEmail)
+
+            // 2. Locate or create PalateLog_Family folder
+            val folderId = googleDriveSyncClient.getOrCreateFamilyFolder(accessToken)
+
+            // 3. First, download and merge all remote delta files from other family members
+            val remoteFiles = googleDriveSyncClient.listRemoteSyncFiles(accessToken, folderId)
+            var mergedRemoteCount = 0
+
+            for (file in remoteFiles) {
+                // Skip files uploaded by this device
+                if (file.name.contains("changes_${deviceId}_")) continue
+
+                try {
+                    val remoteJson = googleDriveSyncClient.downloadSyncPayload(accessToken, file.id)
+                    val remotePayload = json.decodeFromString<SyncPayload>(remoteJson)
+                    importPayload(remotePayload)
+                    mergedRemoteCount++
+                } catch (e: Exception) {
+                    // Ignore individual corrupt payload files
+                }
+            }
+
+            // 4. Export local shared changes modified since cutoff and upload if changes exist
+            val lastSynced = if (forceFullExport) 0L else getLastSyncTimestamp()
+            val localPayload = exportSharedPayload(lastSynced)
+            if (localPayload.restaurants.isNotEmpty() || localPayload.visits.isNotEmpty() || localPayload.dishes.isNotEmpty()) {
+                val fileName = "changes_${deviceId}_${System.currentTimeMillis()}.json"
+                val jsonString = json.encodeToString(localPayload)
+                googleDriveSyncClient.uploadSyncPayload(accessToken, folderId, fileName, jsonString)
+            }
+
+            val now = System.currentTimeMillis()
+            setLastSyncTimestamp(now)
+            _syncStatus.value = SyncStatus.Success("Synced with Google Drive ($mergedRemoteCount updates merged)", now)
+        } catch (e: GoogleAuthException) {
+            _syncStatus.value = SyncStatus.Error(e.message ?: "Google Auth required")
+            throw e
+        } catch (e: Exception) {
+            _syncStatus.value = SyncStatus.Error("Drive Sync failed: ${e.localizedMessage}")
+            throw e
+        }
     }
 
     /**
