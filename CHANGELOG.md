@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **JSON Backup File Import Picker**:
   - Added a **Select Backup File 📁** button in the Settings Import Dialog launching Android's system file picker (`ActivityResultContracts.GetContent()`), allowing users to restore backup files directly from device storage or cloud drives.
 
+### Changed
+- **Target SDK Upgrade to API 36**:
+  - Updated `compileSdk` and `targetSdk` to level 36 (Android 16) in `app/build.gradle.kts` to meet Google Play Console publishing requirements.
+  - Bumped `versionCode` to `5`.
+
+### Fixed
+- **WorkManager Startup Initialization Lint Error**:
+  - Removed default `androidx.work.WorkManagerInitializer` from `AndroidManifest.xml` via `tools:node="remove"` to resolve fatal lint error (`RemoveWorkManagerInitializer`) during release bundle assembly when using Hilt's custom `Configuration.Provider`.
+
 ## [1.1.0] - 2026-03-09
 
 ### Changed
