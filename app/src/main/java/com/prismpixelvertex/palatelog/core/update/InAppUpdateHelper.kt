@@ -34,11 +34,19 @@ class InAppUpdateHelper(private val context: Context) {
         appUpdateManager.unregisterListener(installStateUpdatedListener)
     }
 
+    private var isFlowInProgress = false
+
+    fun resetFlowState() {
+        isFlowInProgress = false
+    }
+
     fun checkForAppUpdate(
         activity: Activity,
         requestCodeFlexible: Int = 1001,
         requestCodeImmediate: Int = 1002
     ) {
+        if (isFlowInProgress) return
+
         val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
         // Default staleness threshold: 90 days (0 or negative means disabled)
         val stalenessThresholdDays = prefs.getInt("staleness_days_threshold", 90)
@@ -51,6 +59,7 @@ class InAppUpdateHelper(private val context: Context) {
                 val isForced = (priority >= 4) || (stalenessThresholdDays in 1..stalenessDays)
 
                 if (isForced && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                    isFlowInProgress = true
                     appUpdateManager.startUpdateFlowForResult(
                         appUpdateInfo,
                         activity,
@@ -58,6 +67,7 @@ class InAppUpdateHelper(private val context: Context) {
                         requestCodeImmediate
                     )
                 } else if (appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+                    isFlowInProgress = true
                     appUpdateManager.startUpdateFlowForResult(
                         appUpdateInfo,
                         activity,
