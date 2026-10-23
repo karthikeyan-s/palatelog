@@ -5,6 +5,14 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-10-21
+
+### Added
+- **Interactive Map Location Picker for Log Visit & Quick Capture**:
+  - Added a **Pick on Map 🗺️** / **Change on Map** button to both **Log visit / Order** (`EntryEditorScreen`) and **3-Second Quick Log** (`QuickCaptureScreen`).
+  - Implemented `LocationPickerDialog` featuring an interactive `osmdroid` map view with tap-to-pin placement and single-touch location locking.
+  - Added automatic reverse-geocoding upon map location confirmation via `LocationClient.reverseGeocode(lat, lng)`, updating latitude, longitude, area/street, city, and nearby restaurant suggestion dynamically.
+
 ## [1.2.0] - 2026-10-21
 
 ### Added

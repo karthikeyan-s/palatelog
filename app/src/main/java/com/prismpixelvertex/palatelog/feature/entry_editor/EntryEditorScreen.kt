@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.AlertDialog
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
+import com.prismpixelvertex.palatelog.core.designsystem.LocationPickerDialog
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmber
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmberContainer
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictChoiceChip
@@ -202,11 +204,42 @@ fun EntryEditorScreen(
                 )
             }
 
-            if (uiState.latitude != 0.0 || uiState.longitude != 0.0) {
-                Text(
-                    text = "📍 Pinned Map Location: ${String.format(java.util.Locale.US, "%.4f", uiState.latitude)}, ${String.format(java.util.Locale.US, "%.4f", uiState.longitude)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            var showMapPicker by remember { mutableStateOf(false) }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (uiState.latitude != 0.0 || uiState.longitude != 0.0)
+                            "📍 Pinned: ${String.format(java.util.Locale.US, "%.4f", uiState.latitude)}, ${String.format(java.util.Locale.US, "%.4f", uiState.longitude)}"
+                        else "📍 No location pinned",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { showMapPicker = true },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (uiState.latitude != 0.0 || uiState.longitude != 0.0) "Change on Map" else "Pick on Map")
+                }
+            }
+
+            if (showMapPicker) {
+                LocationPickerDialog(
+                    initialLatitude = uiState.latitude,
+                    initialLongitude = uiState.longitude,
+                    onDismiss = { showMapPicker = false },
+                    onLocationConfirmed = { lat, lng ->
+                        viewModel.onLocationPicked(lat, lng)
+                        showMapPicker = false
+                    }
                 )
             }
 

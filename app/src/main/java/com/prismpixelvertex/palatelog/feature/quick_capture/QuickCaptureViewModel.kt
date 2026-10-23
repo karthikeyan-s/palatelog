@@ -121,6 +121,22 @@ class QuickCaptureViewModel @Inject constructor(
         }
     }
 
+    fun onLocationPicked(lat: Double, lng: Double) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                latitude = lat,
+                longitude = lng,
+                isLocationLoading = false
+            )
+            val geocoded = locationClient.reverseGeocode(lat, lng)
+            _uiState.value = _uiState.value.copy(
+                streetOrArea = if (geocoded.second.isNotBlank()) geocoded.second else _uiState.value.streetOrArea,
+                city = if (geocoded.third.isNotBlank()) geocoded.third else _uiState.value.city
+            )
+            checkNearbyRestaurant(lat, lng)
+        }
+    }
+
     fun onPlaceNameChanged(name: String) {
         _uiState.value = _uiState.value.copy(placeName = name)
     }
