@@ -47,9 +47,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.MapMarkerFactory
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
+import com.prismpixelvertex.palatelog.core.model.Verdict
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -114,7 +116,8 @@ fun MapScreen(
                     val userMarker = Marker(map).apply {
                         position = GeoPoint(uiState.userLatitude, uiState.userLongitude)
                         title = "Your Location"
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        icon = MapMarkerFactory.getUserLocationMarker(context)
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                     }
                     map.overlays.add(userMarker)
                 }
@@ -125,6 +128,7 @@ fun MapScreen(
                         position = GeoPoint(customLoc.latitude, customLoc.longitude)
                         title = if (customLoc.street.isNotBlank()) customLoc.street else "Selected Spot 📍"
                         snippet = "Tap actions below to log"
+                        icon = MapMarkerFactory.getCustomLocationMarker(context)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                     }
                     map.overlays.add(customMarker)
@@ -136,6 +140,7 @@ fun MapScreen(
                         position = GeoPoint(r.latitude, r.longitude)
                         title = r.name
                         snippet = "${r.overallVerdict.name} • ${r.cuisine}"
+                        icon = MapMarkerFactory.getRestaurantMarker(context, r.overallVerdict, r.restaurantType)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         setOnMarkerClickListener { _, _ ->
                             viewModel.onMarkerSelected(r)
