@@ -165,6 +165,7 @@ fun LocationPickerDialog(
                                 position = selectedPoint
                                 title = "Pinned Spot 📍"
                                 snippet = "Tap Confirm below"
+                                icon = MapMarkerFactory.getCustomLocationMarker(context)
                                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                             }
                             map.overlays.add(marker)

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.1] - 2026-10-21
 
 ### Added
+- **Custom Color-Coded Map Pin Markers**:
+  - Replaced plain map markers with vector-rendered pin badges on `MapScreen` and `LocationPickerDialog`.
+  - Color-coded by overall verdict rating: 🟢 Emerald Green for **GO**, 🔴 Crimson Red for **NO-GO**, and 🟡 Amber Yellow for **CAUTION**.
+  - Added category vector icons inside pins corresponding to restaurant type: Dine-in / Restaurant (🍽️), Highway Dhaba (🛣️), Delivery / Cloud Kitchen (🛵), Cafe (☕), and Takeaway / Drive-Thru (🚗).
+  - Designed distinct GPS user location pulse marker and custom location target pin.
+  - Implemented `MapMarkerFactory` with memoized bitmap caching for zero-overhead rendering when panning or zooming the map.
 - **Interactive Map Location Picker for Log Visit & Quick Capture**:
   - Added a **Pick on Map 🗺️** / **Change on Map** button to both **Log visit / Order** (`EntryEditorScreen`) and **3-Second Quick Log** (`QuickCaptureScreen`).
   - Implemented `LocationPickerDialog` featuring an interactive `osmdroid` map view with tap-to-pin placement and single-touch location locking.
