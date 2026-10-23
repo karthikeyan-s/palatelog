@@ -119,7 +119,7 @@ fun PalateLogNavGraph(
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             // Tab 1: Dashboard
             composable(Screen.Dashboard.route) {

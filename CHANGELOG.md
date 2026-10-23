@@ -5,6 +5,17 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-10-21
+
+### Fixed
+- **In-App Update Background Loop Fix**:
+  - Prevented re-triggering update check loops in `onResume()`, resolving app backgrounding/closing when launching Google Play's system update dialog.
+- **In-App Update "Restart App" Banner Layout**:
+  - Added `.navigationBarsPadding()` to the bottom update banner in `MainActivity`, preventing overlap with Android system navigation gesture/button bar.
+- **Layout & Double Inset Padding Fixes**:
+  - Eliminated double Scaffold bottom padding in `PalateLogNavGraph`, `SettingsScreen`, and `DashboardScreen`.
+  - Added bottom scroll spacer ensuring cards like "Offline Backup & Transfer" and "About PalateLog" are fully visible and never cut off.
+
 ## [1.2.3] - 2026-10-21
 
 ### Fixed & Enhanced

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -98,6 +99,7 @@ class MainActivity : ComponentActivity() {
                             exit = slideOutVertically { it },
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
+                                .navigationBarsPadding()
                                 .padding(16.dp)
                         ) {
                             Card(
@@ -153,9 +155,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        updateHelper.checkForAppUpdate(this@MainActivity)
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        updateHelper.resetFlowState()
     }
 
     override fun onDestroy() {

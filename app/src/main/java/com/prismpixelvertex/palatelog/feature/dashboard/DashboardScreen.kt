@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -107,6 +108,7 @@ fun DashboardScreen(
                 )
             )
         },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             Column(
                 horizontalAlignment = Alignment.End,
@@ -268,7 +270,7 @@ fun DashboardScreen(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 140.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.restaurants, key = { it.restaurant.id }) { item ->
