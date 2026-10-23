@@ -97,8 +97,8 @@ class SyncRepository @Inject constructor(
             var mergedRemoteCount = 0
 
             for (file in remoteFiles) {
-                // Skip files uploaded by this device
-                if (file.name.contains("changes_${deviceId}_")) continue
+                // Skip files uploaded by this device (both changes_deviceId.json and legacy timestamped files)
+                if (file.name == "changes_$deviceId.json" || file.name.startsWith("changes_${deviceId}_")) continue
 
                 try {
                     val remoteJson = googleDriveSyncClient.downloadSyncPayload(accessToken, file.id)
@@ -110,13 +110,11 @@ class SyncRepository @Inject constructor(
                 }
             }
 
-            // 4. Export local shared changes modified since cutoff and upload if changes exist
-            val lastSynced = if (forceFullExport) 0L else getLastSyncTimestamp()
-            val localPayload = exportSharedPayload(lastSynced)
+            // 4. Always export complete shared local state for this device and update changes_<deviceId>.json in Google Drive
+            val localPayload = exportSharedPayload(0L)
             if (localPayload.restaurants.isNotEmpty() || localPayload.visits.isNotEmpty() || localPayload.dishes.isNotEmpty()) {
-                val fileName = "changes_${deviceId}_${System.currentTimeMillis()}.json"
                 val jsonString = json.encodeToString(localPayload)
-                googleDriveSyncClient.uploadSyncPayload(accessToken, folderId, fileName, jsonString)
+                googleDriveSyncClient.uploadOrUpdateSyncPayload(accessToken, folderId, deviceId, jsonString)
             }
 
             val now = System.currentTimeMillis()

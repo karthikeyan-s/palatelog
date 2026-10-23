@@ -5,6 +5,24 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-10-21
+
+### Fixed & Enhanced
+- **Google Shared Drive Single-File In-Place Sync**:
+  - Replaced timestamped sync files with a single canonical file per device (`changes_<deviceId>.json`).
+  - Implemented in-place `PATCH` updates on Google Drive, preventing folder clutter and eliminating missed entries caused by cutoff timestamps.
+- **Visit & Dish Member Attribution**:
+  - Automatically attaches the primary user's display name (`createdByMemberName`) to visit entries and dish feedback.
+  - Displayed `👤 Logged by <MemberName>` on Visit History timeline cards in `RestaurantDetailScreen`.
+- **Expandable Speed Dial FAB (Dashboard)**:
+  - Replaced static action buttons with an expandable Material 3 Speed Dial FAB menu featuring smooth rotation and fade animations.
+  - Added `140dp` bottom list padding so the last restaurant card can scroll completely above the action buttons.
+- **Google Shared Drive Card UI Improvements**:
+  - Re-laid out the Google Drive Connected status card with text truncation (`TextOverflow.Ellipsis`) and single-line wrapping to prevent button overlap on narrow screens.
+- **Personalized Primary Profile Setup**:
+  - Updated default primary member profile name to `"Me"`.
+  - Added an **Edit Profile Name ✏️** action in `SettingsScreen` allowing each user to set their personalized name (e.g., `"Karthik"`, `"Priya"`).
+
 ## [1.2.2] - 2026-10-21
 
 ### Added
@@ -12,7 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated `com.google.android.play:app-update-ktx` for automatic update detection and seamless installation flows.
   - Implemented background **Flexible Updates** with an interactive Material 3 **Bottom "Restart App" Banner** upon download completion.
   - Implemented **Immediate / Forced Updates** for critical releases or releases matching configurable version staleness thresholds.
-  - Added configurable **Forced Staleness Threshold** setting in `SettingsScreen` (options: 30d, 60d, 90d default, 180d, or Disabled).
 
 ## [1.2.1] - 2026-10-21
 

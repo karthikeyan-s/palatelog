@@ -349,6 +349,9 @@ class EntryEditorViewModel @Inject constructor(
                 }
 
                 // 2. Insert Visit Entry
+                val primaryMember = memberDao.getPrimaryMember()
+                val primaryName = primaryMember?.displayName?.ifBlank { "Me" } ?: "Me"
+
                 val visitId = UUID.randomUUID().toString()
                 val billAmount = state.billAmountText.toDoubleOrNull() ?: 0.0
 
@@ -361,8 +364,8 @@ class EntryEditorViewModel @Inject constructor(
                     billAmount = billAmount,
                     billReceiptPhotoUri = state.billPhotoUri,
                     generalNotes = state.generalNotes,
-                    createdByMemberId = "",
-                    createdByMemberName = "Me",
+                    createdByMemberId = primaryMember?.id ?: "",
+                    createdByMemberName = primaryName,
                     isShared = state.isShared,
                     updatedAt = now,
                     isDeleted = false
@@ -373,7 +376,13 @@ class EntryEditorViewModel @Inject constructor(
                 val dishEntities = state.dishes.filter { it.name.isNotBlank() }.map { draft ->
                     val memberPrefMap = if (draft.selectedMemberName.isNotBlank() && draft.memberReaction.isNotBlank()) {
                         mapOf(draft.selectedMemberName to draft.memberReaction)
-                    } else emptyMap()
+                    } else if (draft.memberReaction.isNotBlank()) {
+                        mapOf(primaryName to draft.memberReaction)
+                    } else if (draft.tagsText.isNotBlank()) {
+                        mapOf(primaryName to draft.tagsText)
+                    } else {
+                        mapOf(primaryName to draft.verdict.displayName)
+                    }
 
                     DishFeedbackEntity(
                         id = draft.id,

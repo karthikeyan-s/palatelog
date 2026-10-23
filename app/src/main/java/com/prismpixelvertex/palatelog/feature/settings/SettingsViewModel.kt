@@ -112,19 +112,22 @@ class SettingsViewModel @Inject constructor(
                 memberDao.insert(
                     FamilyMemberEntity(
                         id = UUID.randomUUID().toString(),
-                        displayName = "Karthik",
+                        displayName = "Me",
                         avatarColorHex = "#F59E0B",
                         isPrimaryUser = true
                     )
                 )
-                memberDao.insert(
-                    FamilyMemberEntity(
-                        id = UUID.randomUUID().toString(),
-                        displayName = "Wife",
-                        avatarColorHex = "#10B981",
-                        isPrimaryUser = false
-                    )
-                )
+            }
+        }
+    }
+
+    fun updatePrimaryMemberName(newName: String) {
+        val trimmed = newName.trim()
+        if (trimmed.isBlank()) return
+        viewModelScope.launch {
+            val primary = memberDao.getPrimaryMember()
+            if (primary != null) {
+                memberDao.update(primary.copy(displayName = trimmed))
             }
         }
     }

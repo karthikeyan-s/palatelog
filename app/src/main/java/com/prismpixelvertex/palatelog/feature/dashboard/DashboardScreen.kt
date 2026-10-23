@@ -1,6 +1,13 @@
 package com.prismpixelvertex.palatelog.feature.dashboard
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.ui.draw.rotate
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -47,6 +54,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,6 +83,7 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var isFabExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -99,24 +110,59 @@ fun DashboardScreen(
         floatingActionButton = {
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // The 3-Second Quick Regret Logger (Speed Dial)
-                ExtendedFloatingActionButton(
-                    onClick = onNavigateToQuickCapture,
-                    containerColor = VerdictNoGoRed,
-                    contentColor = Color.White,
-                    icon = { Icon(Icons.Default.FlashOn, contentDescription = null) },
-                    text = { Text("Quick Regret Log", fontWeight = FontWeight.Bold) }
-                )
-
-                // Standard Full Add Button
-                FloatingActionButton(
-                    onClick = { onNavigateToEntryEditor(null) },
-                    containerColor = AmberPrimary,
-                    contentColor = Color.White
+                AnimatedVisibility(
+                    visible = isFabExpanded,
+                    enter = fadeIn() + slideInVertically { it / 2 },
+                    exit = fadeOut() + slideOutVertically { it / 2 }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Visit / Order")
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // 1. Quick Regret Log (3s) FAB
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                isFabExpanded = false
+                                onNavigateToQuickCapture()
+                            },
+                            containerColor = VerdictNoGoRed,
+                            contentColor = Color.White,
+                            icon = { Icon(Icons.Default.FlashOn, contentDescription = null) },
+                            text = { Text("Quick Regret Log (3s)", fontWeight = FontWeight.Bold) }
+                        )
+
+                        // 2. Full Visit Log FAB
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                isFabExpanded = false
+                                onNavigateToEntryEditor(null)
+                            },
+                            containerColor = AmberPrimary,
+                            contentColor = Color.White,
+                            icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                            text = { Text("Full Visit Log", fontWeight = FontWeight.Bold) }
+                        )
+                    }
+                }
+
+                // Main Trigger FAB
+                FloatingActionButton(
+                    onClick = { isFabExpanded = !isFabExpanded },
+                    containerColor = if (isFabExpanded) MaterialTheme.colorScheme.surfaceVariant else AmberPrimary,
+                    contentColor = if (isFabExpanded) MaterialTheme.colorScheme.onSurfaceVariant else Color.White,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    val rotation by animateFloatAsState(
+                        targetValue = if (isFabExpanded) 45f else 0f,
+                        label = "fab_rotation"
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = if (isFabExpanded) "Close Menu" else "Log Options",
+                        modifier = Modifier.rotate(rotation)
+                    )
                 }
             }
         },
@@ -222,7 +268,7 @@ fun DashboardScreen(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 140.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.restaurants, key = { it.restaurant.id }) { item ->
