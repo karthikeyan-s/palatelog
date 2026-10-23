@@ -422,7 +422,59 @@ fun SettingsScreen(
                 }
             }
 
-            // Section 4: About PalateLog
+            // Section 4: In-App Update Settings
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CloudSync, contentDescription = null, tint = AmberPrimary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "In-App Updates & Forced Staleness",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Text(
+                        text = "Threshold for forcing an update on outdated releases:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val options = listOf(
+                            30 to "30d",
+                            60 to "60d",
+                            90 to "90d (Default)",
+                            180 to "180d",
+                            -1 to "Disabled"
+                        )
+                        options.forEach { (days, label) ->
+                            val isSelected = uiState.stalenessThresholdDays == days
+                            androidx.compose.material3.FilterChip(
+                                selected = isSelected,
+                                onClick = { viewModel.setStalenessThreshold(days) },
+                                label = {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Section 5: About PalateLog
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
