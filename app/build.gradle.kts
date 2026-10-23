@@ -24,8 +24,8 @@ android {
         applicationId = "com.prismpixelvertex.palatelog"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.2.1"
+        versionCode = 8
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -108,8 +108,9 @@ dependencies {
     // WorkManager (Background Sync)
     implementation(libs.androidx.work.runtime.ktx)
 
-    // Location & Free Maps
+    // Location & Free Maps & Updates
     implementation(libs.play.services.location)
+    implementation(libs.play.services.update)
     implementation(libs.osmdroid.android)
 
     // Image Loading

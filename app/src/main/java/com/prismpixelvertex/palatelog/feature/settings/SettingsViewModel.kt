@@ -12,6 +12,7 @@ import com.prismpixelvertex.palatelog.core.sync.GoogleAuthException
 import com.prismpixelvertex.palatelog.core.sync.SyncRepository
 import com.prismpixelvertex.palatelog.core.sync.SyncStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,8 @@ data class SettingsUiState(
     val isSignedInWithGoogle: Boolean = false,
     val lastSyncedAt: Long = 0L,
     val isSyncing: Boolean = false,
-    val syncMessage: String = ""
+    val syncMessage: String = "",
+    val stalenessThresholdDays: Int = 90
 )
 
 sealed interface SettingsEvent {
@@ -44,6 +46,7 @@ sealed interface SettingsEvent {
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val memberDao: FamilyMemberDao,
     private val syncRepository: SyncRepository
 ) : ViewModel() {
@@ -52,12 +55,25 @@ class SettingsViewModel @Inject constructor(
     val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
     private val _googleAccountEmail = MutableStateFlow<String?>(syncRepository.getGoogleAccountEmail())
+    private val _stalenessThreshold = MutableStateFlow(getStalenessDays())
+
+    private fun getStalenessDays(): Int {
+        val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
+        return prefs.getInt("staleness_days_threshold", 90)
+    }
+
+    fun setStalenessThreshold(days: Int) {
+        val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("staleness_days_threshold", days).apply()
+        _stalenessThreshold.value = days
+    }
 
     val uiState: StateFlow<SettingsUiState> = combine(
         memberDao.getAllMembers(),
         syncRepository.syncStatus,
-        _googleAccountEmail
-    ) { memberEntities, syncStatus, googleEmail ->
+        _googleAccountEmail,
+        _stalenessThreshold
+    ) { memberEntities, syncStatus, googleEmail, stalenessDays ->
         val members = memberEntities.map { it.toDomain() }
         val isSyncing = syncStatus is SyncStatus.Syncing
         val message = when (syncStatus) {
@@ -72,14 +88,16 @@ class SettingsViewModel @Inject constructor(
             isSignedInWithGoogle = !googleEmail.isNullOrBlank(),
             lastSyncedAt = syncRepository.getLastSyncTimestamp(),
             isSyncing = isSyncing,
-            syncMessage = message
+            syncMessage = message,
+            stalenessThresholdDays = stalenessDays
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SettingsUiState(
             googleAccountEmail = syncRepository.getGoogleAccountEmail(),
-            isSignedInWithGoogle = !syncRepository.getGoogleAccountEmail().isNullOrBlank()
+            isSignedInWithGoogle = !syncRepository.getGoogleAccountEmail().isNullOrBlank(),
+            stalenessThresholdDays = getStalenessDays()
         )
     )
 
