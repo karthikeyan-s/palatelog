@@ -164,6 +164,20 @@ class EntryEditorViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(city = city)
     }
 
+    fun onLocationPicked(lat: Double, lng: Double) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                latitude = lat,
+                longitude = lng
+            )
+            val geocoded = locationClient.reverseGeocode(lat, lng)
+            _uiState.value = _uiState.value.copy(
+                address = if (geocoded.second.isNotBlank()) geocoded.second else _uiState.value.address,
+                city = if (geocoded.third.isNotBlank()) geocoded.third else _uiState.value.city
+            )
+        }
+    }
+
     fun onRestaurantNameChanged(name: String) {
         _uiState.value = _uiState.value.copy(restaurantName = name)
         // Check if matches an existing restaurant

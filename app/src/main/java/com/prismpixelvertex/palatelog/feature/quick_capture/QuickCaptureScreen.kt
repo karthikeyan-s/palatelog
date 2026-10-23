@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -29,6 +28,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,13 +41,18 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import com.prismpixelvertex.palatelog.core.designsystem.LocationPickerDialog
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -118,6 +123,8 @@ fun QuickCaptureScreen(
         },
         modifier = modifier
     ) { innerPadding ->
+        var showMapPicker by remember { mutableStateOf(false) }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -131,8 +138,21 @@ fun QuickCaptureScreen(
             // Location Badge & Nearby Suggestion
             LocationHeaderCard(
                 uiState = uiState,
-                onUseNearby = { viewModel.onUseNearbyRestaurant(it) }
+                onUseNearby = { viewModel.onUseNearbyRestaurant(it) },
+                onOpenMapPicker = { showMapPicker = true }
             )
+
+            if (showMapPicker) {
+                LocationPickerDialog(
+                    initialLatitude = uiState.latitude,
+                    initialLongitude = uiState.longitude,
+                    onDismiss = { showMapPicker = false },
+                    onLocationConfirmed = { lat, lng ->
+                        viewModel.onLocationPicked(lat, lng)
+                        showMapPicker = false
+                    }
+                )
+            }
 
             // Step 1: Big Verdict Selector
             Text(
@@ -335,7 +355,8 @@ fun QuickCaptureScreen(
 @Composable
 private fun LocationHeaderCard(
     uiState: QuickCaptureUiState,
-    onUseNearby: (com.prismpixelvertex.palatelog.core.database.RestaurantEntity) -> Unit
+    onUseNearby: (com.prismpixelvertex.palatelog.core.database.RestaurantEntity) -> Unit,
+    onOpenMapPicker: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -344,30 +365,45 @@ private fun LocationHeaderCard(
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(12.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = null,
-                tint = if (uiState.isLocationLoading) MaterialTheme.colorScheme.outline else VerdictGoGreen,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            if (uiState.isLocationLoading) {
-                Text(
-                    text = "Acquiring GPS location...",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = if (uiState.isLocationLoading) MaterialTheme.colorScheme.outline else VerdictGoGreen,
+                    modifier = Modifier.size(20.dp)
                 )
-            } else {
-                val locText = listOfNotNull(
-                    uiState.streetOrArea.ifBlank { null },
-                    uiState.city.ifBlank { null }
-                ).joinToString(", ")
-                Text(
-                    text = if (locText.isNotBlank()) "📍 $locText" else "📍 Location Locked (${String.format("%.4f", uiState.latitude)}, ${String.format("%.4f", uiState.longitude)})",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium
-                )
+                Spacer(modifier = Modifier.width(6.dp))
+                if (uiState.isLocationLoading) {
+                    Text(
+                        text = "Acquiring GPS location...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    val locText = listOfNotNull(
+                        uiState.streetOrArea.ifBlank { null },
+                        uiState.city.ifBlank { null }
+                    ).joinToString(", ")
+                    Text(
+                        text = if (locText.isNotBlank()) "📍 $locText" else "📍 Location Locked (${String.format(java.util.Locale.US, "%.4f", uiState.latitude)}, ${String.format(java.util.Locale.US, "%.4f", uiState.longitude)})",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            TextButton(onClick = onOpenMapPicker) {
+                Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Pick on Map", style = MaterialTheme.typography.labelSmall)
             }
         }
 
