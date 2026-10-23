@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
@@ -68,6 +69,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.google.android.gms.common.AccountPicker
@@ -87,6 +89,9 @@ fun SettingsScreen(
 
     var showAddMemberDialog by remember { mutableStateOf(false) }
     var newMemberName by remember { mutableStateOf("") }
+
+    var showEditPrimaryDialog by remember { mutableStateOf(false) }
+    var primaryNameInput by remember { mutableStateOf("") }
 
     var showImportDialog by remember { mutableStateOf(false) }
     var importJsonText by remember { mutableStateOf("") }
@@ -244,7 +249,22 @@ fun SettingsScreen(
                                     fontWeight = FontWeight.Medium
                                 )
                             }
-                            if (!member.isPrimaryUser) {
+                            if (member.isPrimaryUser) {
+                                IconButton(
+                                    onClick = {
+                                        primaryNameInput = member.displayName
+                                        showEditPrimaryDialog = true
+                                    },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = "Edit Profile Name",
+                                        tint = AmberPrimary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            } else {
                                 IconButton(
                                     onClick = { viewModel.removeFamilyMember(member.id) },
                                     modifier = Modifier.size(24.dp)
@@ -295,7 +315,7 @@ fun SettingsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         Icons.Default.CheckCircle,
@@ -307,20 +327,30 @@ fun SettingsScreen(
                                     Text(
                                         text = "Google Drive Connected",
                                         style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                                 Text(
                                     text = uiState.googleAccountEmail ?: "",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
+                            Spacer(modifier = Modifier.width(8.dp))
                             OutlinedButton(
                                 onClick = { viewModel.onGoogleSignOut() },
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text("Disconnect", style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    text = "Disconnect",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                     } else {
@@ -422,59 +452,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Section 4: In-App Update Settings
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.CloudSync, contentDescription = null, tint = AmberPrimary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "In-App Updates & Forced Staleness",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Text(
-                        text = "Threshold for forcing an update on outdated releases:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        val options = listOf(
-                            30 to "30d",
-                            60 to "60d",
-                            90 to "90d (Default)",
-                            180 to "180d",
-                            -1 to "Disabled"
-                        )
-                        options.forEach { (days, label) ->
-                            val isSelected = uiState.stalenessThresholdDays == days
-                            androidx.compose.material3.FilterChip(
-                                selected = isSelected,
-                                onClick = { viewModel.setStalenessThreshold(days) },
-                                label = {
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Section 5: About PalateLog
+            // Section 4: About PalateLog
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -527,6 +505,39 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showAddMemberDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Edit Primary Profile Name Dialog
+    if (showEditPrimaryDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditPrimaryDialog = false },
+            title = { Text("Edit Primary Profile Name") },
+            text = {
+                OutlinedTextField(
+                    value = primaryNameInput,
+                    onValueChange = { primaryNameInput = it },
+                    label = { Text("Profile Name") },
+                    placeholder = { Text("e.g. Karthik, Priya, Me") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (primaryNameInput.isNotBlank()) {
+                        viewModel.updatePrimaryMemberName(primaryNameInput)
+                        showEditPrimaryDialog = false
+                    }
+                }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditPrimaryDialog = false }) {
                     Text("Cancel")
                 }
             }

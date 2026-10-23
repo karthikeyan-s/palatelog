@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackDao
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackEntity
+import com.prismpixelvertex.palatelog.core.database.FamilyMemberDao
 import com.prismpixelvertex.palatelog.core.database.RestaurantDao
 import com.prismpixelvertex.palatelog.core.database.RestaurantEntity
 import com.prismpixelvertex.palatelog.core.database.VisitDao
@@ -54,7 +55,8 @@ class QuickCaptureViewModel @Inject constructor(
     private val locationClient: LocationClient,
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
-    private val dishDao: DishFeedbackDao
+    private val dishDao: DishFeedbackDao,
+    private val memberDao: FamilyMemberDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QuickCaptureUiState())
@@ -205,6 +207,9 @@ class QuickCaptureViewModel @Inject constructor(
                 )
                 restaurantDao.insert(restaurantEntity)
 
+                val primaryMember = memberDao.getPrimaryMember()
+                val primaryName = primaryMember?.displayName?.ifBlank { "Me" } ?: "Me"
+
                 val visitId = UUID.randomUUID().toString()
                 val visitChannel = if (state.isHighwayStop) Channel.HIGHWAY_STOP.displayName else Channel.WALK_IN.displayName
                 val visitEntity = VisitEntryEntity(
@@ -216,8 +221,8 @@ class QuickCaptureViewModel @Inject constructor(
                     billAmount = 0.0,
                     billReceiptPhotoUri = null,
                     generalNotes = state.quickReason,
-                    createdByMemberId = "",
-                    createdByMemberName = "Me",
+                    createdByMemberId = primaryMember?.id ?: "",
+                    createdByMemberName = primaryName,
                     isShared = true,
                     updatedAt = now,
                     isDeleted = false
@@ -230,6 +235,12 @@ class QuickCaptureViewModel @Inject constructor(
                         Verdict.NO_GO -> DishVerdict.NO_GO
                         Verdict.CAUTION -> DishVerdict.MEH
                     }
+                    val memberPrefMap = if (state.quickReason.isNotBlank()) {
+                        mapOf(primaryName to state.quickReason)
+                    } else {
+                        mapOf(primaryName to dishVerdict.displayName)
+                    }
+
                     val dishEntity = DishFeedbackEntity(
                         id = UUID.randomUUID().toString(),
                         visitId = visitId,
@@ -238,7 +249,7 @@ class QuickCaptureViewModel @Inject constructor(
                         category = DishCategory.MAIN.name,
                         verdict = dishVerdict.name,
                         tags = if (state.quickReason.isNotBlank()) listOf(state.quickReason) else emptyList(),
-                        memberPreferences = emptyMap(),
+                        memberPreferences = memberPrefMap,
                         price = 0.0,
                         photoUris = emptyList(),
                         notes = state.quickReason,

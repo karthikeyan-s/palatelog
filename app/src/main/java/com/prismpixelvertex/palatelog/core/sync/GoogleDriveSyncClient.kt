@@ -155,6 +155,80 @@ class GoogleDriveSyncClient @Inject constructor(
     }
 
     /**
+     * Searches for an existing canonical sync file for this device (changes_<deviceId>.json).
+     */
+    suspend fun findSyncFileForDevice(
+        accessToken: String,
+        folderId: String,
+        deviceId: String
+    ): DriveFileItem? = withContext(Dispatchers.IO) {
+        val targetName = "changes_$deviceId.json"
+        val query = "'$folderId' in parents and name = '$targetName' and trashed = false"
+        val url = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name,createdTime,modifiedTime)&pageSize=1"
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .get()
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+
+        if (!response.isSuccessful) {
+            return@withContext null
+        }
+
+        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        fileList.files.firstOrNull()
+    }
+
+    /**
+     * Updates an existing Google Drive sync file content in-place via PATCH.
+     */
+    suspend fun updateSyncPayloadFile(
+        accessToken: String,
+        fileId: String,
+        jsonContent: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        val uploadUrl = "https://www.googleapis.com/upload/drive/v3/files/$fileId?uploadType=media"
+
+        val request = Request.Builder()
+            .url(uploadUrl)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .addHeader("Content-Type", "application/json; charset=UTF-8")
+            .patch(jsonContent.toRequestBody("application/json; charset=UTF-8".toMediaType()))
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+
+        if (!response.isSuccessful) {
+            throw IOException("Failed to update sync payload: HTTP ${response.code} - $responseBody")
+        }
+
+        true
+    }
+
+    /**
+     * Uploads or updates the single canonical sync file for this device (changes_<deviceId>.json).
+     */
+    suspend fun uploadOrUpdateSyncPayload(
+        accessToken: String,
+        folderId: String,
+        deviceId: String,
+        jsonContent: String
+    ): Boolean {
+        val existingFile = findSyncFileForDevice(accessToken, folderId, deviceId)
+        val targetName = "changes_$deviceId.json"
+        return if (existingFile != null) {
+            updateSyncPayloadFile(accessToken, existingFile.id, jsonContent)
+        } else {
+            uploadSyncPayload(accessToken, folderId, targetName, jsonContent)
+        }
+    }
+
+    /**
      * Lists all JSON delta sync files in the family folder.
      */
     suspend fun listRemoteSyncFiles(

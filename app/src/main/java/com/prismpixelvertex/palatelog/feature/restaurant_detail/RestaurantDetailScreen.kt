@@ -1091,11 +1091,26 @@ private fun VisitHistoryCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = dateString,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = dateString,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                if (visit.createdByMemberName.isNotBlank()) {
+                    Text(
+                        text = "👤 Logged by ${visit.createdByMemberName}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AmberPrimary
+                    )
+                }
+            }
 
             if (visit.billAmount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
