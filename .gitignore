@@ -51,6 +51,7 @@ proguard/
 *.p12
 *.key
 signing.properties
+keystore.properties
 
 # Google Services & OAuth Credentials
 google-services.json
