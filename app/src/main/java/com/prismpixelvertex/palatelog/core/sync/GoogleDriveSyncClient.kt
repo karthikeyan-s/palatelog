@@ -32,6 +32,24 @@ data class DriveFileListResponse(
     val files: List<DriveFileItem> = emptyList()
 )
 
+@Serializable
+data class DrivePermissionItem(
+    val id: String? = null,
+    val emailAddress: String? = null,
+    val role: String? = null
+)
+
+@Serializable
+data class DrivePermissionListResponse(
+    val permissions: List<DrivePermissionItem> = emptyList()
+)
+
+sealed interface FolderAccessResult {
+    object Success : FolderAccessResult
+    data class AccessDenied(val folderId: String, val statusCode: Int) : FolderAccessResult
+    data class Error(val message: String) : FolderAccessResult
+}
+
 class GoogleAuthException(
     message: String,
     val userRecoverableIntent: android.content.Intent? = null
@@ -56,7 +74,7 @@ class GoogleDriveSyncClient @Inject constructor(
      * Gets OAuth2 access token for Google Drive API.
      */
     suspend fun getAccessToken(accountEmail: String): String = withContext(Dispatchers.IO) {
-        val scope = "oauth2:https://www.googleapis.com/auth/drive.file"
+        val scope = "oauth2:https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly"
         val account = Account(accountEmail, "com.google")
         try {
             GoogleAuthUtil.getToken(context, account, scope)
@@ -95,6 +113,14 @@ class GoogleDriveSyncClient @Inject constructor(
         }
 
         // 2. Folder does not exist, create it
+        createNewFamilyFolder(accessToken)
+    }
+
+    /**
+     * Creates a fresh 'PalateLog_Family' folder in Google Drive.
+     */
+    suspend fun createNewFamilyFolder(accessToken: String): String = withContext(Dispatchers.IO) {
+        val folderName = "PalateLog_Family"
         val createUrl = "https://www.googleapis.com/drive/v3/files"
         val jsonPayload = """{"name":"$folderName","mimeType":"application/vnd.google-apps.folder"}"""
         val createRequest = Request.Builder()
@@ -278,5 +304,94 @@ class GoogleDriveSyncClient @Inject constructor(
         }
 
         responseBody
+    }
+
+    /**
+     * Verifies if the authenticated user has access to the target Google Drive folder.
+     */
+    suspend fun verifyFolderAccess(
+        accessToken: String,
+        folderId: String
+    ): FolderAccessResult = withContext(Dispatchers.IO) {
+        val url = "https://www.googleapis.com/drive/v3/files/$folderId?fields=id,name"
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .get()
+            .build()
+
+        try {
+            val response = httpClient.newCall(request).execute()
+            when (response.code) {
+                200 -> FolderAccessResult.Success
+                404, 403 -> FolderAccessResult.AccessDenied(folderId, response.code)
+                else -> FolderAccessResult.Error("HTTP ${response.code}: ${response.body?.string()}")
+            }
+        } catch (e: Exception) {
+            FolderAccessResult.Error(e.localizedMessage ?: "Network request failed")
+        }
+    }
+
+    /**
+     * Grants 'writer' (Editor) permission on the target Google Drive folder to a family member email.
+     */
+    suspend fun grantFolderPermission(
+        accessToken: String,
+        folderId: String,
+        emailAddress: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        val cleanEmail = emailAddress.trim()
+        android.util.Log.d("PalateLog_Sync", "grantFolderPermission called for email=$cleanEmail, folderId=$folderId")
+        val url = "https://www.googleapis.com/drive/v3/files/$folderId/permissions?sendNotificationEmail=false"
+        val jsonPayload = """{"role":"writer","type":"user","emailAddress":"$cleanEmail"}"""
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .addHeader("Content-Type", "application/json")
+            .post(jsonPayload.toRequestBody("application/json".toMediaType()))
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+        android.util.Log.d("PalateLog_Sync", "grantFolderPermission response code: ${response.code}, body: $responseBody")
+
+        if (!response.isSuccessful && response.code != 409) { // 409 Conflict = already granted
+            android.util.Log.e("PalateLog_Sync", "grantFolderPermission failed: HTTP ${response.code} - $responseBody")
+            throw IOException("HTTP ${response.code} - $responseBody")
+        }
+
+        true
+    }
+
+    /**
+     * Lists current permission holders for the target Google Drive folder.
+     */
+    suspend fun listFolderPermissions(
+        accessToken: String,
+        folderId: String
+    ): List<DrivePermissionItem> = withContext(Dispatchers.IO) {
+        val url = "https://www.googleapis.com/drive/v3/files/$folderId/permissions?fields=permissions(id,emailAddress,role)"
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .get()
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+
+        if (!response.isSuccessful) {
+            return@withContext emptyList()
+        }
+
+        try {
+            val permList = json.decodeFromString<DrivePermissionListResponse>(responseBody)
+            permList.permissions
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 }

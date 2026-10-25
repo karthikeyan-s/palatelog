@@ -158,9 +158,24 @@ graph TD
 
 ---
 
-## 5. Security, Privacy & Sync Architecture
+## 5. Security, Privacy & Sync Architecture (v1.2.5)
 
 - **Private vs. Shared Isolation**: Each entity carries an `isShared: Boolean` flag. Private entries remain strictly in the local SQLite database. Only shared entries are synchronized to the shared family storage.
 - **Offline-First & Sovereign**: The app operates 100% offline. All writes go directly to Room SQLite.
-- **Zero-Cost Family Cloud Sync**: Data is synchronized as compact JSON deltas (`changes_<deviceId>_<timestamp>.json`) and WebP compressed images stored in a user-owned Google Shared Drive folder (`PalateLog_Family/`).
-- **Conflict Resolution**: UUID primary keys prevent collision. Conflicts across devices are resolved using Last-Write-Wins (LWW) based on `updatedAt` timestamps. Soft-deleted records (`isDeleted = true`) act as tombstones so deletions propagate cleanly across all family phones.
+- **Zero-Cost Family Cloud Sync (Dual-Mode)**:
+  PalateLog supports flexible, zero-cost cloud sync across family devices without requiring custom server infrastructure. Users can choose between two modes based on their technical preference:
+
+  ### Mode A: Single Shared Family Google Account (Zero-Config)
+  - **Setup**: All family members sign into PalateLog using a single designated Gmail address (e.g. `ourfamily.palatelog@gmail.com`).
+  - **Behavior**: The app automatically searches for or creates the `PalateLog_Family/` folder in the root directory of that account's Google Drive.
+  - **Target Audience**: Non-technical families looking for a 1-tap setup with zero QR codes or invite steps.
+
+  ### Mode B: Individual Google Accounts (Automated In-App Invites & Static QR Code)
+  - **Setup**: Each family member signs into PalateLog using their personal Gmail account.
+  - **Host Provisioning**: The family host creates the `PalateLog_Family/` folder once. The generated `folderId` is permanent and static.
+  - **In-App Automated Invites**: The host enters family member email(s) inside PalateLog. PalateLog automatically grants write access via the Google Drive Permissions REST API (`POST /drive/v3/files/{folderId}/permissions`).
+  - **Static QR Code & Deep Link Sharing**: The host shares a static QR code or WhatsApp deep link (`palatelog://sync?folderId=<folderId>`). Family members scan or tap the link to store the target `folderId` in their app.
+  - **Graceful Error Recovery & WhatsApp Request**: If an uninvited user scans the QR code before the host adds their email, Google Drive API returns an authorization error (HTTP 404/403). PalateLog catches this error and presents a friendly *Permission Pending* screen with a 1-tap **"Ask Host via WhatsApp"** pre-filled request message.
+
+- **Sync Payload Format**: Data is synchronized as compact canonical JSON delta files (`changes_<deviceId>.json`) updated in-place via Google Drive `PATCH` API.
+- **Conflict Resolution**: UUID primary keys prevent collisions. Conflicts across devices are resolved using Last-Write-Wins (LWW) based on `updatedAt` timestamps. Soft-deleted records (`isDeleted = true`) act as tombstones so deletions propagate cleanly across all family phones.

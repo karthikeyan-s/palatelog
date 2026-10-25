@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.FamilyMemberDao
 import com.prismpixelvertex.palatelog.core.database.FamilyMemberEntity
 import com.prismpixelvertex.palatelog.core.model.FamilyMember
+import com.prismpixelvertex.palatelog.core.sync.DrivePermissionItem
 import com.prismpixelvertex.palatelog.core.sync.GoogleAuthException
 import com.prismpixelvertex.palatelog.core.sync.SyncRepository
 import com.prismpixelvertex.palatelog.core.sync.SyncStatus
@@ -35,14 +36,31 @@ data class SettingsUiState(
     val lastSyncedAt: Long = 0L,
     val isSyncing: Boolean = false,
     val syncMessage: String = "",
-    val stalenessThresholdDays: Int = 90
+    val stalenessThresholdDays: Int = 90,
+    val syncMode: String = "SHARED_ACCOUNT",
+    val targetFolderId: String? = null,
+    val invitedMembers: List<DrivePermissionItem> = emptyList()
 )
 
 sealed interface SettingsEvent {
     data class JsonExported(val file: File) : SettingsEvent
     data class ShowToast(val message: String) : SettingsEvent
     data class LaunchAuthConsent(val intent: Intent, val pendingEmail: String) : SettingsEvent
+    data class ShowPermissionPendingDialog(val userEmail: String, val folderId: String) : SettingsEvent
 }
+
+private data class PrimarySettingsState(
+    val members: List<FamilyMember>,
+    val syncStatus: SyncStatus,
+    val googleEmail: String?,
+    val stalenessDays: Int
+)
+
+private data class ExtraSettingsState(
+    val mode: String,
+    val folderId: String?,
+    val invited: List<DrivePermissionItem>
+)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -56,6 +74,9 @@ class SettingsViewModel @Inject constructor(
 
     private val _googleAccountEmail = MutableStateFlow<String?>(syncRepository.getGoogleAccountEmail())
     private val _stalenessThreshold = MutableStateFlow(getStalenessDays())
+    private val _syncMode = MutableStateFlow(syncRepository.getSyncMode())
+    private val _targetFolderId = MutableStateFlow<String?>(syncRepository.getTargetFolderId())
+    private val _invitedMembers = MutableStateFlow<List<DrivePermissionItem>>(emptyList())
 
     private fun getStalenessDays(): Int {
         val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
@@ -68,28 +89,100 @@ class SettingsViewModel @Inject constructor(
         _stalenessThreshold.value = days
     }
 
+    fun setSyncMode(mode: String) {
+        syncRepository.setSyncMode(mode)
+        _syncMode.value = mode
+    }
+
+    fun setTargetFolderId(folderId: String?) {
+        syncRepository.setTargetFolderId(folderId)
+        _targetFolderId.value = folderId
+    }
+
+    fun inviteFamilyMember(rawEmails: String) {
+        if (rawEmails.isBlank()) return
+        val emails = rawEmails.split(",", ";", "\n", " ")
+            .map { it.trim() }
+            .filter { it.contains("@") && it.contains(".") }
+
+        if (emails.isEmpty()) {
+            viewModelScope.launch {
+                _events.emit(SettingsEvent.ShowToast("Please enter a valid email address."))
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            var successCount = 0
+            var lastErrorMessage = ""
+            for (email in emails) {
+                try {
+                    syncRepository.inviteFamilyMember(email)
+                    successCount++
+                } catch (e: Exception) {
+                    android.util.Log.e("PalateLog_Sync", "Failed to invite $email", e)
+                    lastErrorMessage = e.localizedMessage ?: e.message ?: "Permission failed"
+                }
+            }
+            val folderId = syncRepository.getTargetFolderId()
+            _targetFolderId.value = folderId
+
+            if (successCount > 0) {
+                loadInvitedMembers()
+                _events.emit(SettingsEvent.ShowToast("Granted Drive permission to $successCount member(s)"))
+            } else {
+                _events.emit(SettingsEvent.ShowToast("Grant failed: $lastErrorMessage"))
+            }
+        }
+    }
+
+    fun loadInvitedMembers() {
+        viewModelScope.launch {
+            try {
+                val list = syncRepository.listInvitedMembers()
+                _invitedMembers.value = list
+            } catch (e: Exception) {
+                // Ignore failure
+            }
+        }
+    }
+
     val uiState: StateFlow<SettingsUiState> = combine(
-        memberDao.getAllMembers(),
-        syncRepository.syncStatus,
-        _googleAccountEmail,
-        _stalenessThreshold
-    ) { memberEntities, syncStatus, googleEmail, stalenessDays ->
-        val members = memberEntities.map { it.toDomain() }
-        val isSyncing = syncStatus is SyncStatus.Syncing
-        val message = when (syncStatus) {
-            is SyncStatus.Success -> syncStatus.message
-            is SyncStatus.Error -> "Error: ${syncStatus.error}"
+        combine(
+            memberDao.getAllMembers(),
+            syncRepository.syncStatus,
+            _googleAccountEmail,
+            _stalenessThreshold
+        ) { memberEntities, syncStatus, googleEmail, stalenessDays ->
+            val members = memberEntities.map { it.toDomain() }
+            PrimarySettingsState(members, syncStatus, googleEmail, stalenessDays)
+        },
+        combine(
+            _syncMode,
+            _targetFolderId,
+            _invitedMembers
+        ) { mode, folderId, invited ->
+            ExtraSettingsState(mode, folderId, invited)
+        }
+    ) { primary, extra ->
+        val isSyncing = primary.syncStatus is SyncStatus.Syncing
+        val message = when (primary.syncStatus) {
+            is SyncStatus.Success -> primary.syncStatus.message
+            is SyncStatus.Error -> "Error: ${primary.syncStatus.error}"
             else -> ""
         }
 
         SettingsUiState(
-            members = members,
-            googleAccountEmail = googleEmail,
-            isSignedInWithGoogle = !googleEmail.isNullOrBlank(),
+            members = primary.members,
+            googleAccountEmail = primary.googleEmail,
+            isSignedInWithGoogle = !primary.googleEmail.isNullOrBlank(),
             lastSyncedAt = syncRepository.getLastSyncTimestamp(),
             isSyncing = isSyncing,
             syncMessage = message,
-            stalenessThresholdDays = stalenessDays
+            stalenessThresholdDays = primary.stalenessDays,
+            syncMode = extra.mode,
+            targetFolderId = extra.folderId,
+            invitedMembers = extra.invited
         )
     }.stateIn(
         scope = viewModelScope,
@@ -97,7 +190,9 @@ class SettingsViewModel @Inject constructor(
         initialValue = SettingsUiState(
             googleAccountEmail = syncRepository.getGoogleAccountEmail(),
             isSignedInWithGoogle = !syncRepository.getGoogleAccountEmail().isNullOrBlank(),
-            stalenessThresholdDays = getStalenessDays()
+            stalenessThresholdDays = getStalenessDays(),
+            syncMode = syncRepository.getSyncMode(),
+            targetFolderId = syncRepository.getTargetFolderId()
         )
     )
 
@@ -186,7 +281,12 @@ class SettingsViewModel @Inject constructor(
         } catch (e: Exception) {
             syncRepository.setGoogleAccountEmail(null)
             _googleAccountEmail.value = null
-            _events.emit(SettingsEvent.ShowToast("Drive Sync failed: ${e.localizedMessage}"))
+            if (e.message?.contains("Access Pending") == true) {
+                val folderId = syncRepository.getTargetFolderId() ?: ""
+                _events.emit(SettingsEvent.ShowPermissionPendingDialog(email, folderId))
+            } else {
+                _events.emit(SettingsEvent.ShowToast("Drive Sync failed: ${e.localizedMessage}"))
+            }
         }
     }
 
@@ -212,7 +312,12 @@ class SettingsViewModel @Inject constructor(
                         _events.emit(SettingsEvent.ShowToast("Auth error: ${e.message}"))
                     }
                 } catch (e: Exception) {
-                    _events.emit(SettingsEvent.ShowToast("Sync error: ${e.localizedMessage}"))
+                    if (e.message?.contains("Access Pending") == true) {
+                        val folderId = syncRepository.getTargetFolderId() ?: ""
+                        _events.emit(SettingsEvent.ShowPermissionPendingDialog(email, folderId))
+                    } else {
+                        _events.emit(SettingsEvent.ShowToast("Sync error: ${e.localizedMessage}"))
+                    }
                 }
             } else {
                 try {
