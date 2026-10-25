@@ -97,6 +97,15 @@ fun SettingsScreen(
     var showImportDialog by remember { mutableStateOf(false) }
     var importJsonText by remember { mutableStateOf("") }
 
+    var showInviteDialog by remember { mutableStateOf(false) }
+    var inviteEmailsInput by remember { mutableStateOf("") }
+
+    var showShareQrDialog by remember { mutableStateOf(false) }
+    var showJoinFolderDialog by remember { mutableStateOf(false) }
+    var joinFolderIdInput by remember { mutableStateOf("") }
+
+    var pendingPermissionDialogEvent by remember { mutableStateOf<SettingsEvent.ShowPermissionPendingDialog?>(null) }
+
     var pendingConsentEmail by remember { mutableStateOf<String?>(null) }
 
     val accountPickerLauncher = rememberLauncherForActivityResult(
@@ -147,6 +156,9 @@ fun SettingsScreen(
                 is SettingsEvent.LaunchAuthConsent -> {
                     pendingConsentEmail = event.pendingEmail
                     authConsentLauncher.launch(event.intent)
+                }
+                is SettingsEvent.ShowPermissionPendingDialog -> {
+                    pendingPermissionDialogEvent = event
                 }
                 is SettingsEvent.JsonExported -> {
                     try {
@@ -308,51 +320,159 @@ fun SettingsScreen(
                     )
 
                     if (uiState.isSignedInWithGoogle) {
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                                 .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = AmberPrimary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = AmberPrimary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Google Drive Connected",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                     Text(
-                                        text = "Google Drive Connected",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.Bold,
+                                        text = uiState.googleAccountEmail ?: "",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                Text(
-                                    text = uiState.googleAccountEmail ?: "",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                OutlinedButton(
+                                    onClick = { viewModel.onGoogleSignOut() },
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Disconnect",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            OutlinedButton(
-                                onClick = { viewModel.onGoogleSignOut() },
-                                shape = RoundedCornerShape(8.dp)
+
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                            // Sync Mode Selector
+                            Text(
+                                text = "Family Sync Setup Mode",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text(
-                                    text = "Disconnect",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1,
-                                    softWrap = false
-                                )
+                                OutlinedButton(
+                                    onClick = { viewModel.setSyncMode("SHARED_ACCOUNT") },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = if (uiState.syncMode == "SHARED_ACCOUNT") AmberPrimary.copy(alpha = 0.15f) else Color.Transparent
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Shared Account",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (uiState.syncMode == "SHARED_ACCOUNT") AmberPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.setSyncMode("INDIVIDUAL_ACCOUNTS")
+                                        viewModel.loadInvitedMembers()
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") AmberPrimary.copy(alpha = 0.15f) else Color.Transparent
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Individual Accounts",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") AmberPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+
+                            if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .padding(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Individual Accounts Management",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    if (!uiState.targetFolderId.isNullOrBlank()) {
+                                        Text(
+                                            text = "Family Folder ID: ${uiState.targetFolderId}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        OutlinedButton(
+                                            onClick = { showInviteDialog = true },
+                                            shape = RoundedCornerShape(8.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("➕ Invite Email", style = MaterialTheme.typography.labelSmall)
+                                        }
+
+                                        OutlinedButton(
+                                            onClick = { showShareQrDialog = true },
+                                            shape = RoundedCornerShape(8.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("📱 Share Link", style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = { showJoinFolderDialog = true },
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("🔗 Join via Folder Link / ID", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
                             }
                         }
                     } else {
@@ -608,6 +728,211 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showImportDialog = false }) {
                     Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Invite Family Member Dialog
+    if (showInviteDialog) {
+        AlertDialog(
+            onDismissRequest = { showInviteDialog = false },
+            title = { Text("Invite Family Member", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Enter Google Account email addresses to grant access to your family sync folder:",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedTextField(
+                        value = inviteEmailsInput,
+                        onValueChange = { inviteEmailsInput = it },
+                        label = { Text("Email Address(es)") },
+                        placeholder = { Text("e.g. wife@gmail.com, son@gmail.com") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (inviteEmailsInput.isNotBlank()) {
+                            viewModel.inviteFamilyMember(inviteEmailsInput)
+                            inviteEmailsInput = ""
+                            showInviteDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
+                ) {
+                    Text("Grant Access")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showInviteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Share Family Sync Link Dialog
+    if (showShareQrDialog) {
+        val folderId = uiState.targetFolderId ?: "Pending Setup"
+        val shareLink = "palatelog://sync?folderId=$folderId"
+        AlertDialog(
+            onDismissRequest = { showShareQrDialog = false },
+            title = { Text("Family Sync Share Link", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Share this link or Folder ID with your family members so they can connect their PalateLog app:",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Folder ID:\n$folderId",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val shareText = "Join our PalateLog Family Sync!\n\nFolder ID: $folderId\nLink: $shareLink"
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share PalateLog Family Link"))
+                        showShareQrDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
+                ) {
+                    Text("Share via WhatsApp")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showShareQrDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // Join Family Folder Dialog
+    if (showJoinFolderDialog) {
+        AlertDialog(
+            onDismissRequest = { showJoinFolderDialog = false },
+            title = { Text("Join Family Sync Folder", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Enter or paste the Family Folder ID shared by your host:",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedTextField(
+                        value = joinFolderIdInput,
+                        onValueChange = { joinFolderIdInput = it },
+                        label = { Text("Folder ID") },
+                        placeholder = { Text("e.g. 1a2b3c4d5e...") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (joinFolderIdInput.isNotBlank()) {
+                            viewModel.setTargetFolderId(joinFolderIdInput.trim())
+                            viewModel.setSyncMode("INDIVIDUAL_ACCOUNTS")
+                            viewModel.triggerSync()
+                            showJoinFolderDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
+                ) {
+                    Text("Connect Folder")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showJoinFolderDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Permission Pending Dialog
+    pendingPermissionDialogEvent?.let { event ->
+        AlertDialog(
+            onDismissRequest = { pendingPermissionDialogEvent = null },
+            icon = {
+                Icon(
+                    Icons.Default.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "Access Permission Pending",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Your account (${event.userEmail}) does not have access to this family sync folder yet.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Please ask the family host to add ${event.userEmail} under Family Sync Settings in their PalateLog app.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val message = "Hi! I'm trying to join our family's PalateLog sync. Could you please add my email (${event.userEmail}) under Family Sync Settings in your PalateLog app?"
+                        val waIntent = Intent(Intent.ACTION_VIEW).apply {
+                            data = Uri.parse("https://api.whatsapp.com/send?text=${Uri.encode(message)}")
+                        }
+                        try {
+                            context.startActivity(waIntent)
+                        } catch (e: Exception) {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, message)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Ask Host"))
+                        }
+                        pendingPermissionDialogEvent = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
+                ) {
+                    Text("Ask Host via WhatsApp")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { pendingPermissionDialogEvent = null }) {
+                    Text("Dismiss")
                 }
             }
         )

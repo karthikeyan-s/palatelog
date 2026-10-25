@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -66,12 +67,79 @@ class SyncRepository @Inject constructor(
         }
     }
 
+    fun getSyncMode(): String {
+        return prefs.getString("sync_mode", "SHARED_ACCOUNT") ?: "SHARED_ACCOUNT"
+    }
+
+    fun setSyncMode(mode: String) {
+        prefs.edit().putString("sync_mode", mode).apply()
+    }
+
+    fun getTargetFolderId(): String? {
+        return prefs.getString("target_folder_id", null)
+    }
+
+    fun setTargetFolderId(folderId: String?) {
+        if (folderId.isNullOrBlank()) {
+            prefs.edit().remove("target_folder_id").apply()
+        } else {
+            prefs.edit().putString("target_folder_id", folderId).apply()
+        }
+    }
+
     fun getLastSyncTimestamp(): Long {
         return prefs.getLong("last_synced_at", 0L)
     }
 
     private fun setLastSyncTimestamp(timestamp: Long) {
         prefs.edit().putLong("last_synced_at", timestamp).apply()
+    }
+
+    /**
+     * Grants permission to an invited family member via Google Drive API.
+     */
+    suspend fun inviteFamilyMember(email: String): Boolean = withContext(Dispatchers.IO) {
+        val accountEmail = getGoogleAccountEmail() ?: throw IllegalStateException("Not connected to Google Account.")
+        val accessToken = googleDriveSyncClient.getAccessToken(accountEmail)
+        var folderId = getTargetFolderId()
+        if (folderId.isNullOrBlank()) {
+            folderId = googleDriveSyncClient.getOrCreateFamilyFolder(accessToken)
+            setTargetFolderId(folderId)
+        }
+
+        try {
+            googleDriveSyncClient.grantFolderPermission(accessToken, folderId, email)
+        } catch (e: Exception) {
+            if (e.message?.contains("appNotAuthorizedToChild") == true) {
+                // Legacy or externally created child file found in existing folder.
+                // Create a fresh app-owned family folder and grant permission on it.
+                folderId = googleDriveSyncClient.createNewFamilyFolder(accessToken)
+                setTargetFolderId(folderId)
+                googleDriveSyncClient.grantFolderPermission(accessToken, folderId, email)
+            } else {
+                throw e
+            }
+        }
+    }
+
+    /**
+     * Lists all family members currently holding permissions on the family sync folder.
+     */
+    suspend fun listInvitedMembers(): List<DrivePermissionItem> = withContext(Dispatchers.IO) {
+        val accountEmail = getGoogleAccountEmail() ?: return@withContext emptyList()
+        val accessToken = googleDriveSyncClient.getAccessToken(accountEmail)
+        val folderId = getTargetFolderId() ?: googleDriveSyncClient.getOrCreateFamilyFolder(accessToken)
+        googleDriveSyncClient.listFolderPermissions(accessToken, folderId)
+    }
+
+    /**
+     * Verifies whether the connected account has access to the target sync folder.
+     */
+    suspend fun verifyTargetFolderAccess(): FolderAccessResult = withContext(Dispatchers.IO) {
+        val accountEmail = getGoogleAccountEmail() ?: return@withContext FolderAccessResult.Error("No account connected")
+        val accessToken = googleDriveSyncClient.getAccessToken(accountEmail)
+        val folderId = getTargetFolderId() ?: googleDriveSyncClient.getOrCreateFamilyFolder(accessToken)
+        googleDriveSyncClient.verifyFolderAccess(accessToken, folderId)
     }
 
     /**
@@ -89,8 +157,20 @@ class SyncRepository @Inject constructor(
             // 1. Obtain OAuth Token
             val accessToken = googleDriveSyncClient.getAccessToken(accountEmail)
 
-            // 2. Locate or create PalateLog_Family folder
-            val folderId = googleDriveSyncClient.getOrCreateFamilyFolder(accessToken)
+            // 2. Determine target Google Drive Folder ID
+            var folderId = getTargetFolderId()
+            if (!folderId.isNullOrBlank()) {
+                // Verify folder access
+                val accessResult = googleDriveSyncClient.verifyFolderAccess(accessToken, folderId)
+                if (accessResult is FolderAccessResult.AccessDenied) {
+                    val errMsg = "Access Pending: Please ask host to add $accountEmail in Family Sync Settings."
+                    _syncStatus.value = SyncStatus.Error(errMsg)
+                    throw IOException(errMsg)
+                }
+            } else {
+                folderId = googleDriveSyncClient.getOrCreateFamilyFolder(accessToken)
+                setTargetFolderId(folderId)
+            }
 
             // 3. First, download and merge all remote delta files from other family members
             val remoteFiles = googleDriveSyncClient.listRemoteSyncFiles(accessToken, folderId)
@@ -124,7 +204,7 @@ class SyncRepository @Inject constructor(
             _syncStatus.value = SyncStatus.Error(e.message ?: "Google Auth required")
             throw e
         } catch (e: Exception) {
-            _syncStatus.value = SyncStatus.Error("Drive Sync failed: ${e.localizedMessage}")
+            _syncStatus.value = SyncStatus.Error(e.localizedMessage ?: "Drive Sync failed")
             throw e
         }
     }

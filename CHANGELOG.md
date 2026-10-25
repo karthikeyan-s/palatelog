@@ -5,6 +5,15 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2026-10-21
+
+### Added
+- **Dual-Mode Family Google Drive Sync**:
+  - Implemented choice between **Mode A (Single Shared Google Account)** and **Mode B (Individual Google Accounts)** in Family Sync settings.
+  - Added automated in-app family email invitations via Google Drive Permissions API (`POST /drive/v3/files/{folderId}/permissions`).
+  - Added static, reusable QR Code & WhatsApp share link generation (`palatelog://sync?folderId=<folderId>`) encoding the immutable family `folderId`.
+  - Implemented graceful permission pending error handling catching HTTP 404/403 when an uninvited family member scans the QR code, with a 1-tap **Ask Host via WhatsApp** pre-filled message action.
+
 ## [1.2.4] - 2026-10-21
 
 ### Fixed
