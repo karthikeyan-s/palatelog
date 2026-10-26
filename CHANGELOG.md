@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added static, reusable QR Code & WhatsApp share link generation (`palatelog://sync?folderId=<folderId>`) encoding the immutable family `folderId`.
   - Implemented graceful permission pending error handling catching HTTP 404/403 when an uninvited family member scans the QR code, with a 1-tap **Ask Host via WhatsApp** pre-filled message action.
 
+### Changed
+- **Release Build R8 Minification & Resource Shrinking**:
+  - Enabled `isMinifyEnabled = true` and `isShrinkResources = true` in `app/build.gradle.kts` to optimize release AAB size, protect bytecode, and automatically supply deobfuscation mapping files to Google Play Console.
+  - Added ProGuard rules in `proguard-rules.pro` for Room Database and Kotlinx Serialization data models.
+
 ## [1.2.4] - 2026-10-21
 
 ### Fixed
