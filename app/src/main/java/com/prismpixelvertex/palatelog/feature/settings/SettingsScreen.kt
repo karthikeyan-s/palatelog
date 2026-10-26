@@ -9,7 +9,13 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.prismpixelvertex.palatelog.BuildConfig
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +43,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.AlertDialog
@@ -103,6 +111,8 @@ fun SettingsScreen(
     var showShareQrDialog by remember { mutableStateOf(false) }
     var showJoinFolderDialog by remember { mutableStateOf(false) }
     var joinFolderIdInput by remember { mutableStateOf("") }
+
+    var isSyncModeExpanded by remember { mutableStateOf(uiState.targetFolderId.isNullOrBlank()) }
 
     var pendingPermissionDialogEvent by remember { mutableStateOf<SettingsEvent.ShowPermissionPendingDialog?>(null) }
 
@@ -374,103 +384,143 @@ fun SettingsScreen(
 
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                            // Sync Mode Selector
-                            Text(
-                                text = "Family Sync Setup Mode",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-
+                            // Collapsible Sync Mode Header Row
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { isSyncModeExpanded = !isSyncModeExpanded }
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                OutlinedButton(
-                                    onClick = { viewModel.setSyncMode("SHARED_ACCOUNT") },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (uiState.syncMode == "SHARED_ACCOUNT") AmberPrimary.copy(alpha = 0.15f) else Color.Transparent
-                                    ),
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Text(
-                                        text = "Shared Account",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (uiState.syncMode == "SHARED_ACCOUNT") AmberPrimary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-
-                                OutlinedButton(
-                                    onClick = {
-                                        viewModel.setSyncMode("INDIVIDUAL_ACCOUNTS")
-                                        viewModel.loadInvitedMembers()
-                                    },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") AmberPrimary.copy(alpha = 0.15f) else Color.Transparent
-                                    ),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        text = "Individual Accounts",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") AmberPrimary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-
-                            if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.surface)
-                                        .padding(10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Individual Accounts Management",
+                                        text = "Family Sync Setup Mode",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold
                                     )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") "(Individual)" else "(Shared)",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Icon(
+                                    imageVector = if (isSyncModeExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (isSyncModeExpanded) "Collapse" else "Expand",
+                                    tint = AmberPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
 
-                                    if (!uiState.targetFolderId.isNullOrBlank()) {
-                                        Text(
-                                            text = "Family Folder ID: ${uiState.targetFolderId}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-
+                            AnimatedVisibility(
+                                visible = isSyncModeExpanded,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier.padding(top = 4.dp)
+                                ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         OutlinedButton(
-                                            onClick = { showInviteDialog = true },
+                                            onClick = { viewModel.setSyncMode("SHARED_ACCOUNT") },
                                             shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.outlinedButtonColors(
+                                                containerColor = if (uiState.syncMode == "SHARED_ACCOUNT") AmberPrimary.copy(alpha = 0.15f) else Color.Transparent
+                                            ),
                                             modifier = Modifier.weight(1f)
                                         ) {
-                                            Text("➕ Invite Email", style = MaterialTheme.typography.labelSmall)
+                                            Text(
+                                                text = "Shared Account",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (uiState.syncMode == "SHARED_ACCOUNT") AmberPrimary else MaterialTheme.colorScheme.onSurface
+                                            )
                                         }
 
                                         OutlinedButton(
-                                            onClick = { showShareQrDialog = true },
+                                            onClick = {
+                                                viewModel.setSyncMode("INDIVIDUAL_ACCOUNTS")
+                                                viewModel.loadInvitedMembers()
+                                            },
                                             shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.outlinedButtonColors(
+                                                containerColor = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") AmberPrimary.copy(alpha = 0.15f) else Color.Transparent
+                                            ),
                                             modifier = Modifier.weight(1f)
                                         ) {
-                                            Text("📱 Share Link", style = MaterialTheme.typography.labelSmall)
+                                            Text(
+                                                text = "Individual Accounts",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") AmberPrimary else MaterialTheme.colorScheme.onSurface
+                                            )
                                         }
                                     }
 
-                                    OutlinedButton(
-                                        onClick = { showJoinFolderDialog = true },
-                                        shape = RoundedCornerShape(8.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("🔗 Join via Folder Link / ID", style = MaterialTheme.typography.labelSmall)
+                                    if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(MaterialTheme.colorScheme.surface)
+                                                .padding(10.dp),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(
+                                                text = "Individual Accounts Management",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+
+                                            if (!uiState.targetFolderId.isNullOrBlank()) {
+                                                Text(
+                                                    text = "Family Folder ID: ${uiState.targetFolderId}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                OutlinedButton(
+                                                    onClick = { showInviteDialog = true },
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Text("➕ Invite Email", style = MaterialTheme.typography.labelSmall)
+                                                }
+
+                                                OutlinedButton(
+                                                    onClick = { showShareQrDialog = true },
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Text("📱 Share Link", style = MaterialTheme.typography.labelSmall)
+                                                }
+                                            }
+
+                                            OutlinedButton(
+                                                onClick = { showJoinFolderDialog = true },
+                                                shape = RoundedCornerShape(8.dp),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Text("🔗 Join via Folder Link / ID", style = MaterialTheme.typography.labelSmall)
+                                            }
+                                        }
                                     }
                                 }
                             }
