@@ -1,7 +1,9 @@
 package com.prismpixelvertex.palatelog.core.update
 
-import android.app.Activity
 import android.content.Context
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.core.content.edit
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
@@ -40,11 +42,7 @@ class InAppUpdateHelper(private val context: Context) {
         isFlowInProgress = false
     }
 
-    fun checkForAppUpdate(
-        activity: Activity,
-        requestCodeFlexible: Int = 1001,
-        requestCodeImmediate: Int = 1002
-    ) {
+    fun checkForAppUpdate(updateLauncher: ActivityResultLauncher<IntentSenderRequest>) {
         if (isFlowInProgress) return
 
         val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
@@ -62,17 +60,15 @@ class InAppUpdateHelper(private val context: Context) {
                     isFlowInProgress = true
                     appUpdateManager.startUpdateFlowForResult(
                         appUpdateInfo,
-                        activity,
-                        AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
-                        requestCodeImmediate
+                        updateLauncher,
+                        AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
                     )
                 } else if (appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
                     isFlowInProgress = true
                     appUpdateManager.startUpdateFlowForResult(
                         appUpdateInfo,
-                        activity,
-                        AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build(),
-                        requestCodeFlexible
+                        updateLauncher,
+                        AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
                     )
                 }
             } else if (appUpdateInfo.installStatus() == InstallStatus.DOWNLOADED) {
@@ -92,6 +88,6 @@ class InAppUpdateHelper(private val context: Context) {
 
     fun setStalenessThresholdDays(days: Int) {
         val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
-        prefs.edit().putInt("staleness_days_threshold", days).apply()
+        prefs.edit { putInt("staleness_days_threshold", days) }
     }
 }

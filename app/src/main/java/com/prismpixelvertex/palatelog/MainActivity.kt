@@ -54,13 +54,19 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var updateHelper: InAppUpdateHelper
 
+    private val updateLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) {
+        updateHelper.resetFlowState()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         updateHelper = InAppUpdateHelper(applicationContext)
         updateHelper.registerListener()
-        updateHelper.checkForAppUpdate(this@MainActivity)
+        updateHelper.checkForAppUpdate(updateLauncher)
 
         setContent {
             PalateLogTheme {
@@ -153,12 +159,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        updateHelper.resetFlowState()
     }
 
     override fun onDestroy() {
