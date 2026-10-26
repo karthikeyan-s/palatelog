@@ -22,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -1115,7 +1114,7 @@ private fun VisitHistoryCard(
             if (visit.billAmount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Total Bill: ₹${String.format("%.0f", visit.billAmount)}",
+                    text = "Total Bill: ₹${String.format(Locale.getDefault(), "%.0f", visit.billAmount)}",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium
                 )

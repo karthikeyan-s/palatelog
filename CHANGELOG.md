@@ -5,6 +5,17 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed & Cleaned
+- **In-App Update Activity Result API Migration**:
+  - Migrated `InAppUpdateHelper` and `MainActivity` from deprecated `onActivityResult` callback to `ActivityResultContracts.StartIntentSenderForResult()`, eliminating deprecation build warnings and improving type safety.
+- **Code Hygiene & Kotlin Modernization**:
+  - Updated `DishVerdict.values()` to `DishVerdict.entries` in `EntryEditorScreen`.
+  - Added explicit `Locale.getDefault()` to `String.format` bill total formatting in `RestaurantDetailScreen`.
+  - Migrated `SharedPreferences` writes to Kotlin KTX `prefs.edit { ... }` blocks in `InAppUpdateHelper`, `SettingsViewModel`, and `SyncRepository`.
+  - Removed unused imports and unneeded exception parameters across location, dashboard, and detail modules.
+
 ## [1.2.5] - 2026-10-21
 
 ### Added

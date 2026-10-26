@@ -2,6 +2,7 @@ package com.prismpixelvertex.palatelog.core.sync
 
 import android.content.Context
 import android.provider.Settings
+import androidx.core.content.edit
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackDao
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackEntity
 import com.prismpixelvertex.palatelog.core.database.RestaurantDao
@@ -61,9 +62,9 @@ class SyncRepository @Inject constructor(
 
     fun setGoogleAccountEmail(email: String?) {
         if (email.isNullOrBlank()) {
-            prefs.edit().remove("google_account_email").apply()
+            prefs.edit { remove("google_account_email") }
         } else {
-            prefs.edit().putString("google_account_email", email).apply()
+            prefs.edit { putString("google_account_email", email) }
         }
     }
 

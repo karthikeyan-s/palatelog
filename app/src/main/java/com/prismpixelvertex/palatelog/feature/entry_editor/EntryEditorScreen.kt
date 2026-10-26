@@ -260,7 +260,7 @@ fun EntryEditorScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         uiState.previousDishes.distinctBy { it.dishName }.forEach { dish ->
-                            val verdict = try { DishVerdict.valueOf(dish.verdict) } catch (e: Exception) { DishVerdict.GO }
+                            val verdict = try { DishVerdict.valueOf(dish.verdict) } catch (_: Exception) { DishVerdict.GO }
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
@@ -549,7 +549,7 @@ private fun DishEditorCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                DishVerdict.values().forEach { v ->
+                DishVerdict.entries.forEach { v ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
