@@ -7,3 +7,4 @@ When working on this repository, please adhere strictly to the following guideli
 3. **New Feature Workflow**: For new features or major enhancements, conduct a detailed analysis, present solution options along with any potential impact on existing code/models, and obtain user confirmation before starting implementation.
 4. **Changelog Maintenance**: Always update and maintain `CHANGELOG.md` with every notable fix, enhancement, or new feature added to the codebase.
 5. Follow the Clean Architecture, MVVM, and Room patterns established in @doc/architecture_and_design.md.
+6. **Git Branching & PR Strategy**: For any new change, fix, or feature, always create a dedicated feature/fix branch off the default branch (`main`), apply the changes on that branch, and create a Pull Request (PR) to merge back into the default branch.
