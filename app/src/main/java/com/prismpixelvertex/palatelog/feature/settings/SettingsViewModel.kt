@@ -3,6 +3,7 @@ package com.prismpixelvertex.palatelog.feature.settings
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.FamilyMemberDao
@@ -85,7 +86,7 @@ class SettingsViewModel @Inject constructor(
 
     fun setStalenessThreshold(days: Int) {
         val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
-        prefs.edit().putInt("staleness_days_threshold", days).apply()
+        prefs.edit { putInt("staleness_days_threshold", days) }
         _stalenessThreshold.value = days
     }
 

@@ -5,7 +5,6 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.os.Build
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -52,7 +51,7 @@ class LocationClient @Inject constructor(
                         continuation.resume(null)
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 continuation.resume(null)
             }
 
