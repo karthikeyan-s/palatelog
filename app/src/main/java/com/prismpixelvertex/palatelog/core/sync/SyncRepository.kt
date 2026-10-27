@@ -2,6 +2,7 @@ package com.prismpixelvertex.palatelog.core.sync
 
 import android.content.Context
 import android.provider.Settings
+import android.util.Log
 import androidx.core.content.edit
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackDao
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackEntity
@@ -96,6 +97,24 @@ class SyncRepository @Inject constructor(
         prefs.edit().putLong("last_synced_at", timestamp).apply()
     }
 
+    private fun extractPhotoFileName(uriString: String?): String? {
+        if (uriString.isNullOrBlank()) return null
+        val lastSegment = uriString.substringAfterLast("/")
+        return if (lastSegment.isNotBlank() && (lastSegment.endsWith(".jpg") || lastSegment.endsWith(".png") || lastSegment.endsWith(".jpeg"))) {
+            lastSegment
+        } else null
+    }
+
+    private fun getLocalPhotoUri(fileName: String): String? {
+        val file = getLocalPhotoFile(fileName)
+        return if (file.exists()) android.net.Uri.fromFile(file).toString() else null
+    }
+
+    private fun getLocalPhotoFile(fileName: String): File {
+        val photosDir = File(context.filesDir, "photos")
+        return File(photosDir, fileName)
+    }
+
     /**
      * Grants permission to an invited family member via Google Drive API.
      */
@@ -112,8 +131,6 @@ class SyncRepository @Inject constructor(
             googleDriveSyncClient.grantFolderPermission(accessToken, folderId, email)
         } catch (e: Exception) {
             if (e.message?.contains("appNotAuthorizedToChild") == true) {
-                // Legacy or externally created child file found in existing folder.
-                // Create a fresh app-owned family folder and grant permission on it.
                 folderId = googleDriveSyncClient.createNewFamilyFolder(accessToken)
                 setTargetFolderId(folderId)
                 googleDriveSyncClient.grantFolderPermission(accessToken, folderId, email)
@@ -144,7 +161,7 @@ class SyncRepository @Inject constructor(
     }
 
     /**
-     * Executes 2-way Google Shared Drive Sync.
+     * Executes 2-way Google Shared Drive Sync including photo media files.
      */
     suspend fun performGoogleDriveSync(forceFullExport: Boolean = false): Unit = withContext(Dispatchers.IO) {
         val accountEmail = getGoogleAccountEmail()
@@ -153,18 +170,17 @@ class SyncRepository @Inject constructor(
             return@withContext
         }
 
+        Log.d("PalateLog_Sync", "Starting Google Drive Sync for account: $accountEmail, device: $deviceId")
         _syncStatus.value = SyncStatus.Syncing
         try {
-            // 1. Obtain OAuth Token
             val accessToken = googleDriveSyncClient.getAccessToken(accountEmail)
 
-            // 2. Determine target Google Drive Folder ID
             var folderId = getTargetFolderId()
             if (!folderId.isNullOrBlank()) {
-                // Verify folder access
                 val accessResult = googleDriveSyncClient.verifyFolderAccess(accessToken, folderId)
                 if (accessResult is FolderAccessResult.AccessDenied) {
                     val errMsg = "Access Pending: Please ask host to add $accountEmail in Family Sync Settings."
+                    Log.e("PalateLog_Sync", "Folder access denied for folderId=$folderId")
                     _syncStatus.value = SyncStatus.Error(errMsg)
                     throw IOException(errMsg)
                 }
@@ -173,26 +189,107 @@ class SyncRepository @Inject constructor(
                 setTargetFolderId(folderId)
             }
 
-            // 3. First, download and merge all remote delta files from other family members
-            val remoteFiles = googleDriveSyncClient.listRemoteSyncFiles(accessToken, folderId)
+            val photosFolderId = try {
+                googleDriveSyncClient.getOrCreatePhotosFolder(accessToken, folderId)
+            } catch (e: Exception) {
+                Log.e("PalateLog_Sync", "Failed to access/create Photos folder", e)
+                null
+            }
+
+            val remotePhotoFiles = if (photosFolderId != null) {
+                googleDriveSyncClient.listRemotePhotoFiles(accessToken, photosFolderId)
+            } else emptyList()
+            val remotePhotoMap = remotePhotoFiles.associateBy { it.name }
+            Log.d("PalateLog_Sync", "Found ${remotePhotoMap.size} remote photo files in Google Drive")
+
             var mergedRemoteCount = 0
+            var photosDownloadedCount = 0
+            var photosUploadedCount = 0
+
+            // 1. Download and merge all remote delta files from other family members
+            val remoteFiles = googleDriveSyncClient.listRemoteSyncFiles(accessToken, folderId)
+            Log.d("PalateLog_Sync", "Found ${remoteFiles.size} remote JSON delta files in Google Drive")
 
             for (file in remoteFiles) {
-                // Skip files uploaded by this device (both changes_deviceId.json and legacy timestamped files)
                 if (file.name == "changes_$deviceId.json" || file.name.startsWith("changes_${deviceId}_")) continue
 
                 try {
                     val remoteJson = googleDriveSyncClient.downloadSyncPayload(accessToken, file.id)
                     val remotePayload = json.decodeFromString<SyncPayload>(remoteJson)
+
+                    if (photosFolderId != null) {
+                        for (visit in remotePayload.visits) {
+                            val visitPhotoNames = if (visit.photoNames.isNotEmpty()) visit.photoNames else listOfNotNull(visit.billReceiptPhotoName)
+                            for (photoName in visitPhotoNames) {
+                                val localFile = getLocalPhotoFile(photoName)
+                                if (!localFile.exists()) {
+                                    remotePhotoMap[photoName]?.let { driveFile ->
+                                        val success = googleDriveSyncClient.downloadPhotoFile(accessToken, driveFile.id, localFile)
+                                        if (success) {
+                                            photosDownloadedCount++
+                                            Log.d("PalateLog_Sync", "Downloaded photo: $photoName")
+                                        } else {
+                                            Log.e("PalateLog_Sync", "Failed to download photo: $photoName")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        for (dish in remotePayload.dishes) {
+                            for (photoName in dish.photoNames) {
+                                val localFile = getLocalPhotoFile(photoName)
+                                if (!localFile.exists()) {
+                                    remotePhotoMap[photoName]?.let { driveFile ->
+                                        val success = googleDriveSyncClient.downloadPhotoFile(accessToken, driveFile.id, localFile)
+                                        if (success) {
+                                            photosDownloadedCount++
+                                            Log.d("PalateLog_Sync", "Downloaded photo: $photoName")
+                                        } else {
+                                            Log.e("PalateLog_Sync", "Failed to download photo: $photoName")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     importPayload(remotePayload)
                     mergedRemoteCount++
                 } catch (e: Exception) {
-                    // Ignore individual corrupt payload files
+                    Log.e("PalateLog_Sync", "Error downloading or importing remote payload ${file.name}", e)
                 }
             }
 
-            // 4. Always export complete shared local state for this device and update changes_<deviceId>.json in Google Drive
+            // 2. Export local payload and upload missing local photo files to Google Drive
             val localPayload = exportSharedPayload(0L)
+
+            if (photosFolderId != null) {
+                val localPhotoNames = mutableSetOf<String>()
+                localPayload.visits.forEach { v ->
+                    localPhotoNames.addAll(v.photoNames)
+                    v.billReceiptPhotoName?.let { localPhotoNames.add(it) }
+                }
+                localPayload.dishes.forEach { d -> localPhotoNames.addAll(d.photoNames) }
+
+                for (photoName in localPhotoNames) {
+                    if (!remotePhotoMap.containsKey(photoName)) {
+                        val localFile = getLocalPhotoFile(photoName)
+                        if (localFile.exists()) {
+                            try {
+                                val bytes = localFile.readBytes()
+                                val success = googleDriveSyncClient.uploadPhotoFile(accessToken, photosFolderId, photoName, bytes)
+                                if (success) {
+                                    photosUploadedCount++
+                                    Log.d("PalateLog_Sync", "Uploaded photo to Google Drive: $photoName (${bytes.size} bytes)")
+                                }
+                            } catch (e: Exception) {
+                                Log.e("PalateLog_Sync", "Failed to upload photo $photoName", e)
+                            }
+                        }
+                    }
+                }
+            }
+
             if (localPayload.restaurants.isNotEmpty() || localPayload.visits.isNotEmpty() || localPayload.dishes.isNotEmpty()) {
                 val jsonString = json.encodeToString(localPayload)
                 googleDriveSyncClient.uploadOrUpdateSyncPayload(accessToken, folderId, deviceId, jsonString)
@@ -200,11 +297,23 @@ class SyncRepository @Inject constructor(
 
             val now = System.currentTimeMillis()
             setLastSyncTimestamp(now)
-            _syncStatus.value = SyncStatus.Success("Synced with Google Drive ($mergedRemoteCount updates merged)", now)
+
+            val photoDetails = when {
+                photosUploadedCount > 0 && photosDownloadedCount > 0 -> ", $photosUploadedCount photos uploaded, $photosDownloadedCount downloaded"
+                photosUploadedCount > 0 -> ", $photosUploadedCount photos uploaded"
+                photosDownloadedCount > 0 -> ", $photosDownloadedCount photos downloaded"
+                else -> ""
+            }
+
+            val successMsg = "Synced with Google Drive ($mergedRemoteCount updates merged$photoDetails)"
+            Log.d("PalateLog_Sync", "Sync SUCCESS: $successMsg")
+            _syncStatus.value = SyncStatus.Success(successMsg, now)
         } catch (e: GoogleAuthException) {
+            Log.e("PalateLog_Sync", "GoogleAuthException during sync: ${e.message}", e)
             _syncStatus.value = SyncStatus.Error(e.message ?: "Google Auth required")
             throw e
         } catch (e: Exception) {
+            Log.e("PalateLog_Sync", "Exception during sync: ${e.localizedMessage}", e)
             _syncStatus.value = SyncStatus.Error(e.localizedMessage ?: "Drive Sync failed")
             throw e
         }
@@ -241,6 +350,8 @@ class SyncRepository @Inject constructor(
                 )
             },
             visits = modifiedVisits.map {
+                val uris = if (it.billReceiptPhotoUri.isNullOrBlank()) emptyList() else it.billReceiptPhotoUri.split(",").filter { s -> s.isNotBlank() }
+                val names = uris.mapNotNull { uri -> extractPhotoFileName(uri) }
                 SyncVisit(
                     id = it.id,
                     restaurantId = it.restaurantId,
@@ -248,6 +359,8 @@ class SyncRepository @Inject constructor(
                     channel = it.channel,
                     visitVerdict = it.visitVerdict,
                     billAmount = it.billAmount,
+                    billReceiptPhotoName = names.firstOrNull(),
+                    photoNames = names,
                     generalNotes = it.generalNotes,
                     createdByMemberId = it.createdByMemberId,
                     createdByMemberName = it.createdByMemberName,
@@ -267,6 +380,7 @@ class SyncRepository @Inject constructor(
                     tags = it.tags,
                     memberPreferences = it.memberPreferences,
                     price = it.price,
+                    photoNames = it.photoUris.mapNotNull { uri -> extractPhotoFileName(uri) },
                     notes = it.notes,
                     isShared = it.isShared,
                     updatedAt = it.updatedAt,
@@ -311,6 +425,10 @@ class SyncRepository @Inject constructor(
 
             // 2. Merge Visits
             val visitEntities = payload.visits.map {
+                val names = if (it.photoNames.isNotEmpty()) it.photoNames else listOfNotNull(it.billReceiptPhotoName)
+                val uris = names.mapNotNull { name -> getLocalPhotoUri(name) }
+                val visitPhotosString = if (uris.isEmpty()) null else uris.joinToString(",")
+
                 VisitEntryEntity(
                     id = it.id,
                     restaurantId = it.restaurantId,
@@ -318,7 +436,7 @@ class SyncRepository @Inject constructor(
                     channel = it.channel,
                     visitVerdict = it.visitVerdict,
                     billAmount = it.billAmount,
-                    billReceiptPhotoUri = null,
+                    billReceiptPhotoUri = visitPhotosString,
                     generalNotes = it.generalNotes,
                     createdByMemberId = it.createdByMemberId,
                     createdByMemberName = it.createdByMemberName,
@@ -331,6 +449,7 @@ class SyncRepository @Inject constructor(
 
             // 3. Merge Dishes
             val dishEntities = payload.dishes.map {
+                val photoUris = it.photoNames.mapNotNull { name -> getLocalPhotoUri(name) }
                 DishFeedbackEntity(
                     id = it.id,
                     visitId = it.visitId,
@@ -341,7 +460,7 @@ class SyncRepository @Inject constructor(
                     tags = it.tags,
                     memberPreferences = it.memberPreferences,
                     price = it.price,
-                    photoUris = emptyList(),
+                    photoUris = photoUris,
                     notes = it.notes,
                     isShared = it.isShared,
                     updatedAt = it.updatedAt,

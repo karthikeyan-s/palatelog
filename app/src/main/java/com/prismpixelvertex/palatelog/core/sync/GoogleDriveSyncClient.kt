@@ -307,6 +307,152 @@ class GoogleDriveSyncClient @Inject constructor(
     }
 
     /**
+     * Locates or creates the 'Photos' subfolder inside 'PalateLog_Family'.
+     */
+    suspend fun getOrCreatePhotosFolder(
+        accessToken: String,
+        familyFolderId: String
+    ): String = withContext(Dispatchers.IO) {
+        val folderName = "Photos"
+        val query = "'$familyFolderId' in parents and name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+        val searchUrl = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name)"
+
+        val request = Request.Builder()
+            .url(searchUrl)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .get()
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+
+        if (!response.isSuccessful) {
+            throw IOException("Failed to search Photos folder: HTTP ${response.code} - $responseBody")
+        }
+
+        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        if (fileList.files.isNotEmpty()) {
+            return@withContext fileList.files.first().id
+        }
+
+        val createUrl = "https://www.googleapis.com/drive/v3/files"
+        val jsonPayload = """{"name":"$folderName","mimeType":"application/vnd.google-apps.folder","parents":["$familyFolderId"]}"""
+        val createRequest = Request.Builder()
+            .url(createUrl)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .addHeader("Content-Type", "application/json")
+            .post(jsonPayload.toRequestBody("application/json".toMediaType()))
+            .build()
+
+        val createResponse = httpClient.newCall(createRequest).execute()
+        val createBody = createResponse.body?.string() ?: ""
+
+        if (!createResponse.isSuccessful) {
+            throw IOException("Failed to create Photos folder: HTTP ${createResponse.code} - $createBody")
+        }
+
+        val createdFolder = json.decodeFromString<DriveFileItem>(createBody)
+        createdFolder.id
+    }
+
+    /**
+     * Lists all photo files in the 'Photos' subfolder.
+     */
+    suspend fun listRemotePhotoFiles(
+        accessToken: String,
+        photosFolderId: String
+    ): List<DriveFileItem> = withContext(Dispatchers.IO) {
+        val query = "'$photosFolderId' in parents and trashed = false"
+        val url = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name,createdTime,modifiedTime)&pageSize=1000"
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .get()
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+
+        if (!response.isSuccessful) {
+            return@withContext emptyList()
+        }
+
+        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        fileList.files
+    }
+
+    /**
+     * Uploads a binary photo file to the 'Photos' subfolder in Google Drive.
+     */
+    suspend fun uploadPhotoFile(
+        accessToken: String,
+        photosFolderId: String,
+        fileName: String,
+        fileBytes: ByteArray
+    ): Boolean = withContext(Dispatchers.IO) {
+        val uploadUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+        val boundary = "PalateLogPhotoBoundary${System.currentTimeMillis()}"
+
+        val multipartHeader = StringBuilder().apply {
+            append("--$boundary\r\n")
+            append("Content-Type: application/json; charset=UTF-8\r\n\r\n")
+            append("""{"name":"$fileName","parents":["$photosFolderId"]}""")
+            append("\r\n--$boundary\r\n")
+            append("Content-Type: image/jpeg\r\n\r\n")
+        }.toString().toByteArray(Charsets.UTF_8)
+
+        val closingBoundary = "\r\n--$boundary--\r\n".toByteArray(Charsets.UTF_8)
+        val fullBodyBytes = multipartHeader + fileBytes + closingBoundary
+
+        val request = Request.Builder()
+            .url(uploadUrl)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .addHeader("Content-Type", "multipart/related; boundary=$boundary")
+            .post(fullBodyBytes.toRequestBody("multipart/related; boundary=$boundary".toMediaType()))
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+
+        if (!response.isSuccessful) {
+            throw IOException("Failed to upload photo $fileName: HTTP ${response.code} - $responseBody")
+        }
+
+        true
+    }
+
+    /**
+     * Downloads a photo file from Google Drive directly into local device file.
+     */
+    suspend fun downloadPhotoFile(
+        accessToken: String,
+        fileId: String,
+        destFile: java.io.File
+    ): Boolean = withContext(Dispatchers.IO) {
+        val downloadUrl = "https://www.googleapis.com/drive/v3/files/$fileId?alt=media"
+
+        val request = Request.Builder()
+            .url(downloadUrl)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .get()
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        if (response.isSuccessful && response.body != null) {
+            destFile.parentFile?.let { if (!it.exists()) it.mkdirs() }
+            response.body!!.byteStream().use { input ->
+                destFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
      * Verifies if the authenticated user has access to the target Google Drive folder.
      */
     suspend fun verifyFolderAccess(
