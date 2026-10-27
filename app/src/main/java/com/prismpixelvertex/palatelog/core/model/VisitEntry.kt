@@ -42,3 +42,10 @@ data class VisitEntry(
     val updatedAt: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false
 )
+
+val VisitEntry.photoUris: List<String>
+    get() = if (billReceiptPhotoUri.isNullOrBlank()) {
+        emptyList()
+    } else {
+        billReceiptPhotoUri.split(",").filter { it.isNotBlank() }
+    }

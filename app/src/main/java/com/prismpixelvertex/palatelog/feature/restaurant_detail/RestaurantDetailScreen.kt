@@ -1,8 +1,10 @@
 package com.prismpixelvertex.palatelog.feature.restaurant_detail
 
 import android.content.Context
+import com.prismpixelvertex.palatelog.core.model.photoUris
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.ChannelBadge
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
@@ -115,6 +119,7 @@ fun RestaurantDetailScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var visitToEdit by remember { mutableStateOf<VisitEntry?>(null) }
     var visitToDelete by remember { mutableStateOf<VisitEntry?>(null) }
+    var selectedPhotoForPreview by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -274,7 +279,8 @@ fun RestaurantDetailScreen(
                         DishVerdictGroup(
                             title = "AVOID NEXT TIME 🔴",
                             dishes = uiState.avoidDishes,
-                            accentColor = VerdictNoGoRed
+                            accentColor = VerdictNoGoRed,
+                            onPhotoClick = { selectedPhotoForPreview = it }
                         )
                     }
 
@@ -283,7 +289,8 @@ fun RestaurantDetailScreen(
                         DishVerdictGroup(
                             title = "FAMILY FAVORITES & MUST TRY 🟢",
                             dishes = uiState.mustTryDishes,
-                            accentColor = VerdictGoGreen
+                            accentColor = VerdictGoGreen,
+                            onPhotoClick = { selectedPhotoForPreview = it }
                         )
                     }
 
@@ -292,7 +299,8 @@ fun RestaurantDetailScreen(
                         DishVerdictGroup(
                             title = "NEUTRAL / OKAY DISHES 🟡",
                             dishes = uiState.neutralDishes,
-                            accentColor = VerdictCautionAmber
+                            accentColor = VerdictCautionAmber,
+                            onPhotoClick = { selectedPhotoForPreview = it }
                         )
                     }
                 }
@@ -320,12 +328,20 @@ fun RestaurantDetailScreen(
                         VisitHistoryCard(
                             visit = visit,
                             onEditVisit = { visitToEdit = visit },
-                            onDeleteVisit = { visitToDelete = visit }
+                            onDeleteVisit = { visitToDelete = visit },
+                            onPhotoClick = { selectedPhotoForPreview = it }
                         )
                     }
                 }
             }
         }
+    }
+
+    selectedPhotoForPreview?.let { photoUri ->
+        FullscreenPhotoDialog(
+            photoUri = photoUri,
+            onDismiss = { selectedPhotoForPreview = null }
+        )
     }
 
     // Dialog: Edit Restaurant Details
@@ -986,10 +1002,52 @@ private fun EditVisitDialog(
 }
 
 @Composable
+private fun FullscreenPhotoDialog(
+    photoUri: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            AsyncImage(
+                model = photoUri,
+                contentDescription = "Full-screen photo view",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = onDismiss)
+            )
+
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(40.dp)
+                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color.White
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun DishVerdictGroup(
     title: String,
     dishes: List<DishFeedback>,
-    accentColor: Color
+    accentColor: Color,
+    onPhotoClick: (String) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -1036,6 +1094,28 @@ private fun DishVerdictGroup(
                             }
                         }
                     }
+
+                    if (dish.photoUris.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            dish.photoUris.forEach { photoUri ->
+                                AsyncImage(
+                                    model = photoUri,
+                                    contentDescription = "Dish photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { onPhotoClick(photoUri) }
+                                )
+                            }
+                        }
+                    }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
             }
@@ -1047,7 +1127,8 @@ private fun DishVerdictGroup(
 private fun VisitHistoryCard(
     visit: VisitEntry,
     onEditVisit: () -> Unit,
-    onDeleteVisit: () -> Unit
+    onDeleteVisit: () -> Unit,
+    onPhotoClick: (String) -> Unit
 ) {
     val dateFormatter = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
     val dateString = dateFormatter.format(Date(visit.visitDate))
@@ -1118,6 +1199,29 @@ private fun VisitHistoryCard(
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium
                 )
+            }
+
+            if (visit.photoUris.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    visit.photoUris.forEach { photoUri ->
+                        AsyncImage(
+                            model = photoUri,
+                            contentDescription = "Visit photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onPhotoClick(photoUri) }
+                        )
+                    }
+                }
             }
 
             if (visit.generalNotes.isNotBlank()) {

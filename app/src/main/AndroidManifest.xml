@@ -12,7 +12,6 @@
 
     <!-- Camera and Storage for food photos & bill receipts -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Package visibility queries for navigation intents (Android 11+) -->
     <queries>

@@ -3,12 +3,16 @@ package com.prismpixelvertex.palatelog.feature.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackDao
+import com.prismpixelvertex.palatelog.core.database.DishFeedbackEntity
 import com.prismpixelvertex.palatelog.core.database.RestaurantDao
+import com.prismpixelvertex.palatelog.core.database.RestaurantEntity
 import com.prismpixelvertex.palatelog.core.database.VisitDao
+import com.prismpixelvertex.palatelog.core.database.VisitEntryEntity
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
 import com.prismpixelvertex.palatelog.core.location.LocationClient
 import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishFeedback
+import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Restaurant
 import com.prismpixelvertex.palatelog.core.model.Verdict
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,7 +38,9 @@ data class RestaurantCardUiState(
     val distanceKm: Double?,
     val totalVisits: Int,
     val topMustTryDishes: List<String>,
-    val topAvoidDishes: List<String>
+    val topAvoidDishes: List<String>,
+    val matchedDishes: List<DishFeedback> = emptyList(),
+    val searchMatchScore: Int = 0
 )
 
 data class DashboardUiState(
@@ -64,38 +70,113 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = combine(
         restaurantDao.getAllRestaurants(),
         visitDao.getAllVisits(),
+        dishDao.getAllDishes(),
         _searchQuery,
         _selectedFilter,
         _userLocation
-    ) { restaurantEntities, visitEntities, query, filter, location ->
-        val domainRestaurants = restaurantEntities.map { it.toDomain() }
+    ) { flows ->
+        @Suppress("UNCHECKED_CAST")
+        val restaurantEntities = flows[0] as List<RestaurantEntity>
+        @Suppress("UNCHECKED_CAST")
+        val visitEntities = flows[1] as List<VisitEntryEntity>
+        @Suppress("UNCHECKED_CAST")
+        val dishEntities = flows[2] as List<DishFeedbackEntity>
+        val query = flows[3] as String
+        val filter = flows[4] as DashboardFilter
+        @Suppress("UNCHECKED_CAST")
+        val location = flows[5] as Pair<Double, Double>?
 
-        // Filter by Search Query
-        val searchFiltered = if (query.isBlank()) {
-            domainRestaurants
-        } else {
-            domainRestaurants.filter { r ->
-                r.name.contains(query, ignoreCase = true) ||
-                r.city.contains(query, ignoreCase = true) ||
-                r.cuisine.contains(query, ignoreCase = true) ||
-                r.highwayOrRoute.contains(query, ignoreCase = true) ||
-                r.tags.any { it.contains(query, ignoreCase = true) }
+        val domainRestaurants = restaurantEntities.map { it.toDomain() }
+        val domainDishes = dishEntities.map { it.toDomain() }
+        val dishesByRestaurant = domainDishes.groupBy { it.restaurantId }
+
+        val trimmedQuery = query.trim().lowercase()
+        val queryTokens = trimmedQuery.split("\\s+".toRegex()).filter { it.isNotBlank() }
+
+        val evaluatedCards = domainRestaurants.mapNotNull { r ->
+            val restaurantDishes = dishesByRestaurant[r.id] ?: emptyList()
+
+            val topMustTry = restaurantDishes
+                .filter { it.verdict == DishVerdict.GO }
+                .map { it.dishName }
+                .distinct()
+                .take(3)
+
+            val topAvoid = restaurantDishes
+                .filter { it.verdict == DishVerdict.NO_GO }
+                .map { it.dishName }
+                .distinct()
+                .take(2)
+
+            var matchScore = 0
+            val matchedDishesForRestaurant = mutableListOf<DishFeedback>()
+
+            if (trimmedQuery.isNotBlank()) {
+                val nameMatch = r.name.lowercase().contains(trimmedQuery)
+                val cityMatch = r.city.lowercase().contains(trimmedQuery)
+                val cuisineMatch = r.cuisine.lowercase().contains(trimmedQuery)
+                val highwayMatch = r.highwayOrRoute.lowercase().contains(trimmedQuery)
+                val tagMatch = r.tags.any { it.lowercase().contains(trimmedQuery) }
+
+                if (nameMatch || cityMatch || cuisineMatch || highwayMatch || tagMatch) {
+                    matchScore += 100
+                } else if (queryTokens.isNotEmpty()) {
+                    val tokenHits = queryTokens.count { token ->
+                        r.name.lowercase().contains(token) ||
+                        r.city.lowercase().contains(token) ||
+                        r.cuisine.lowercase().contains(token) ||
+                        r.highwayOrRoute.lowercase().contains(token) ||
+                        r.tags.any { it.lowercase().contains(token) }
+                    }
+                    matchScore += tokenHits * 10
+                }
+
+                for (d in restaurantDishes) {
+                    val dishNameLower = d.dishName.lowercase()
+                    val dishTagsLower = d.tags.map { it.lowercase() }
+
+                    if (dishNameLower.contains(trimmedQuery) || dishTagsLower.any { it.contains(trimmedQuery) }) {
+                        matchScore += 50
+                        matchedDishesForRestaurant.add(d)
+                    } else if (queryTokens.size > 1 && queryTokens.all { token -> dishNameLower.contains(token) || dishTagsLower.any { it.contains(token) } }) {
+                        matchScore += 30
+                        matchedDishesForRestaurant.add(d)
+                    } else if (queryTokens.isNotEmpty() && queryTokens.any { token -> dishNameLower.contains(token) || dishTagsLower.any { it.contains(token) } }) {
+                        matchScore += 10
+                        matchedDishesForRestaurant.add(d)
+                    }
+                }
+
+                if (matchScore == 0) {
+                    return@mapNotNull null
+                }
             }
+
+            val dist = location?.let {
+                GeoUtils.calculateDistanceKm(it.first, it.second, r.latitude, r.longitude)
+            }
+            val visits = visitEntities.count { it.restaurantId == r.id && !it.isDeleted }
+
+            RestaurantCardUiState(
+                restaurant = r,
+                distanceKm = dist,
+                totalVisits = visits,
+                topMustTryDishes = topMustTry,
+                topAvoidDishes = topAvoid,
+                matchedDishes = matchedDishesForRestaurant.distinctBy { it.dishName.lowercase() },
+                searchMatchScore = matchScore
+            )
         }
 
-        // Filter by Category Chip
         val categoryFiltered = when (filter) {
-            DashboardFilter.ALL -> searchFiltered
-            DashboardFilter.GO_ONLY -> searchFiltered.filter { it.overallVerdict == Verdict.GO }
-            DashboardFilter.NO_GO_ONLY -> searchFiltered.filter { it.overallVerdict == Verdict.NO_GO }
-            DashboardFilter.NEARBY -> searchFiltered.filter { r ->
-                if (location != null) {
-                    val dist = GeoUtils.calculateDistanceKm(location.first, location.second, r.latitude, r.longitude)
-                    dist <= 15.0 // within 15 km
-                } else true
+            DashboardFilter.ALL -> evaluatedCards
+            DashboardFilter.GO_ONLY -> evaluatedCards.filter { it.restaurant.overallVerdict == Verdict.GO }
+            DashboardFilter.NO_GO_ONLY -> evaluatedCards.filter { it.restaurant.overallVerdict == Verdict.NO_GO }
+            DashboardFilter.NEARBY -> evaluatedCards.filter { card ->
+                card.distanceKm != null && card.distanceKm <= 15.0
             }
-            DashboardFilter.HIGHWAY -> searchFiltered.filter {
-                it.highwayOrRoute.isNotBlank() || it.restaurantType.name == "DHABA"
+            DashboardFilter.HIGHWAY -> evaluatedCards.filter {
+                it.restaurant.highwayOrRoute.isNotBlank() || it.restaurant.restaurantType.name == "DHABA"
             }
             DashboardFilter.DELIVERY -> {
                 val deliveryKeywords = setOf("zomato", "swiggy", "ownly", "eatclub", "magicpin", "ubereats", "door", "dunzo", "delivery", "cloud")
@@ -106,33 +187,27 @@ class DashboardViewModel @Inject constructor(
                     }
                     .map { it.restaurantId }
                     .toSet()
-                searchFiltered.filter { it.id in deliveryRestaurantIds || it.restaurantType.name == "CLOUD_KITCHEN" }
+                evaluatedCards.filter { it.restaurant.id in deliveryRestaurantIds || it.restaurant.restaurantType.name == "CLOUD_KITCHEN" }
             }
         }
 
-        // Map to UI Cards with distances and visit counts
-        val cards = categoryFiltered.map { r ->
-            val dist = location?.let {
-                GeoUtils.calculateDistanceKm(it.first, it.second, r.latitude, r.longitude)
-            }
-            val visits = visitEntities.count { it.restaurantId == r.id && !it.isDeleted }
-
-            RestaurantCardUiState(
-                restaurant = r,
-                distanceKm = dist,
-                totalVisits = visits,
-                topMustTryDishes = emptyList(), // Loaded asynchronously if needed
-                topAvoidDishes = emptyList()
+        val sortedCards = if (trimmedQuery.isNotBlank()) {
+            categoryFiltered.sortedWith(
+                compareByDescending<RestaurantCardUiState> { it.searchMatchScore }
+                    .thenBy { it.distanceKm ?: Double.MAX_VALUE }
+                    .thenByDescending { it.restaurant.updatedAt }
             )
-        }.sortedWith(
-            compareBy<RestaurantCardUiState> { it.distanceKm ?: Double.MAX_VALUE }
-                .thenByDescending { it.restaurant.updatedAt }
-        )
+        } else {
+            categoryFiltered.sortedWith(
+                compareBy<RestaurantCardUiState> { it.distanceKm ?: Double.MAX_VALUE }
+                    .thenByDescending { it.restaurant.updatedAt }
+            )
+        }
 
         DashboardUiState(
             searchQuery = query,
             selectedFilter = filter,
-            restaurants = cards,
+            restaurants = sortedCards,
             totalCount = domainRestaurants.size,
             goCount = domainRestaurants.count { it.overallVerdict == Verdict.GO },
             noGoCount = domainRestaurants.count { it.overallVerdict == Verdict.NO_GO },

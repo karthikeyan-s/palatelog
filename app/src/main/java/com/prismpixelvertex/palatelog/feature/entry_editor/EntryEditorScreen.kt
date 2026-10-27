@@ -1,6 +1,9 @@
 package com.prismpixelvertex.palatelog.feature.entry_editor
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -23,9 +26,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -57,10 +63,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
+import coil.compose.AsyncImage
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.LocationPickerDialog
@@ -74,6 +81,7 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRedContainer
 import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Verdict
+import com.prismpixelvertex.palatelog.core.util.MediaUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -305,7 +313,7 @@ fun EntryEditorScreen(
                     isSelected = uiState.overallVerdict == Verdict.GO,
                     color = VerdictGoGreen,
                     containerColor = VerdictGoGreenContainer,
-                    onClick = { viewModel.onVerdictSelected(Verdict.GO) },
+                    onClick = { viewModel.onOverallVerdictSelected(Verdict.GO) },
                     modifier = Modifier.weight(1f)
                 )
                 VerdictChoiceChip(
@@ -313,7 +321,7 @@ fun EntryEditorScreen(
                     isSelected = uiState.overallVerdict == Verdict.NO_GO,
                     color = VerdictNoGoRed,
                     containerColor = VerdictNoGoRedContainer,
-                    onClick = { viewModel.onVerdictSelected(Verdict.NO_GO) },
+                    onClick = { viewModel.onOverallVerdictSelected(Verdict.NO_GO) },
                     modifier = Modifier.weight(1f)
                 )
                 VerdictChoiceChip(
@@ -321,7 +329,7 @@ fun EntryEditorScreen(
                     isSelected = uiState.overallVerdict == Verdict.CAUTION,
                     color = VerdictCautionAmber,
                     containerColor = VerdictCautionAmberContainer,
-                    onClick = { viewModel.onVerdictSelected(Verdict.CAUTION) },
+                    onClick = { viewModel.onOverallVerdictSelected(Verdict.CAUTION) },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -370,7 +378,9 @@ fun EntryEditorScreen(
                         draft = dishDraft,
                         familyMembers = uiState.familyMembers,
                         onUpdate = { updated -> viewModel.updateDishDraft(index, updated) },
-                        onRemove = { viewModel.removeDishDraft(index) }
+                        onRemove = { viewModel.removeDishDraft(index) },
+                        onPhotoAdded = { uri -> viewModel.onDishPhotoAdded(index, uri) },
+                        onPhotoRemoved = { uri -> viewModel.onDishPhotoRemoved(index, uri) }
                     )
                 }
             }
@@ -400,6 +410,19 @@ fun EntryEditorScreen(
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Bill / Receipt / Menu Photo Attachment
+                    Text(
+                        text = "ATTACH RECEIPT, MENU CARD, OR VISIT PHOTO",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    PhotoAttachmentBox(
+                        photoUris = uiState.visitPhotoUris,
+                        onPhotoAdded = { uri -> viewModel.onVisitPhotoAdded(uri) },
+                        onPhotoRemoved = { uri -> viewModel.onVisitPhotoRemoved(uri) }
                     )
 
                     OutlinedTextField(
@@ -490,7 +513,7 @@ fun EntryEditorScreen(
             confirmButton = {
                 Button(onClick = {
                     if (newChannelName.isNotBlank()) {
-                        viewModel.addCustomChannel(newChannelName)
+                        viewModel.onAddCustomChannel(newChannelName)
                     }
                 }) {
                     Text("Add")
@@ -506,12 +529,118 @@ fun EntryEditorScreen(
 }
 
 @Composable
+fun PhotoAttachmentBox(
+    photoUris: List<String>,
+    onPhotoAdded: (String) -> Unit,
+    onPhotoRemoved: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    val pickPhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            val saved = MediaUtils.copyUriToInternalStorage(context, uri)
+            onPhotoAdded(saved)
+        }
+    }
+
+    val takePhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            val saved = MediaUtils.copyUriToInternalStorage(context, tempCameraUri!!)
+            onPhotoAdded(saved)
+        }
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        photoUris.forEach { uriString ->
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                AsyncImage(
+                    model = uriString,
+                    contentDescription = "Photo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                IconButton(
+                    onClick = { onPhotoRemoved(uriString) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(22.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(11.dp))
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Remove",
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+
+        OutlinedButton(
+            onClick = {
+                try {
+                    pickPhotoLauncher.launch("image/*")
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Could not open picker: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.height(72.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.height(2.dp))
+                Text("Gallery", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+
+        OutlinedButton(
+            onClick = {
+                try {
+                    val pair = MediaUtils.createTempCameraUri(context)
+                    tempCameraUri = pair.second
+                    takePhotoLauncher.launch(pair.second)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Could not open camera: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.height(72.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.height(2.dp))
+                Text("Camera", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
+@Composable
 private fun DishEditorCard(
     index: Int,
     draft: DishDraft,
     familyMembers: List<com.prismpixelvertex.palatelog.core.model.FamilyMember>,
     onUpdate: (DishDraft) -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onPhotoAdded: (String) -> Unit,
+    onPhotoRemoved: (String) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -602,6 +731,19 @@ private fun DishEditorCard(
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            // Dish Photos Attachment
+            Text(
+                text = "DISH PHOTOS",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            PhotoAttachmentBox(
+                photoUris = draft.photoUris,
+                onPhotoAdded = onPhotoAdded,
+                onPhotoRemoved = onPhotoRemoved
             )
         }
     }
