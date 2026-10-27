@@ -27,8 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Verdict
@@ -39,9 +41,9 @@ fun VerdictBadge(
     modifier: Modifier = Modifier
 ) {
     val (bgColor, textColor, icon, label) = when (verdict) {
-        Verdict.GO -> Quadruple(VerdictGoGreenContainer, VerdictGoGreenText, Icons.Default.CheckCircle, "GO")
-        Verdict.NO_GO -> Quadruple(VerdictNoGoRedContainer, VerdictNoGoRedText, Icons.Default.Block, "NO-GO")
-        Verdict.CAUTION -> Quadruple(VerdictCautionAmberContainer, VerdictCautionAmberText, Icons.Default.Warning, "CAUTION")
+        Verdict.GO -> Quadruple(VerdictGoGreenContainer, VerdictGoGreenText, Icons.Default.CheckCircle, stringResource(R.string.verdict_go))
+        Verdict.NO_GO -> Quadruple(VerdictNoGoRedContainer, VerdictNoGoRedText, Icons.Default.Block, stringResource(R.string.verdict_no_go))
+        Verdict.CAUTION -> Quadruple(VerdictCautionAmberContainer, VerdictCautionAmberText, Icons.Default.Warning, stringResource(R.string.verdict_caution))
     }
 
     Row(
@@ -73,9 +75,9 @@ fun DishVerdictBadge(
     modifier: Modifier = Modifier
 ) {
     val (bgColor, textColor, label) = when (verdict) {
-        DishVerdict.GO -> Triple(VerdictGoGreenContainer, VerdictGoGreenText, "🟢 MUST TRY")
-        DishVerdict.NO_GO -> Triple(VerdictNoGoRedContainer, VerdictNoGoRedText, "🔴 AVOID")
-        DishVerdict.MEH -> Triple(VerdictCautionAmberContainer, VerdictCautionAmberText, "🟡 MEH / OK")
+        DishVerdict.GO -> Triple(VerdictGoGreenContainer, VerdictGoGreenText, stringResource(R.string.dish_verdict_must_try))
+        DishVerdict.NO_GO -> Triple(VerdictNoGoRedContainer, VerdictNoGoRedText, stringResource(R.string.dish_verdict_avoid))
+        DishVerdict.MEH -> Triple(VerdictCautionAmberContainer, VerdictCautionAmberText, stringResource(R.string.dish_verdict_meh))
     }
 
     Box(

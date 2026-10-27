@@ -62,10 +62,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
@@ -93,12 +95,12 @@ fun DashboardScreen(
                 title = {
                     Column {
                         Text(
-                            text = "PalateLog",
+                            text = stringResource(R.string.dashboard_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Your food learnings & memory log",
+                            text = stringResource(R.string.dashboard_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -133,7 +135,7 @@ fun DashboardScreen(
                             containerColor = VerdictNoGoRed,
                             contentColor = Color.White,
                             icon = { Icon(Icons.Default.FlashOn, contentDescription = null) },
-                            text = { Text("Quick Regret Log (3s)", fontWeight = FontWeight.Bold) }
+                            text = { Text(stringResource(R.string.dashboard_fab_quick_log), fontWeight = FontWeight.Bold) }
                         )
 
                         // 2. Full Visit Log FAB
@@ -145,7 +147,7 @@ fun DashboardScreen(
                             containerColor = AmberPrimary,
                             contentColor = Color.White,
                             icon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                            text = { Text("Full Visit Log", fontWeight = FontWeight.Bold) }
+                            text = { Text(stringResource(R.string.dashboard_fab_full_visit), fontWeight = FontWeight.Bold) }
                         )
                     }
                 }
@@ -163,7 +165,7 @@ fun DashboardScreen(
                     )
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = if (isFabExpanded) "Close Menu" else "Log Options",
+                        contentDescription = if (isFabExpanded) stringResource(R.string.action_close) else stringResource(R.string.nav_quick_log),
                         modifier = Modifier.rotate(rotation)
                     )
                 }
@@ -180,12 +182,12 @@ fun DashboardScreen(
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = { viewModel.onSearchQueryChanged(it) },
-                placeholder = { Text("Search places, cuisines, dishes...") },
+                placeholder = { Text(stringResource(R.string.dashboard_search_hint)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (uiState.searchQuery.isNotBlank()) {
                         IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.action_close))
                         }
                     }
                 },
@@ -211,32 +213,32 @@ fun DashboardScreen(
                 FilterChip(
                     selected = uiState.selectedFilter == DashboardFilter.ALL,
                     onClick = { viewModel.onFilterSelected(DashboardFilter.ALL) },
-                    label = { Text("All (${uiState.totalCount})") }
+                    label = { Text(stringResource(R.string.dashboard_filter_all, uiState.totalCount)) }
                 )
                 FilterChip(
                     selected = uiState.selectedFilter == DashboardFilter.GO_ONLY,
                     onClick = { viewModel.onFilterSelected(DashboardFilter.GO_ONLY) },
-                    label = { Text("🟢 Go (${uiState.goCount})") }
+                    label = { Text(stringResource(R.string.dashboard_filter_go, uiState.goCount)) }
                 )
                 FilterChip(
                     selected = uiState.selectedFilter == DashboardFilter.NO_GO_ONLY,
                     onClick = { viewModel.onFilterSelected(DashboardFilter.NO_GO_ONLY) },
-                    label = { Text("🔴 No-Go (${uiState.noGoCount})") }
+                    label = { Text(stringResource(R.string.dashboard_filter_no_go, uiState.noGoCount)) }
                 )
                 FilterChip(
                     selected = uiState.selectedFilter == DashboardFilter.NEARBY,
                     onClick = { viewModel.onFilterSelected(DashboardFilter.NEARBY) },
-                    label = { Text("📍 Near Me (<15km)") }
+                    label = { Text(stringResource(R.string.dashboard_filter_nearby)) }
                 )
                 FilterChip(
                     selected = uiState.selectedFilter == DashboardFilter.HIGHWAY,
                     onClick = { viewModel.onFilterSelected(DashboardFilter.HIGHWAY) },
-                    label = { Text("🛣️ Highway") }
+                    label = { Text(stringResource(R.string.dashboard_filter_highway)) }
                 )
                 FilterChip(
                     selected = uiState.selectedFilter == DashboardFilter.DELIVERY,
                     onClick = { viewModel.onFilterSelected(DashboardFilter.DELIVERY) },
-                    label = { Text("🛵 Zomato / Swiggy") }
+                    label = { Text(stringResource(R.string.dashboard_filter_delivery)) }
                 )
             }
 
@@ -257,13 +259,13 @@ fun DashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (uiState.searchQuery.isBlank()) "No restaurant entries yet" else "No matching spots found",
+                            text = if (uiState.searchQuery.isBlank()) stringResource(R.string.dashboard_empty_title) else stringResource(R.string.dashboard_empty_search_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Tap the Quick Regret Log or + button to record your first food insight!",
+                            text = stringResource(R.string.dashboard_empty_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -457,7 +459,10 @@ private fun RestaurantCard(
                     }
 
                     Text(
-                        text = "${item.totalVisits} visit${if (item.totalVisits == 1) "" else "s"}",
+                        text = stringResource(
+                            if (item.totalVisits == 1) R.string.dashboard_card_visits else R.string.dashboard_card_visits_plural,
+                            item.totalVisits
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -469,7 +474,7 @@ private fun RestaurantCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Directions,
-                        contentDescription = "Navigate in Google Maps",
+                        contentDescription = stringResource(R.string.map_preview_navigate),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
