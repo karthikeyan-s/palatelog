@@ -103,16 +103,16 @@ fun LocationPickerDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(Dimens.RadiusDialog),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.ElevationHigh),
             modifier = Modifier
                 .fillMaxWidth(0.92f)
-                .height(540.dp)
+                .height(Dimens.LocationDialogHeight)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(Dimens.SpacingDefault)
             ) {
                 // Dialog Header
                 Row(
@@ -125,9 +125,9 @@ fun LocationPickerDialog(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
                             tint = AmberPrimary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(Dimens.IconSizeDefault)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
                         Column {
                             Text(
                                 text = stringResource(R.string.location_picker_title),

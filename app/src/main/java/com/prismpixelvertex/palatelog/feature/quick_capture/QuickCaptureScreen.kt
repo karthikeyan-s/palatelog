@@ -63,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prismpixelvertex.palatelog.R
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.LocationPickerDialog
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmber
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmberContainer
@@ -347,10 +348,10 @@ fun QuickCaptureScreen(
                         Verdict.CAUTION -> VerdictCautionAmber
                     }
                 ),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(Dimens.RadiusLarge),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(Dimens.ButtonHeightStandard)
             ) {
                 if (uiState.isSaving) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))

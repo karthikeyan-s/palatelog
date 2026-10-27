@@ -85,6 +85,7 @@ import androidx.core.content.FileProvider
 import com.google.android.gms.common.AccountPicker
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
