@@ -35,9 +35,10 @@ data class QuickCaptureUiState(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val isLocationLoading: Boolean = true,
-    val selectedVerdict: Verdict = Verdict.NO_GO, // Default to NO-GO for speed-dial regret
+    val selectedVerdict: Verdict = Verdict.NO_GO,
     val quickReason: String = "",
     val dishName: String = "",
+    val photoUris: List<String> = emptyList(),
     val isHighwayStop: Boolean = false,
     val highwayName: String = "",
     val nearbyExistingRestaurant: RestaurantEntity? = null,
@@ -101,7 +102,6 @@ class QuickCaptureViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLocationLoading = true)
             val loc = locationClient.getCurrentLocation()
             if (loc != null) {
-                // Check if an existing restaurant is within 50 meters
                 val bbox = GeoUtils.getBoundingBox(loc.latitude, loc.longitude, 0.1) // 100m
                 val nearby = restaurantDao.getRestaurantsInBoundingBox(bbox.minLat, bbox.maxLat, bbox.minLng, bbox.maxLng)
                 val closest = nearby.minByOrNull {
@@ -153,6 +153,16 @@ class QuickCaptureViewModel @Inject constructor(
 
     fun onDishNameChanged(name: String) {
         _uiState.value = _uiState.value.copy(dishName = name)
+    }
+
+    fun onPhotoAdded(uriString: String) {
+        val updated = (_uiState.value.photoUris + uriString).distinct()
+        _uiState.value = _uiState.value.copy(photoUris = updated)
+    }
+
+    fun onPhotoRemoved(uriString: String) {
+        val updated = _uiState.value.photoUris.filterNot { it == uriString }
+        _uiState.value = _uiState.value.copy(photoUris = updated)
     }
 
     fun onHighwayToggle(isHighway: Boolean) {
@@ -212,6 +222,8 @@ class QuickCaptureViewModel @Inject constructor(
 
                 val visitId = UUID.randomUUID().toString()
                 val visitChannel = if (state.isHighwayStop) Channel.HIGHWAY_STOP.displayName else Channel.WALK_IN.displayName
+                val visitPhotosString = if (state.photoUris.isEmpty()) null else state.photoUris.joinToString(",")
+
                 val visitEntity = VisitEntryEntity(
                     id = visitId,
                     restaurantId = restaurantId,
@@ -219,7 +231,7 @@ class QuickCaptureViewModel @Inject constructor(
                     channel = visitChannel,
                     visitVerdict = state.selectedVerdict.name,
                     billAmount = 0.0,
-                    billReceiptPhotoUri = null,
+                    billReceiptPhotoUri = visitPhotosString,
                     generalNotes = state.quickReason,
                     createdByMemberId = primaryMember?.id ?: "",
                     createdByMemberName = primaryName,
@@ -251,7 +263,7 @@ class QuickCaptureViewModel @Inject constructor(
                         tags = if (state.quickReason.isNotBlank()) listOf(state.quickReason) else emptyList(),
                         memberPreferences = memberPrefMap,
                         price = 0.0,
-                        photoUris = emptyList(),
+                        photoUris = state.photoUris,
                         notes = state.quickReason,
                         isShared = true,
                         updatedAt = now,
