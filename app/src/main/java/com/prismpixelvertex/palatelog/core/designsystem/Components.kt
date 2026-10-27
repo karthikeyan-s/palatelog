@@ -27,8 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Verdict
@@ -39,16 +41,16 @@ fun VerdictBadge(
     modifier: Modifier = Modifier
 ) {
     val (bgColor, textColor, icon, label) = when (verdict) {
-        Verdict.GO -> Quadruple(VerdictGoGreenContainer, VerdictGoGreenText, Icons.Default.CheckCircle, "GO")
-        Verdict.NO_GO -> Quadruple(VerdictNoGoRedContainer, VerdictNoGoRedText, Icons.Default.Block, "NO-GO")
-        Verdict.CAUTION -> Quadruple(VerdictCautionAmberContainer, VerdictCautionAmberText, Icons.Default.Warning, "CAUTION")
+        Verdict.GO -> Quadruple(VerdictGoGreenContainer, VerdictGoGreenText, Icons.Default.CheckCircle, stringResource(R.string.verdict_go))
+        Verdict.NO_GO -> Quadruple(VerdictNoGoRedContainer, VerdictNoGoRedText, Icons.Default.Block, stringResource(R.string.verdict_no_go))
+        Verdict.CAUTION -> Quadruple(VerdictCautionAmberContainer, VerdictCautionAmberText, Icons.Default.Warning, stringResource(R.string.verdict_caution))
     }
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusSmall))
             .background(bgColor)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = Dimens.BadgePaddingHorizontal, vertical = Dimens.BadgePaddingVertical),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -57,7 +59,7 @@ fun VerdictBadge(
             tint = textColor,
             modifier = Modifier.size(14.dp)
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(Dimens.SpacingXSmall))
         Text(
             text = label,
             color = textColor,
@@ -73,16 +75,16 @@ fun DishVerdictBadge(
     modifier: Modifier = Modifier
 ) {
     val (bgColor, textColor, label) = when (verdict) {
-        DishVerdict.GO -> Triple(VerdictGoGreenContainer, VerdictGoGreenText, "🟢 MUST TRY")
-        DishVerdict.NO_GO -> Triple(VerdictNoGoRedContainer, VerdictNoGoRedText, "🔴 AVOID")
-        DishVerdict.MEH -> Triple(VerdictCautionAmberContainer, VerdictCautionAmberText, "🟡 MEH / OK")
+        DishVerdict.GO -> Triple(VerdictGoGreenContainer, VerdictGoGreenText, stringResource(R.string.dish_verdict_must_try))
+        DishVerdict.NO_GO -> Triple(VerdictNoGoRedContainer, VerdictNoGoRedText, stringResource(R.string.dish_verdict_avoid))
+        DishVerdict.MEH -> Triple(VerdictCautionAmberContainer, VerdictCautionAmberText, stringResource(R.string.dish_verdict_meh))
     }
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(Dimens.SpacingSmall))
             .background(bgColor)
-            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .padding(horizontal = Dimens.SpacingSmall, vertical = Dimens.SpacingXXSmall)
     ) {
         Text(
             text = label,
@@ -110,18 +112,18 @@ fun ChannelBadge(
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusStandard))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = Dimens.BadgePaddingHorizontal, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(12.dp)
+            modifier = Modifier.size(Dimens.IconSizeXSmall)
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(Dimens.SpacingXSmall))
         Text(
             text = displayName,
             style = MaterialTheme.typography.labelSmall,

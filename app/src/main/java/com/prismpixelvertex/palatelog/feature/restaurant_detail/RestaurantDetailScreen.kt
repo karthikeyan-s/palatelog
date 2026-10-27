@@ -65,6 +65,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -72,7 +73,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.ChannelBadge
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.FamilyReactionTag
@@ -124,19 +127,19 @@ fun RestaurantDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(restaurant?.name ?: "Restaurant Details", fontWeight = FontWeight.Bold) },
+                title = { Text(restaurant?.name ?: stringResource(R.string.dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_close))
                     }
                 },
                 actions = {
                     if (restaurant != null) {
                         IconButton(onClick = { showEditRestaurantDialog = true }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit Restaurant", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit), tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { showDeleteConfirmDialog = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 },
@@ -234,7 +237,7 @@ fun RestaurantDetailScreen(
                             ) {
                                 Icon(Icons.Default.Directions, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Navigate")
+                                Text(stringResource(R.string.detail_action_navigate))
                             }
 
                             OutlinedButton(
@@ -244,7 +247,7 @@ fun RestaurantDetailScreen(
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("New Visit")
+                                Text(stringResource(R.string.detail_action_new_visit))
                             }
                         }
                     }

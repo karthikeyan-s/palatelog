@@ -65,10 +65,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.LocationPickerDialog
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmber
@@ -112,14 +115,14 @@ fun EntryEditorScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (uiState.restaurantId != null) "Log Visit to ${uiState.restaurantName}" else "Log Visit / Order",
+                        text = if (uiState.restaurantId != null) stringResource(R.string.entry_editor_title_edit) else stringResource(R.string.entry_editor_title_new),
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_close))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -141,7 +144,7 @@ fun EntryEditorScreen(
         ) {
             // Section 1: Channel Selector
             Text(
-                text = "HOW DID YOU ORDER / VISIT?",
+                text = stringResource(R.string.entry_editor_section_visit),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -169,7 +172,7 @@ fun EntryEditorScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Add Option")
+                            Text(stringResource(R.string.entry_editor_add_dish))
                         }
                     }
                 )
@@ -179,7 +182,7 @@ fun EntryEditorScreen(
             OutlinedTextField(
                 value = uiState.restaurantName,
                 onValueChange = { viewModel.onRestaurantNameChanged(it) },
-                label = { Text("Restaurant Name *") },
+                label = { Text(stringResource(R.string.entry_editor_field_name)) },
                 placeholder = { Text("e.g. Nagarjuna / Sri Krishna Grand") },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
@@ -194,7 +197,7 @@ fun EntryEditorScreen(
                 OutlinedTextField(
                     value = uiState.address,
                     onValueChange = { viewModel.onAddressChanged(it) },
-                    label = { Text("Area / Street") },
+                    label = { Text(stringResource(R.string.entry_editor_field_address)) },
                     placeholder = { Text("e.g. Indiranagar") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -204,7 +207,7 @@ fun EntryEditorScreen(
                 OutlinedTextField(
                     value = uiState.city,
                     onValueChange = { viewModel.onCityChanged(it) },
-                    label = { Text("City") },
+                    label = { Text(stringResource(R.string.entry_editor_field_city)) },
                     placeholder = { Text("e.g. Bengaluru") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -298,7 +301,7 @@ fun EntryEditorScreen(
 
             // Section 3: Overall Visit Verdict
             Text(
-                text = "OVERALL RESTAURANT VERDICT",
+                text = stringResource(R.string.entry_editor_field_overall_verdict),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -309,7 +312,7 @@ fun EntryEditorScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 VerdictChoiceChip(
-                    label = "GO 🟢",
+                    label = stringResource(R.string.verdict_go),
                     isSelected = uiState.overallVerdict == Verdict.GO,
                     color = VerdictGoGreen,
                     containerColor = VerdictGoGreenContainer,
@@ -317,7 +320,7 @@ fun EntryEditorScreen(
                     modifier = Modifier.weight(1f)
                 )
                 VerdictChoiceChip(
-                    label = "NO-GO 🔴",
+                    label = stringResource(R.string.verdict_no_go),
                     isSelected = uiState.overallVerdict == Verdict.NO_GO,
                     color = VerdictNoGoRed,
                     containerColor = VerdictNoGoRedContainer,
@@ -325,7 +328,7 @@ fun EntryEditorScreen(
                     modifier = Modifier.weight(1f)
                 )
                 VerdictChoiceChip(
-                    label = "CAUTION 🟡",
+                    label = stringResource(R.string.verdict_caution),
                     isSelected = uiState.overallVerdict == Verdict.CAUTION,
                     color = VerdictCautionAmber,
                     containerColor = VerdictCautionAmberContainer,
@@ -341,7 +344,7 @@ fun EntryEditorScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "DISHES / ITEMS ORDERED",
+                    text = stringResource(R.string.entry_editor_section_dishes),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -352,7 +355,7 @@ fun EntryEditorScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Dish")
+                    Text(stringResource(R.string.entry_editor_add_dish))
                 }
             }
 
@@ -396,7 +399,7 @@ fun EntryEditorScreen(
                         Icon(Icons.Default.Receipt, contentDescription = null, tint = AmberPrimary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Bill & Notes (Optional)",
+                            text = stringResource(R.string.entry_editor_section_notes),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -405,7 +408,7 @@ fun EntryEditorScreen(
                     OutlinedTextField(
                         value = uiState.billAmountText,
                         onValueChange = { viewModel.onBillAmountChanged(it) },
-                        label = { Text("Total Bill Amount (₹)") },
+                        label = { Text(stringResource(R.string.entry_editor_field_bill_amount)) },
                         placeholder = { Text("e.g. 1250") },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -428,7 +431,7 @@ fun EntryEditorScreen(
                     OutlinedTextField(
                         value = uiState.generalNotes,
                         onValueChange = { viewModel.onGeneralNotesChanged(it) },
-                        label = { Text("General Visit Remarks") },
+                        label = { Text(stringResource(R.string.entry_editor_field_notes)) },
                         placeholder = { Text("e.g. Slow service on weekend, clean AC dining hall") },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -475,16 +478,16 @@ fun EntryEditorScreen(
                 onClick = { viewModel.saveEntry() },
                 enabled = !uiState.isSaving && uiState.restaurantName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(Dimens.RadiusLarge),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(Dimens.ButtonHeightStandard)
             ) {
                 if (uiState.isSaving) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                 } else {
                     Text(
-                        text = "Save Visit & Dishes",
+                        text = stringResource(R.string.entry_editor_save_btn),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White

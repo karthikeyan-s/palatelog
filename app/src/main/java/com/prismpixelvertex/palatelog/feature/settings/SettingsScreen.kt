@@ -77,12 +77,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.google.android.gms.common.AccountPicker
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -198,7 +201,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings & Sync", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )

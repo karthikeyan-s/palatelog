@@ -1,5 +1,6 @@
 package com.prismpixelvertex.palatelog.feature.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -23,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.feature.dashboard.DashboardScreen
 import com.prismpixelvertex.palatelog.feature.dashboard.DashboardViewModel
 import com.prismpixelvertex.palatelog.feature.entry_editor.EntryEditorScreen
@@ -36,11 +39,11 @@ import com.prismpixelvertex.palatelog.feature.restaurant_detail.RestaurantDetail
 import com.prismpixelvertex.palatelog.feature.settings.SettingsScreen
 import com.prismpixelvertex.palatelog.feature.settings.SettingsViewModel
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector? = null) {
-    object Dashboard : Screen("dashboard", "Explore", Icons.Default.Explore)
-    object Map : Screen("map", "Map", Icons.Default.Map)
-    object Settings : Screen("settings", "Settings", Icons.Default.Settings)
-    object QuickCapture : Screen("quick_capture?lat={lat}&lng={lng}&address={address}&city={city}", "Quick Log") {
+sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: ImageVector? = null) {
+    object Dashboard : Screen("dashboard", R.string.nav_dashboard, Icons.Default.Explore)
+    object Map : Screen("map", R.string.nav_map, Icons.Default.Map)
+    object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
+    object QuickCapture : Screen("quick_capture?lat={lat}&lng={lng}&address={address}&city={city}", R.string.nav_quick_log) {
         fun createRoute(
             lat: Double? = null,
             lng: Double? = null,
@@ -55,7 +58,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
             return if (params.isNotEmpty()) "quick_capture?${params.joinToString("&")}" else "quick_capture"
         }
     }
-    object EntryEditor : Screen("entry_editor?restaurantId={restaurantId}&lat={lat}&lng={lng}&address={address}&city={city}", "Edit Entry") {
+    object EntryEditor : Screen("entry_editor?restaurantId={restaurantId}&lat={lat}&lng={lng}&address={address}&city={city}", R.string.nav_edit_entry) {
         fun createRoute(
             restaurantId: String? = null,
             lat: Double? = null,
@@ -72,7 +75,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
             return if (params.isNotEmpty()) "entry_editor?${params.joinToString("&")}" else "entry_editor"
         }
     }
-    object RestaurantDetail : Screen("restaurant_detail/{restaurantId}", "Restaurant Details") {
+    object RestaurantDetail : Screen("restaurant_detail/{restaurantId}", R.string.dashboard_title) {
         fun createRoute(restaurantId: String): String = "restaurant_detail/$restaurantId"
     }
 }
@@ -98,8 +101,8 @@ fun PalateLogNavGraph(
                 NavigationBar {
                     bottomBarScreens.forEach { screen ->
                         NavigationBarItem(
-                            icon = { Icon(screen.icon!!, contentDescription = screen.title) },
-                            label = { Text(screen.title) },
+                            icon = { Icon(screen.icon!!, contentDescription = stringResource(screen.titleRes)) },
+                            label = { Text(stringResource(screen.titleRes)) },
                             selected = currentRoute == screen.route,
                             onClick = {
                                 navController.navigate(screen.route) {
