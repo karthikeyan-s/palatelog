@@ -5,6 +5,19 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-10-21
+
+### Added & Refactored
+- **Design System Dimensions & Spacing Tokens (`Dimens.kt`)**:
+  - Created `core/designsystem/Dimens.kt` establishing central design system tokens for Spacing (`SpacingSmall = 8.dp`, `SpacingDefault = 16.dp`), Corner Radii (`RadiusMedium = 12.dp`, `RadiusLarge = 16.dp`, `RadiusDialog = 20.dp`), Icon Sizing (`IconSizeSmall = 16.dp`, `IconSizeDefault = 24.dp`, `IconSizeHero = 64.dp`), and Component Heights (`ButtonHeightStandard = 56.dp`).
+  - Standardized component padding and dimensions across `Components`, `LocationPickerDialog`, `DashboardScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `MapScreen`, and `SettingsScreen`.
+- **Strict Non-Transitive R Classes (`android.nonTransitiveRClass`)**:
+  - Added `android.nonTransitiveRClass=true` to `gradle.properties`, enforcing strict submodule resource scoping and reducing compiled R class bytecode overhead.
+- **UI String Resource Extraction & Localization Preparedness (`strings.xml`)**:
+  - Extracted hardcoded UI string literals across all Jetpack Compose screens, navigation components, dialogs, badges, and design system elements into `app/src/main/res/values/strings.xml`.
+  - Refactored `PalateLogNavGraph`, `Components`, `LocationPickerDialog`, `DashboardScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `MapScreen`, and `SettingsScreen` to use `@StringRes` and `stringResource(...)`.
+  - Prepared codebase for internationalization (i18n) and localized screen readers (TalkBack) while resolving Android Lint `HardcodedText` warnings.
+
 ## [1.2.6] - 2026-10-21
 
 ### Added
@@ -26,17 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multiple Visit Photo Attachments**:
   - Upgraded visit-level photo attachments in `EntryEditorScreen` and `QuickCaptureScreen` to support attaching multiple photos (receipts, menu cards, ambience, etc.).
   - Added `VisitEntry.photoUris` helper and rendered horizontal thumbnail gallery for all visit photos on `VisitHistoryCard` in `RestaurantDetailScreen`.
-
-### Added & Refactored
-- **Design System Dimensions & Spacing Tokens (`Dimens.kt`)**:
-  - Created `core/designsystem/Dimens.kt` establishing central design system tokens for Spacing (`SpacingSmall = 8.dp`, `SpacingDefault = 16.dp`), Corner Radii (`RadiusMedium = 12.dp`, `RadiusLarge = 16.dp`, `RadiusDialog = 20.dp`), Icon Sizing (`IconSizeSmall = 16.dp`, `IconSizeDefault = 24.dp`, `IconSizeHero = 64.dp`), and Component Heights (`ButtonHeightStandard = 56.dp`).
-  - Standardized component padding and dimensions across `Components`, `LocationPickerDialog`, `DashboardScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `MapScreen`, and `SettingsScreen`.
-- **Strict Non-Transitive R Classes (`android.nonTransitiveRClass`)**:
-  - Added `android.nonTransitiveRClass=true` to `gradle.properties`, enforcing strict submodule resource scoping and reducing compiled R class bytecode overhead.
-- **UI String Resource Extraction & Localization Preparedness (`strings.xml`)**:
-  - Extracted hardcoded UI string literals across all Jetpack Compose screens, navigation components, dialogs, badges, and design system elements into `app/src/main/res/values/strings.xml`.
-  - Refactored `PalateLogNavGraph`, `Components`, `LocationPickerDialog`, `DashboardScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `MapScreen`, and `SettingsScreen` to use `@StringRes` and `stringResource(...)`.
-  - Prepared codebase for internationalization (i18n) and localized screen readers (TalkBack) while resolving Android Lint `HardcodedText` warnings.
 
 ### Fixed & Cleaned
 - **Camera Permission & Gallery Folder Access**:
@@ -107,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Custom Color-Coded Map Pin Markers**:
   - Replaced plain map markers with vector-rendered pin badges on `MapScreen` and `LocationPickerDialog`.
   - Color-coded by overall verdict rating: 🟢 Emerald Green for **GO**, 🔴 Crimson Red for **NO-GO**, and 🟡 Amber Yellow for **CAUTION**.
-  - Added category vector icons inside pins corresponding to restaurant type: Dine-in / Restaurant (🍽️), Highway Dhaba (🛣️), Delivery / Cloud Kitchen (🛵), Cafe (☕), and Takeaway / Drive-Thru (🚗).
+  - Added category vector icons inside pins corresponding to restaurant type: Dine-in / Restaurant (🍽️), Highway Dhaba (🛖), Delivery / Cloud Kitchen (🛵), Cafe (☕), and Takeaway / Drive-Thru (🚗).
   - Designed distinct GPS user location pulse marker and custom location target pin.
   - Implemented `MapMarkerFactory` with memoized bitmap caching for zero-overhead rendering when panning or zooming the map.
 - **Interactive Map Location Picker for Log Visit & Quick Capture**:
