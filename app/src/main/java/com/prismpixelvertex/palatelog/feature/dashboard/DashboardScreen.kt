@@ -63,9 +63,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreen
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
@@ -361,6 +363,62 @@ private fun RestaurantCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            // Matched Dishes or Top Dishes Row
+            if (item.matchedDishes.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    item.matchedDishes.take(4).forEach { dish ->
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            DishVerdictBadge(verdict = dish.verdict)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = dish.dishName,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            } else if (item.topMustTryDishes.isNotEmpty() || item.topAvoidDishes.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (item.topMustTryDishes.isNotEmpty()) {
+                        Text(
+                            text = "🟢 Must Try: ${item.topMustTryDishes.joinToString(", ")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = VerdictGoGreen,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else if (item.topAvoidDishes.isNotEmpty()) {
+                        Text(
+                            text = "🔴 Avoid: ${item.topAvoidDishes.joinToString(", ")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = VerdictNoGoRed,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))

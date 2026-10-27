@@ -39,7 +39,8 @@ data class DishDraft(
     val tagsText: String = "",
     val priceText: String = "",
     val memberReaction: String = "",
-    val selectedMemberName: String = ""
+    val selectedMemberName: String = "",
+    val photoUris: List<String> = emptyList()
 )
 
 data class EntryEditorUiState(
@@ -58,7 +59,7 @@ data class EntryEditorUiState(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val billAmountText: String = "",
-    val billPhotoUri: String? = null,
+    val visitPhotoUris: List<String> = emptyList(),
     val generalNotes: String = "",
     val dishes: List<DishDraft> = emptyList(),
     val familyMembers: List<FamilyMember> = emptyList(),
@@ -112,11 +113,8 @@ class EntryEditorViewModel @Inject constructor(
 
     private fun loadInitialData() {
         viewModelScope.launch {
-            // Load existing restaurants for suggestions
             val allRestaurants = restaurantDao.getAllRestaurants().firstOrNull() ?: emptyList()
-            // Load family members
             val members = memberDao.getAllMembers().firstOrNull()?.map { it.toDomain() } ?: emptyList()
-            // Load distinct channels from DB and custom channels from prefs
             val dbChannels = visitDao.getDistinctChannels().map { Channel.getChannelDisplayName(it) }
             val customChannels = getSavedCustomChannels()
             val allChannels = (Channel.DEFAULT_CHANNELS + dbChannels + customChannels)
@@ -128,7 +126,6 @@ class EntryEditorViewModel @Inject constructor(
                 availableChannels = allChannels
             )
 
-            // If a restaurantId was passed, load its details
             if (!initialRestaurantId.isNullOrBlank()) {
                 val existing = restaurantDao.getRestaurantByIdSync(initialRestaurantId)
                 if (existing != null) {
@@ -142,56 +139,23 @@ class EntryEditorViewModel @Inject constructor(
                     city = navCity ?: ""
                 )
             } else {
-                // Fetch GPS location to pre-fill coordinates
                 val loc = locationClient.getCurrentLocation()
                 if (loc != null) {
                     _uiState.value = _uiState.value.copy(
                         latitude = loc.latitude,
                         longitude = loc.longitude,
-                        address = loc.street,
-                        city = loc.city
+                        address = if (_uiState.value.address.isBlank()) loc.street else _uiState.value.address,
+                        city = if (_uiState.value.city.isBlank()) loc.city else _uiState.value.city
                     )
                 }
             }
         }
     }
 
-    fun onAddressChanged(address: String) {
-        _uiState.value = _uiState.value.copy(address = address)
-    }
-
-    fun onCityChanged(city: String) {
-        _uiState.value = _uiState.value.copy(city = city)
-    }
-
-    fun onLocationPicked(lat: Double, lng: Double) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                latitude = lat,
-                longitude = lng
-            )
-            val geocoded = locationClient.reverseGeocode(lat, lng)
-            _uiState.value = _uiState.value.copy(
-                address = if (geocoded.second.isNotBlank()) geocoded.second else _uiState.value.address,
-                city = if (geocoded.third.isNotBlank()) geocoded.third else _uiState.value.city
-            )
-        }
-    }
-
-    fun onRestaurantNameChanged(name: String) {
-        _uiState.value = _uiState.value.copy(restaurantName = name)
-        // Check if matches an existing restaurant
-        val match = _uiState.value.existingRestaurants.firstOrNull {
-            it.name.equals(name.trim(), ignoreCase = true)
-        }
-        if (match != null) {
-            selectExistingRestaurant(match)
-        }
-    }
-
     fun selectExistingRestaurant(restaurant: RestaurantEntity) {
         viewModelScope.launch {
-            val previousDishes = dishDao.getDishesForRestaurant(restaurant.id).firstOrNull() ?: emptyList()
+            val pastDishes = dishDao.getDishesForRestaurant(restaurant.id).firstOrNull() ?: emptyList()
+
             _uiState.value = _uiState.value.copy(
                 restaurantId = restaurant.id,
                 restaurantName = restaurant.name,
@@ -202,33 +166,37 @@ class EntryEditorViewModel @Inject constructor(
                 latitude = restaurant.latitude,
                 longitude = restaurant.longitude,
                 overallVerdict = try { Verdict.valueOf(restaurant.overallVerdict) } catch (e: Exception) { Verdict.GO },
-                previousDishes = previousDishes
+                previousDishes = pastDishes
             )
         }
     }
 
-    fun onChannelSelected(channelName: String) {
-        _uiState.value = _uiState.value.copy(channel = channelName)
+    fun onRestaurantNameChanged(name: String) {
+        _uiState.value = _uiState.value.copy(restaurantName = name)
+    }
+
+    fun onChannelSelected(channel: String) {
+        _uiState.value = _uiState.value.copy(channel = channel)
     }
 
     fun showAddChannelDialog(show: Boolean) {
         _uiState.value = _uiState.value.copy(showAddChannelDialog = show)
     }
 
-    fun addCustomChannel(channelName: String) {
-        val trimmed = channelName.trim()
-        if (trimmed.isBlank()) return
-        val displayName = Channel.getChannelDisplayName(trimmed)
-        saveCustomChannel(displayName)
-        val updatedChannels = (_uiState.value.availableChannels + displayName).distinctBy { it.lowercase() }
-        _uiState.value = _uiState.value.copy(
-            availableChannels = updatedChannels,
-            channel = displayName,
-            showAddChannelDialog = false
-        )
+    fun onAddCustomChannel(newChannelName: String) {
+        val trimmed = newChannelName.trim()
+        if (trimmed.isNotBlank()) {
+            saveCustomChannel(trimmed)
+            val updatedAvailable = (_uiState.value.availableChannels + trimmed).distinctBy { it.lowercase() }
+            _uiState.value = _uiState.value.copy(
+                availableChannels = updatedAvailable,
+                channel = trimmed,
+                showAddChannelDialog = false
+            )
+        }
     }
 
-    fun onVerdictSelected(verdict: Verdict) {
+    fun onOverallVerdictSelected(verdict: Verdict) {
         _uiState.value = _uiState.value.copy(overallVerdict = verdict)
     }
 
@@ -236,12 +204,41 @@ class EntryEditorViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(cuisine = cuisine)
     }
 
-    fun onHighwayOrRouteChanged(route: String) {
-        _uiState.value = _uiState.value.copy(highwayOrRoute = route)
+    fun onAddressChanged(address: String) {
+        _uiState.value = _uiState.value.copy(address = address)
+    }
+
+    fun onCityChanged(city: String) {
+        _uiState.value = _uiState.value.copy(city = city)
+    }
+
+    fun onHighwayChanged(highway: String) {
+        _uiState.value = _uiState.value.copy(highwayOrRoute = highway)
+    }
+
+    fun onLocationPicked(lat: Double, lng: Double) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(latitude = lat, longitude = lng)
+            val geocoded = locationClient.reverseGeocode(lat, lng)
+            _uiState.value = _uiState.value.copy(
+                address = if (geocoded.second.isNotBlank()) geocoded.second else _uiState.value.address,
+                city = if (geocoded.third.isNotBlank()) geocoded.third else _uiState.value.city
+            )
+        }
     }
 
     fun onBillAmountChanged(amount: String) {
         _uiState.value = _uiState.value.copy(billAmountText = amount)
+    }
+
+    fun onVisitPhotoAdded(uriString: String) {
+        val updated = (_uiState.value.visitPhotoUris + uriString).distinct()
+        _uiState.value = _uiState.value.copy(visitPhotoUris = updated)
+    }
+
+    fun onVisitPhotoRemoved(uriString: String) {
+        val updated = _uiState.value.visitPhotoUris.filterNot { it == uriString }
+        _uiState.value = _uiState.value.copy(visitPhotoUris = updated)
     }
 
     fun onGeneralNotesChanged(notes: String) {
@@ -277,6 +274,24 @@ class EntryEditorViewModel @Inject constructor(
         val current = _uiState.value.dishes.toMutableList()
         if (index in current.indices) {
             current.removeAt(index)
+            _uiState.value = _uiState.value.copy(dishes = current)
+        }
+    }
+
+    fun onDishPhotoAdded(index: Int, uriString: String) {
+        val current = _uiState.value.dishes.toMutableList()
+        if (index in current.indices) {
+            val updatedPhotos = (current[index].photoUris + uriString).distinct()
+            current[index] = current[index].copy(photoUris = updatedPhotos)
+            _uiState.value = _uiState.value.copy(dishes = current)
+        }
+    }
+
+    fun onDishPhotoRemoved(index: Int, uriString: String) {
+        val current = _uiState.value.dishes.toMutableList()
+        if (index in current.indices) {
+            val updatedPhotos = current[index].photoUris.filterNot { it == uriString }
+            current[index] = current[index].copy(photoUris = updatedPhotos)
             _uiState.value = _uiState.value.copy(dishes = current)
         }
     }
@@ -354,6 +369,7 @@ class EntryEditorViewModel @Inject constructor(
 
                 val visitId = UUID.randomUUID().toString()
                 val billAmount = state.billAmountText.toDoubleOrNull() ?: 0.0
+                val visitPhotosString = if (state.visitPhotoUris.isEmpty()) null else state.visitPhotoUris.joinToString(",")
 
                 val visitEntity = VisitEntryEntity(
                     id = visitId,
@@ -362,7 +378,7 @@ class EntryEditorViewModel @Inject constructor(
                     channel = state.channel,
                     visitVerdict = state.overallVerdict.name,
                     billAmount = billAmount,
-                    billReceiptPhotoUri = state.billPhotoUri,
+                    billReceiptPhotoUri = visitPhotosString,
                     generalNotes = state.generalNotes,
                     createdByMemberId = primaryMember?.id ?: "",
                     createdByMemberName = primaryName,
@@ -394,7 +410,7 @@ class EntryEditorViewModel @Inject constructor(
                         tags = if (draft.tagsText.isNotBlank()) draft.tagsText.split(",").map { it.trim() } else emptyList(),
                         memberPreferences = memberPrefMap,
                         price = draft.priceText.toDoubleOrNull() ?: 0.0,
-                        photoUris = emptyList(),
+                        photoUris = draft.photoUris,
                         notes = draft.tagsText,
                         isShared = state.isShared,
                         updatedAt = now,

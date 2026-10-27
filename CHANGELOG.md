@@ -5,9 +5,32 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.6] - 2026-10-21
+
+### Added
+- **Dish-Aware Unified Search & Tokenized Relevance Ranking (Phase 2A)**:
+  - Added `getAllDishes()` in `DishFeedbackDao` to stream active dish feedback entries across all restaurants.
+  - Implemented tokenized query processing in `DashboardViewModel` matching queries across restaurant metadata and specific dishes.
+  - Ranked search results by relevance (exact phrase match > all-token match > partial-token match) so searching e.g. `"Chicken Fry"` lists exact matches at top and partial matches (like `"Chicken 65"`) down the order.
+  - Displayed matched dish chips with verdict badges directly on `RestaurantCard` on Dashboard.
+- **Camera & System PhotoPicker Integration (Phase 2A)**:
+  - Added 1-tap **Gallery 🖼️** (`PickVisualMedia`) and **Camera 📷** (`TakePicture` via `FileProvider`) attachments in `EntryEditorScreen` (bill receipt and per-dish photos) and `QuickCaptureScreen`.
+  - Stored persistent copies of media in internal app storage via `MediaUtils.copyUriToInternalStorage()` for zero-permission offline rendering.
+- **Restaurant Details Photo Gallery & Fullscreen Preview (Phase 2A)**:
+  - Displayed dish photo thumbnails in the Dish Insights Matrix and bill receipt photo thumbnails in `VisitHistoryCard` via Coil `AsyncImage`.
+  - Implemented interactive tap-to-expand `FullscreenPhotoDialog` for full-screen photo viewing.
+- **Two-Way Family Photo Sync via Google Drive**:
+  - Implemented `PalateLog_Family/Photos/` subfolder management in `GoogleDriveSyncClient`.
+  - Added photo filename mapping in `SyncVisit` (`billReceiptPhotoName` / `photoNames`) and `SyncDish` (`photoNames`) using unique UUID filenames.
+  - Automatically uploads local photo files and downloads remote family photo files during Google Drive 2-way sync for offline rendering on all family devices.
+- **Multiple Visit Photo Attachments**:
+  - Upgraded visit-level photo attachments in `EntryEditorScreen` and `QuickCaptureScreen` to support attaching multiple photos (receipts, menu cards, ambience, etc.).
+  - Added `VisitEntry.photoUris` helper and rendered horizontal thumbnail gallery for all visit photos on `VisitHistoryCard` in `RestaurantDetailScreen`.
 
 ### Fixed & Cleaned
+- **Camera Permission & Gallery Folder Access**:
+  - Removed `android.permission.CAMERA` declaration from `AndroidManifest.xml` so `ActivityResultContracts.TakePicture()` delegates camera captures directly to system camera app without requiring runtime permissions.
+  - Replaced `PickVisualMedia` with `ActivityResultContracts.GetContent("image/*")` allowing browsing all phone folders (WhatsApp Images, Pictures, Downloads, SD Card, etc.) in system picker.
 - **In-App Update Activity Result API Migration**:
   - Migrated `InAppUpdateHelper` and `MainActivity` from deprecated `onActivityResult` callback to `ActivityResultContracts.StartIntentSenderForResult()`, eliminating deprecation build warnings and improving type safety.
 - **Code Hygiene & Kotlin Modernization**:

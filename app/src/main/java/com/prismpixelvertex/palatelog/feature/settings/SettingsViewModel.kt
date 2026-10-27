@@ -142,7 +142,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 val list = syncRepository.listInvitedMembers()
                 _invitedMembers.value = list
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Ignore failure
             }
         }
@@ -305,7 +305,9 @@ class SettingsViewModel @Inject constructor(
             if (!email.isNullOrBlank()) {
                 try {
                     syncRepository.performGoogleDriveSync(forceFullExport = false)
-                    _events.emit(SettingsEvent.ShowToast("Google Drive Sync completed!"))
+                    val status = syncRepository.syncStatus.value
+                    val msg = if (status is SyncStatus.Success) status.message else "Google Drive Sync completed!"
+                    _events.emit(SettingsEvent.ShowToast(msg))
                 } catch (e: GoogleAuthException) {
                     if (e.userRecoverableIntent != null) {
                         _events.emit(SettingsEvent.LaunchAuthConsent(e.userRecoverableIntent, email))
