@@ -43,9 +43,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.MapMarkerFactory
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
@@ -165,7 +167,7 @@ fun MapScreen(
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
         ) {
-            Icon(Icons.Default.MyLocation, contentDescription = "Center on my location")
+            Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.location_picker_my_location))
         }
 
         // Bottom Card when a custom location on map is tapped
@@ -211,7 +213,7 @@ fun MapScreen(
                                 onClick = { viewModel.clearCustomLocation() },
                                 modifier = Modifier.size(24.dp)
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = "Close")
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close))
                             }
                         }
 
@@ -243,7 +245,7 @@ fun MapScreen(
                             ) {
                                 Icon(Icons.Default.FlashOn, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Quick Log (3s)")
+                                Text(stringResource(R.string.dashboard_fab_quick_log))
                             }
 
                             Button(
@@ -262,7 +264,7 @@ fun MapScreen(
                             ) {
                                 Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Full Log")
+                                Text(stringResource(R.string.dashboard_fab_full_visit))
                             }
                         }
                     }
@@ -302,7 +304,7 @@ fun MapScreen(
                                 onClick = { viewModel.onMarkerSelected(null) },
                                 modifier = Modifier.size(24.dp)
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = "Close")
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close))
                             }
                         }
 
@@ -353,7 +355,7 @@ fun MapScreen(
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Log Visit")
+                                Text(stringResource(R.string.detail_action_new_visit))
                             }
 
                             OutlinedButton(
@@ -370,7 +372,7 @@ fun MapScreen(
                             ) {
                                 Icon(Icons.Default.Directions, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Navigate")
+                                Text(stringResource(R.string.detail_action_navigate))
                             }
 
                             OutlinedButton(
@@ -378,7 +380,7 @@ fun MapScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Insights")
+                                Text(stringResource(R.string.map_preview_view_details))
                                 Spacer(modifier = Modifier.width(2.dp))
                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                             }

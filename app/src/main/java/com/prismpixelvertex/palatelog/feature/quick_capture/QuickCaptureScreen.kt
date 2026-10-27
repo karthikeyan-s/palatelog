@@ -58,9 +58,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.LocationPickerDialog
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmber
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmberContainer
@@ -108,7 +110,7 @@ fun QuickCaptureScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "3-Second Quick Log",
+                            text = stringResource(R.string.quick_capture_title),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
@@ -116,7 +118,7 @@ fun QuickCaptureScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_close))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -159,7 +161,7 @@ fun QuickCaptureScreen(
 
             // Step 1: Big Verdict Selector
             Text(
-                text = "1. WHAT IS YOUR VERDICT?",
+                text = stringResource(R.string.quick_capture_verdict_header),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -170,7 +172,7 @@ fun QuickCaptureScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 VerdictChoiceButton(
-                    label = "NO-GO 🔴",
+                    label = stringResource(R.string.verdict_no_go),
                     sublabel = "Never Again!",
                     icon = Icons.Default.Block,
                     isSelected = uiState.selectedVerdict == Verdict.NO_GO,
@@ -181,7 +183,7 @@ fun QuickCaptureScreen(
                 )
 
                 VerdictChoiceButton(
-                    label = "GO 🟢",
+                    label = stringResource(R.string.verdict_go),
                     sublabel = "Must Visit!",
                     icon = Icons.Default.CheckCircle,
                     isSelected = uiState.selectedVerdict == Verdict.GO,
@@ -192,7 +194,7 @@ fun QuickCaptureScreen(
                 )
 
                 VerdictChoiceButton(
-                    label = "CAUTION 🟡",
+                    label = stringResource(R.string.verdict_caution),
                     sublabel = "Mixed / Okay",
                     icon = Icons.Default.Warning,
                     isSelected = uiState.selectedVerdict == Verdict.CAUTION,
@@ -209,7 +211,7 @@ fun QuickCaptureScreen(
             OutlinedTextField(
                 value = uiState.placeName,
                 onValueChange = { viewModel.onPlaceNameChanged(it) },
-                label = { Text("Restaurant / Stall Name *") },
+                label = { Text(stringResource(R.string.quick_capture_spot_name_hint)) },
                 placeholder = { Text("e.g. Highway Tea Point / Nagarjuna") },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
@@ -232,7 +234,7 @@ fun QuickCaptureScreen(
                 OutlinedTextField(
                     value = uiState.quickReason,
                     onValueChange = { viewModel.onQuickReasonChanged(it) },
-                    label = { Text("Quick Reason / Learning") },
+                    label = { Text(stringResource(R.string.quick_capture_reason_header)) },
                     placeholder = { Text("e.g. Terrible watery tea / Soggy side") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -356,7 +358,7 @@ fun QuickCaptureScreen(
                     Icon(Icons.Default.FlashOn, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Save & Finish (3s)",
+                        text = stringResource(R.string.quick_capture_save_button),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White

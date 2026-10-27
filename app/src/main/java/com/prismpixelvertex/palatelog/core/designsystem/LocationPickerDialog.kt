@@ -36,11 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.prismpixelvertex.palatelog.R
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -128,12 +130,12 @@ fun LocationPickerDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Select Restaurant Location",
+                                text = stringResource(R.string.location_picker_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Tap anywhere on map to pin spot",
+                                text = stringResource(R.string.location_picker_instructions),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -141,7 +143,7 @@ fun LocationPickerDialog(
                     }
 
                     IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close))
                     }
                 }
 
@@ -185,7 +187,7 @@ fun LocationPickerDialog(
                             .padding(8.dp)
                             .size(40.dp)
                     ) {
-                        Icon(Icons.Default.MyLocation, contentDescription = "Center on pin", modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.location_picker_my_location), modifier = Modifier.size(20.dp))
                     }
                 }
 
@@ -211,7 +213,7 @@ fun LocationPickerDialog(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.action_cancel))
                     }
 
                     Button(
@@ -222,7 +224,7 @@ fun LocationPickerDialog(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Confirm Spot", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.location_picker_confirm), fontWeight = FontWeight.Bold)
                     }
                 }
             }

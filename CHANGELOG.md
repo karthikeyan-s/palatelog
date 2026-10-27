@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Upgraded visit-level photo attachments in `EntryEditorScreen` and `QuickCaptureScreen` to support attaching multiple photos (receipts, menu cards, ambience, etc.).
   - Added `VisitEntry.photoUris` helper and rendered horizontal thumbnail gallery for all visit photos on `VisitHistoryCard` in `RestaurantDetailScreen`.
 
+### Added & Refactored
+- **UI String Resource Extraction & Localization Preparedness (`strings.xml`)**:
+  - Extracted hardcoded UI string literals across all Jetpack Compose screens, navigation components, dialogs, badges, and design system elements into `app/src/main/res/values/strings.xml`.
+  - Refactored `PalateLogNavGraph`, `Components`, `LocationPickerDialog`, `DashboardScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `MapScreen`, and `SettingsScreen` to use `@StringRes` and `stringResource(...)`.
+  - Prepared codebase for internationalization (i18n) and localized screen readers (TalkBack) while resolving Android Lint `HardcodedText` warnings.
+
 ### Fixed & Cleaned
 - **Camera Permission & Gallery Folder Access**:
   - Removed `android.permission.CAMERA` declaration from `AndroidManifest.xml` so `ActivityResultContracts.TakePicture()` delegates camera captures directly to system camera app without requiring runtime permissions.
