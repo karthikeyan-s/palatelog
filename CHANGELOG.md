@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `VisitEntry.photoUris` helper and rendered horizontal thumbnail gallery for all visit photos on `VisitHistoryCard` in `RestaurantDetailScreen`.
 
 ### Added & Refactored
+- **Design System Dimensions & Spacing Tokens (`Dimens.kt`)**:
+  - Created `core/designsystem/Dimens.kt` establishing central design system tokens for Spacing (`SpacingSmall = 8.dp`, `SpacingDefault = 16.dp`), Corner Radii (`RadiusMedium = 12.dp`, `RadiusLarge = 16.dp`, `RadiusDialog = 20.dp`), Icon Sizing (`IconSizeSmall = 16.dp`, `IconSizeDefault = 24.dp`, `IconSizeHero = 64.dp`), and Component Heights (`ButtonHeightStandard = 56.dp`).
+  - Standardized component padding and dimensions across `Components`, `LocationPickerDialog`, `DashboardScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `MapScreen`, and `SettingsScreen`.
+- **Strict Non-Transitive R Classes (`android.nonTransitiveRClass`)**:
+  - Added `android.nonTransitiveRClass=true` to `gradle.properties`, enforcing strict submodule resource scoping and reducing compiled R class bytecode overhead.
 - **UI String Resource Extraction & Localization Preparedness (`strings.xml`)**:
   - Extracted hardcoded UI string literals across all Jetpack Compose screens, navigation components, dialogs, badges, and design system elements into `app/src/main/res/values/strings.xml`.
   - Refactored `PalateLogNavGraph`, `Components`, `LocationPickerDialog`, `DashboardScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `MapScreen`, and `SettingsScreen` to use `@StringRes` and `stringResource(...)`.

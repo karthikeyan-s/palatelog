@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreen
@@ -247,7 +248,7 @@ fun DashboardScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(32.dp),
+                        .padding(Dimens.SpacingXLarge),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -255,15 +256,15 @@ fun DashboardScreen(
                             imageVector = Icons.Default.Restaurant,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(64.dp)
+                            modifier = Modifier.size(Dimens.IconSizeHero)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingDefault))
                         Text(
                             text = if (uiState.searchQuery.isBlank()) stringResource(R.string.dashboard_empty_title) else stringResource(R.string.dashboard_empty_search_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
                         Text(
                             text = stringResource(R.string.dashboard_empty_subtitle),
                             style = MaterialTheme.typography.bodyMedium,

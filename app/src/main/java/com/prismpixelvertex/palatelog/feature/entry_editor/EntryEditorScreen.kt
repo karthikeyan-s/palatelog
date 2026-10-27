@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.LocationPickerDialog
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmber
@@ -477,10 +478,10 @@ fun EntryEditorScreen(
                 onClick = { viewModel.saveEntry() },
                 enabled = !uiState.isSaving && uiState.restaurantName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(Dimens.RadiusLarge),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(Dimens.ButtonHeightStandard)
             ) {
                 if (uiState.isSaving) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
