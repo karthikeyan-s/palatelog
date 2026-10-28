@@ -48,7 +48,7 @@ PalateLog follows Google's recommended **Clean Architecture** with MVVM / MVI Un
 ```
 palatelog/
 ├── app/                        # Main Android application module
-│   ├── src/main/java/com/karthik/palatelog/
+│   ├── src/main/java/com/prismpixelvertex/palatelog/
 │   │   ├── core/               # Database, Location, Sync, Design System
 │   │   └── feature/            # Quick Capture, Map, Explore, Details, Settings
 │   └── build.gradle.kts

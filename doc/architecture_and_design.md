@@ -22,7 +22,7 @@ The system addresses three critical memory failure modes:
 PalateLog follows Google's recommended **Clean Architecture** with strict Unidirectional Data Flow (UDF) and MVVM:
 
 ```
-app/src/main/java/com/karthik/palatelog/
+app/src/main/java/com/prismpixelvertex/palatelog/
 ├── PalateLogApp.kt             # Application class (@HiltAndroidApp, WorkManager config)
 ├── MainActivity.kt             # Single Activity host with Edge-to-Edge & Compose NavHost
 ├── core/
