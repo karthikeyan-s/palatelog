@@ -138,7 +138,7 @@ graph TD
     C1 --> D[Select 1-Tap Verdict: NO-GO / GO / CAUTION]
     C2 --> D
     D --> E[Select Quick Reason Chip: 'Watery tea', 'Soggy food', 'Dirty restrooms']
-    E --> F[Tap 'Save & Finish (3s)']
+    E --> F["Tap 'Save & Finish (3s)'"]
     F --> G[Atomic insert to Room DB & return to Explore]
 ```
 

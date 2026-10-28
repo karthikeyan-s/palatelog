@@ -5,6 +5,16 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.8] - 2026-10-21
+
+### Changed & Fixed
+- **Gradle Build Portability (`gradle.properties`)**:
+  - Removed local machine hardcoded `org.gradle.java.home` path from `gradle.properties` so builds are portable across developer machines, operating systems, and CI/CD pipelines.
+- **GitHub Documentation Mermaid Diagram Syntax (`architecture_and_design.md`)**:
+  - Fixed a Mermaid flowchart rendering error in `doc/architecture_and_design.md` by escaping node label parentheses in double quotes (`"Tap 'Save & Finish (3s)'"`).
+- **Public Repository Readiness & Git Author History**:
+  - Unified repository Git commit history to use GitHub no-reply email (`5286594+karthikeyan-s@users.noreply.github.com`).
+
 ## [1.2.7] - 2026-10-21
 
 ### Added & Refactored
