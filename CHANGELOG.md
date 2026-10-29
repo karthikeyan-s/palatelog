@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added explicit `Locale.getDefault()` to `GeoUtils.kt` distance formatting to prevent implicit locale conversion issues.
   - Modernized `Channel.values()` to Kotlin 2.0 `Channel.entries` in `VisitEntry.kt` for allocation-free enumeration.
   - Migrated URL parsing to KTX `.toUri()` in `ExternalMapNavigator.kt` and `SettingsScreen.kt`.
-  - Migrated `SharedPreferences` write calls to KTX `prefs.edit { ... }` in `SyncRepository.kt`.
+  - Migrated `SharedPreferences` write calls to KTX `prefs.edit { ... }` in `SyncRepository.kt` and `EntryEditorViewModel.kt`.
+  - Migrated marker rendering in `MapMarkerFactory.kt` to Android KTX (`.toColorInt()`, `createBitmap()`, `.toDrawable()`).
+  - Removed unused XML namespace declaration from `file_paths.xml`.
   - Quoted Mermaid diagram node strings containing emojis and quotes in `architecture_and_design.md` to resolve parser syntax errors.
   - Removed dead imports across `DashboardScreen.kt`, `DashboardViewModel.kt`, `MapScreen.kt`, `MapViewModel.kt`, `RestaurantDetailScreen.kt`, and `SettingsScreen.kt`.
   - Cleaned redundant properties in `.editorconfig`.

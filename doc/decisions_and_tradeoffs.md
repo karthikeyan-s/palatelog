@@ -159,6 +159,8 @@ A comprehensive IDE code inspection audit (351 reported items in `index.html`) w
 - Passed explicit `Locale.getDefault()` in `GeoUtils.kt` distance formatting.
 - Replaced `Channel.values()` with `Channel.entries` for allocation-free enumeration in Kotlin 2.0.
 - Replaced `Uri.parse()` with `.toUri()` extension in `ExternalMapNavigator.kt` and `SettingsScreen.kt`.
-- Replaced `prefs.edit().apply()` with KTX `prefs.edit { ... }` in `SyncRepository.kt`.
+- Replaced `prefs.edit().apply()` with KTX `prefs.edit { ... }` in `SyncRepository.kt` and `EntryEditorViewModel.kt`.
+- Migrated `MapMarkerFactory.kt` bitmap, color, and drawable instantiation to Android KTX (`.toColorInt()`, `createBitmap()`, `.toDrawable()`).
+- Removed redundant `xmlns:android` namespace declaration from `file_paths.xml`.
 - Cleaned dead imports across Compose screens/ViewModels and removed redundant `.editorconfig` properties.
 
