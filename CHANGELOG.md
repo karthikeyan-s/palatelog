@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.8] - 2026-10-21
 
 ### Changed & Fixed
+- **Touchscreen Hardware Filtering (`AndroidManifest.xml`)**:
+  - Added `<uses-feature android:name="android.hardware.touchscreen" android:required="true" />` to manifest so Google Play filters out non-touchscreen Android TV set-top boxes and streaming devices.
 - **Gradle Build Portability (`gradle.properties`)**:
   - Removed local machine hardcoded `org.gradle.java.home` path from `gradle.properties` so builds are portable across developer machines, operating systems, and CI/CD pipelines.
 - **GitHub Documentation Mermaid Diagram Syntax (`architecture_and_design.md`)**:

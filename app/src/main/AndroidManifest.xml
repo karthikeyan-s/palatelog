@@ -10,7 +10,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Camera and Storage for food photos & bill receipts -->
+    <!-- Hardware requirements: Require touchscreen to filter out Android TV boxes -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- Package visibility queries for navigation intents (Android 11+) -->
