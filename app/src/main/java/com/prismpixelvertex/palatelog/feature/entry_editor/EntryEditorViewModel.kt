@@ -1,6 +1,7 @@
 package com.prismpixelvertex.palatelog.feature.entry_editor
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -108,7 +109,7 @@ class EntryEditorViewModel @Inject constructor(
         val prefs = context.getSharedPreferences("palatelog_prefs", Context.MODE_PRIVATE)
         val current = prefs.getStringSet("custom_channels", emptySet())?.toMutableSet() ?: mutableSetOf()
         current.add(channelName)
-        prefs.edit().putStringSet("custom_channels", current).apply()
+        prefs.edit { putStringSet("custom_channels", current) }
     }
 
     private fun loadInitialData() {
@@ -165,7 +166,7 @@ class EntryEditorViewModel @Inject constructor(
                 highwayOrRoute = restaurant.highwayOrRoute,
                 latitude = restaurant.latitude,
                 longitude = restaurant.longitude,
-                overallVerdict = try { Verdict.valueOf(restaurant.overallVerdict) } catch (e: Exception) { Verdict.GO },
+                overallVerdict = try { Verdict.valueOf(restaurant.overallVerdict) } catch (_: Exception) { Verdict.GO },
                 previousDishes = pastDishes
             )
         }
@@ -200,6 +201,7 @@ class EntryEditorViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(overallVerdict = verdict)
     }
 
+    @Suppress("unused")
     fun onCuisineChanged(cuisine: String) {
         _uiState.value = _uiState.value.copy(cuisine = cuisine)
     }
@@ -212,6 +214,7 @@ class EntryEditorViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(city = city)
     }
 
+    @Suppress("unused")
     fun onHighwayChanged(highway: String) {
         _uiState.value = _uiState.value.copy(highwayOrRoute = highway)
     }

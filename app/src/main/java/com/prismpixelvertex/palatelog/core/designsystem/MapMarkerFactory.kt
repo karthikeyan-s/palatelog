@@ -1,14 +1,15 @@
 package com.prismpixelvertex.palatelog.core.designsystem
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.toColorInt
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.model.RestaurantType
 import com.prismpixelvertex.palatelog.core.model.Verdict
@@ -48,13 +49,13 @@ object MapMarkerFactory {
     ): Drawable {
         val width = 100
         val height = 120
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
 
         val pinColor = when (verdict) {
-            Verdict.GO -> Color.parseColor("#10B981") // Emerald Green
-            Verdict.NO_GO -> Color.parseColor("#EF4444") // Crimson Red
-            Verdict.CAUTION -> Color.parseColor("#F59E0B") // Amber Yellow
+            Verdict.GO -> "#10B981".toColorInt() // Emerald Green
+            Verdict.NO_GO -> "#EF4444".toColorInt() // Crimson Red
+            Verdict.CAUTION -> "#F59E0B".toColorInt() // Amber Yellow
         }
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -103,24 +104,24 @@ object MapMarkerFactory {
             iconDrawable.draw(canvas)
         }
 
-        return BitmapDrawable(context.resources, bitmap)
+        return bitmap.toDrawable(context.resources)
     }
 
     private fun createUserLocationMarkerBitmap(context: Context): Drawable {
         val size = 80
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
 
         val center = size / 2f
 
         val outerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#333B82F6")
+            color = "#333B82F6".toColorInt()
             style = Paint.Style.FILL
         }
         canvas.drawCircle(center, center, 36f, outerPaint)
 
         val middlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#2563EB")
+            color = "#2563EB".toColorInt()
             style = Paint.Style.FILL
         }
         canvas.drawCircle(center, center, 22f, middlePaint)
@@ -138,13 +139,13 @@ object MapMarkerFactory {
         }
         canvas.drawCircle(center, center, 8f, innerPaint)
 
-        return BitmapDrawable(context.resources, bitmap)
+        return bitmap.toDrawable(context.resources)
     }
 
     private fun createCustomLocationMarkerBitmap(context: Context): Drawable {
         val width = 90
         val height = 110
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
 
         val centerX = width / 2f
@@ -161,7 +162,7 @@ object MapMarkerFactory {
         }
 
         val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#F59E0B")
+            color = "#F59E0B".toColorInt()
             style = Paint.Style.FILL
         }
 
@@ -181,11 +182,11 @@ object MapMarkerFactory {
         canvas.drawCircle(centerX, circleCenterY, 12f, dotPaint)
 
         val innerDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#F59E0B")
+            color = "#F59E0B".toColorInt()
             style = Paint.Style.FILL
         }
         canvas.drawCircle(centerX, circleCenterY, 6f, innerDotPaint)
 
-        return BitmapDrawable(context.resources, bitmap)
+        return bitmap.toDrawable(context.resources)
     }
 }
