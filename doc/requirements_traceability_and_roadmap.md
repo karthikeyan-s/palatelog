@@ -50,3 +50,6 @@ Based on the gap analysis, here are the completed phases and recommended next st
    - Allow entering an Origin and Destination (e.g. Bangalore to Chennai) to query all logged stops within 5-10 km along that highway corridor.
 7. **Proximity Regret Warning Notification (Optional Geofence)**:
    - When driving within 200m of a restaurant previously marked **NO-GO 🔴**, pop up a friendly reminder: *"Heads up! You marked [Highway Tea Stall] as NO-GO (Terrible watery tea) on May 2024."*
+8. **Comprehensive UI Localization & Hardcoded String Migration (TODO)**:
+   - Perform an exhaustive audit across all Compose UI screens (e.g. Quick Capture reason chips, photo dialogs, empty states, filter badges) to wire remaining hardcoded Kotlin strings into `res/values/strings.xml`.
+   - Prune obsolete string keys and prepare the app for full multi-language locale support.

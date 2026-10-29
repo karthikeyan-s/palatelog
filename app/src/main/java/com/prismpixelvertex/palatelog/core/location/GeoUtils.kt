@@ -1,5 +1,6 @@
 package com.prismpixelvertex.palatelog.core.location
 
+import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -57,7 +58,7 @@ object GeoUtils {
         return if (km < 1.0) {
             "${(km * 1000).toInt()} m"
         } else {
-            String.format("%.1f km", km)
+            String.format(Locale.getDefault(), "%.1f km", km)
         }
     }
 }

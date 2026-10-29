@@ -24,7 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Directions
@@ -32,7 +31,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -56,6 +54,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -75,7 +74,6 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
-import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.ChannelBadge
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.FamilyReactionTag
@@ -717,8 +715,8 @@ private fun LocationPickerDialog(
     onConfirm: (lat: Double, lng: Double, street: String, city: String) -> Unit
 ) {
     val context = LocalContext.current
-    var selectedLat by remember { mutableStateOf(initialLat) }
-    var selectedLng by remember { mutableStateOf(initialLng) }
+    var selectedLat by remember { mutableDoubleStateOf(initialLat) }
+    var selectedLng by remember { mutableDoubleStateOf(initialLng) }
     var selectedStreet by remember { mutableStateOf("") }
     var selectedCity by remember { mutableStateOf("") }
 

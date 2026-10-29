@@ -121,3 +121,46 @@ When logging entries or quick regrets in the field, GPS precision might vary or 
 ### Decision & Trade-offs
 * **Benefits**: High flexibility, instantaneous correction of address/coordinate errors, zero orphaned child entities (dishes/visits remain correctly linked), and full sync compatibility.
 
+---
+
+## ADR 008: Static Analysis & IDE Lint Observation Triage Strategy
+
+### Context
+A comprehensive IDE code inspection audit (351 reported items in `index.html`) was conducted. While static analysis provides valuable insights into memory efficiency and deprecated APIs, indiscriminately applying automated quick-fixes can introduce build instability, break existing runtime mechanisms, or reverse intentional product constraints. We categorized all observations and established an explicit policy distinguishing genuine fixes from intentional exceptions and deferred tasks.
+
+### Decisions & Untouched Warnings (False Positives / Intentional Design)
+
+1. **Device Form-Factor Gate (`android.hardware.touchscreen` `required="true"`)**:
+   - *Decision*: Retained intentionally with `tools:ignore="UnnecessaryRequiredFeature"`.
+   - *Rationale*: PalateLog is engineered strictly for mobile handheld dining and travel journal capture. We explicitly restrict Play Store eligibility away from Android TV and non-touch form factors.
+2. **Stable Device Identity (`Settings.Secure.ANDROID_ID`)**:
+   - *Decision*: Retained with `@SuppressLint("HardwareIds")`.
+   - *Rationale*: Used exclusively as a persistent device ID anchor in personal Google Drive sync delta filenames (`changes_<deviceId>.json`). Migrating to a randomized app UUID at this phase would invalidate existing family device sync states and cause delta fragmentation.
+3. **Dependency & Toolchain Upgrades**:
+   - *Decision*: Kept stable library versions in `libs.versions.toml`; deferred upgrades.
+   - *Rationale*: Upgrades flagged by Lint (e.g., AGP 9.5.x, Kotlin 2.4.x, compileSdk 37, Hilt 2.60.x) contain breaking changes. Core toolchain upgrades are managed as isolated, planned milestone tasks with full regression testing.
+4. **Framework & Reflection Entry Points (`ChannelBadge`, Room `Converters`)**:
+   - *Decision*: Retained without modifications.
+   - *Rationale*: Flagged as "unused declarations" because IDE static reachability does not trace Room SQLite type converter generation and dynamic Compose entry points.
+5. **`forceFullExport` Parameter Extensibility in `SettingsViewModel`**:
+   - *Decision*: Retained with `@Suppress("SameParameterValue")`.
+   - *Rationale*: Preserves clean API extensibility for upcoming background or incremental sync triggers without mutating the function signature.
+6. **Domain Vernacular & Programmatic Pluralization**:
+   - *Decision*: Retained "Drive-Thru" and singular/plural visits strings with `tools:ignore="Typos,Spelling,PluralsCandidate"`.
+   - *Rationale*: "Drive-Thru" is standard industry vernacular. Plural formatting is already handled deterministically in Kotlin Compose code (`if (item.totalVisits == 1)`).
+7. **Deferred String Pruning for Localization**:
+   - *Decision*: Retained all pre-allocated string resources in `strings.xml` and suppressed `UnusedResources` via module-level `app/lint.xml`.
+   - *Rationale*: Hardcoded strings in Compose screens will be systematically migrated to `strings.xml` in a dedicated localization session (tracked in Roadmap Phase 3).
+
+### Genuine Fixes Applied
+- Quoted Mermaid node strings containing emojis and quotes in `architecture_and_design.md` to resolve AST parser errors.
+- Added `android:value="androidx.startup"` on WorkManagerInitializer removal in `AndroidManifest.xml` and removed redundant `MainActivity` label.
+- Replaced `mutableStateOf` with `mutableDoubleStateOf` in `RestaurantDetailScreen.kt` to eliminate primitive boxing.
+- Passed explicit `Locale.getDefault()` in `GeoUtils.kt` distance formatting.
+- Replaced `Channel.values()` with `Channel.entries` for allocation-free enumeration in Kotlin 2.0.
+- Replaced `Uri.parse()` with `.toUri()` extension in `ExternalMapNavigator.kt` and `SettingsScreen.kt`.
+- Replaced `prefs.edit().apply()` with KTX `prefs.edit { ... }` in `SyncRepository.kt` and `EntryEditorViewModel.kt`.
+- Migrated `MapMarkerFactory.kt` bitmap, color, and drawable instantiation to Android KTX (`.toColorInt()`, `createBitmap()`, `.toDrawable()`).
+- Removed redundant `xmlns:android` namespace declaration from `file_paths.xml`.
+- Cleaned dead imports across Compose screens/ViewModels and removed redundant `.editorconfig` properties.
+

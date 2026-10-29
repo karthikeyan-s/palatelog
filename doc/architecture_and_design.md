@@ -131,13 +131,13 @@ erDiagram
 ### A. The 3-Second Quick Regret Logger (Speed-First Capture)
 ```mermaid
 graph TD
-    A[Tap Floating 'Quick Regret Log' 🔴] --> B[Auto-fetch GPS & Geocoded Address]
+    A["Tap Floating 'Quick Regret Log' 🔴"] --> B[Auto-fetch GPS & Geocoded Address]
     B --> C{Nearby Spot Found within 50m?}
     C -->|Yes| C1[Show One-Tap Reuse Banner]
     C -->|No| C2[Auto-fill Area Name]
     C1 --> D[Select 1-Tap Verdict: NO-GO / GO / CAUTION]
     C2 --> D
-    D --> E[Select Quick Reason Chip: 'Watery tea', 'Soggy food', 'Dirty restrooms']
+    D --> E["Select Quick Reason Chip: 'Watery tea', 'Soggy food', 'Dirty restrooms'"]
     E --> F["Tap 'Save & Finish (3s)'"]
     F --> G[Atomic insert to Room DB & return to Explore]
 ```
@@ -148,9 +148,9 @@ graph TD
     A[Open App before ordering on Zomato] --> B[Search 'Nagarjuna']
     B --> C[Tap Restaurant Card to Open Details]
     C --> D[Review Dish Matrix]
-    D --> D1[🟢 Must-Try: Biriyani - 'Fragrant spices']
-    D --> D2[🔴 Avoid: Chicken Fry - 'Became soggy during delivery']
-    D --> D3[👥 Family Notes: 'Wife loved Mutton Fry; Karthik avoids Chicken Fry']
+    D --> D1["🟢 Must-Try: Biriyani - 'Fragrant spices'"]
+    D --> D2["🔴 Avoid: Chicken Fry - 'Became soggy during delivery'"]
+    D --> D3["👥 Family Notes: 'Wife loved Mutton Fry; Karthik avoids Chicken Fry'"]
     D --> E[Order safely on Zomato without regrets]
     E --> F[Tap 'New Visit' in PalateLog]
     F --> G[Dishes pre-filled as selectable chips for instant 1-tap re-logging]

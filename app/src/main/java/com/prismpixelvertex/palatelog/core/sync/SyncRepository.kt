@@ -1,5 +1,6 @@
 package com.prismpixelvertex.palatelog.core.sync
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import android.util.Log
@@ -49,13 +50,16 @@ class SyncRepository @Inject constructor(
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
 
-    private val deviceId: String by lazy {
-        try {
+    @SuppressLint("HardwareIds")
+    private fun getHardwareDeviceId(): String {
+        return try {
             Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "device_unknown"
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "device_unknown"
         }
     }
+
+    private val deviceId: String by lazy { getHardwareDeviceId() }
 
     fun getGoogleAccountEmail(): String? {
         return prefs.getString("google_account_email", null)
@@ -74,7 +78,7 @@ class SyncRepository @Inject constructor(
     }
 
     fun setSyncMode(mode: String) {
-        prefs.edit().putString("sync_mode", mode).apply()
+        prefs.edit { putString("sync_mode", mode) }
     }
 
     fun getTargetFolderId(): String? {
@@ -83,9 +87,9 @@ class SyncRepository @Inject constructor(
 
     fun setTargetFolderId(folderId: String?) {
         if (folderId.isNullOrBlank()) {
-            prefs.edit().remove("target_folder_id").apply()
+            prefs.edit { remove("target_folder_id") }
         } else {
-            prefs.edit().putString("target_folder_id", folderId).apply()
+            prefs.edit { putString("target_folder_id", folderId) }
         }
     }
 
@@ -94,7 +98,7 @@ class SyncRepository @Inject constructor(
     }
 
     private fun setLastSyncTimestamp(timestamp: Long) {
-        prefs.edit().putLong("last_synced_at", timestamp).apply()
+        prefs.edit { putLong("last_synced_at", timestamp) }
     }
 
     private fun extractPhotoFileName(uriString: String?): String? {

@@ -82,10 +82,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import com.google.android.gms.common.AccountPicker
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
-import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -965,11 +965,11 @@ fun SettingsScreen(
                     onClick = {
                         val message = "Hi! I'm trying to join our family's PalateLog sync. Could you please add my email (${event.userEmail}) under Family Sync Settings in your PalateLog app?"
                         val waIntent = Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse("https://api.whatsapp.com/send?text=${Uri.encode(message)}")
+                            data = "https://api.whatsapp.com/send?text=${Uri.encode(message)}".toUri()
                         }
                         try {
                             context.startActivity(waIntent)
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_TEXT, message)

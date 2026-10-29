@@ -49,12 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
-import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.MapMarkerFactory
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
-import com.prismpixelvertex.palatelog.core.model.Verdict
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver

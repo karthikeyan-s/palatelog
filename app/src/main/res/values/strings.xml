@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- App & General -->
     <string name="app_name">PalateLog</string>
     <string name="tagline">Never repeat a dining regret; remember every family favorite</string>
@@ -41,7 +41,7 @@
     <string name="channel_dhaba">Dhaba</string>
     <string name="channel_cafe">Cafe</string>
     <string name="channel_cloud_kitchen">Cloud Kitchen</string>
-    <string name="channel_drive_thru">Drive-thru</string>
+    <string name="channel_drive_thru" tools:ignore="Typos,Spelling">Drive-thru</string>
 
     <!-- Location Picker Dialog -->
     <string name="location_picker_title">Pick Location on Map</string>
@@ -67,8 +67,8 @@
     <string name="dashboard_filter_nearby">📍 Near Me (&lt;15km)</string>
     <string name="dashboard_filter_highway">🛣️ Highway</string>
     <string name="dashboard_filter_delivery">🛵 Zomato / Swiggy</string>
-    <string name="dashboard_card_visits">%1$d visit</string>
-    <string name="dashboard_card_visits_plural">%1$d visits</string>
+    <string name="dashboard_card_visits" tools:ignore="PluralsCandidate">%1$d visit</string>
+    <string name="dashboard_card_visits_plural" tools:ignore="PluralsCandidate">%1$d visits</string>
     <string name="dashboard_empty_title">No restaurant entries yet</string>
     <string name="dashboard_empty_search_title">No matching spots found</string>
     <string name="dashboard_empty_subtitle">Tap the Quick Regret Log or + button to record your first food insight!</string>
