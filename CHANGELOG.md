@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed a Mermaid flowchart rendering error in `doc/architecture_and_design.md` by escaping node label parentheses in double quotes (`"Tap 'Save & Finish (3s)'"`).
 - **Public Repository Readiness & Git Author History**:
   - Unified repository Git commit history to use GitHub no-reply email (`5286594+karthikeyan-s@users.noreply.github.com`).
+- **Repository Code Ownership (`.github/CODEOWNERS`)**:
+  - Added `.github/CODEOWNERS` defining `@karthikeyan-s` as default code owner for repository governance.
 
 ## [1.2.7] - 2026-10-21
 
