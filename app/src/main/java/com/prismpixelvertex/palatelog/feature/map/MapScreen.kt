@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
-import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.MapMarkerFactory
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed

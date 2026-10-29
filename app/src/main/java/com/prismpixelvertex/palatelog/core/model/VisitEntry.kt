@@ -14,11 +14,11 @@ enum class Channel(val displayName: String) {
     DRIVE_THRU("Drive-Thru");
 
     companion object {
-        val DEFAULT_CHANNELS: List<String> = values().map { it.displayName }
+        val DEFAULT_CHANNELS: List<String> = entries.map { it.displayName }
 
         fun getChannelDisplayName(channelStr: String): String {
             if (channelStr.isBlank()) return WALK_IN.displayName
-            val enumMatch = values().firstOrNull {
+            val enumMatch = entries.firstOrNull {
                 it.name.equals(channelStr, ignoreCase = true) || it.displayName.equals(channelStr, ignoreCase = true)
             }
             if (enumMatch != null) return enumMatch.displayName

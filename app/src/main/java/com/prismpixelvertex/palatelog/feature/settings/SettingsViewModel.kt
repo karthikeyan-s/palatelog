@@ -262,6 +262,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    @Suppress("SameParameterValue")
     private suspend fun connectAndSyncGoogleDrive(email: String, forceFullExport: Boolean) {
         try {
             // Temporarily configure email in repository for token request

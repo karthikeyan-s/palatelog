@@ -24,7 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Directions
@@ -56,6 +55,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -717,8 +717,8 @@ private fun LocationPickerDialog(
     onConfirm: (lat: Double, lng: Double, street: String, city: String) -> Unit
 ) {
     val context = LocalContext.current
-    var selectedLat by remember { mutableStateOf(initialLat) }
-    var selectedLng by remember { mutableStateOf(initialLng) }
+    var selectedLat by remember { mutableDoubleStateOf(initialLat) }
+    var selectedLng by remember { mutableDoubleStateOf(initialLng) }
     var selectedStreet by remember { mutableStateOf("") }
     var selectedCity by remember { mutableStateOf("") }
 

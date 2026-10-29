@@ -10,7 +10,6 @@ import com.prismpixelvertex.palatelog.core.database.VisitDao
 import com.prismpixelvertex.palatelog.core.database.VisitEntryEntity
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
 import com.prismpixelvertex.palatelog.core.location.LocationClient
-import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishFeedback
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Restaurant

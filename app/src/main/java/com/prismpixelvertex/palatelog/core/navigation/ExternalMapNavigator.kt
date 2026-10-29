@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.core.net.toUri
 
 object ExternalMapNavigator {
 
@@ -16,7 +17,7 @@ object ExternalMapNavigator {
         val encodedLabel = Uri.encode(label)
 
         // Tier 1: Try direct Google Maps app driving navigation intent
-        val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude&mode=d")
+        val gmmIntentUri = "google.navigation:q=$latitude,$longitude&mode=d".toUri()
         val googleMapsIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
             setPackage("com.google.android.apps.maps")
         }
@@ -29,7 +30,7 @@ object ExternalMapNavigator {
         }
 
         // Tier 2: Try standard geo: scheme for any installed map application (Waze, OsmAnd, etc.)
-        val geoUri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude($encodedLabel)")
+        val geoUri = "geo:$latitude,$longitude?q=$latitude,$longitude($encodedLabel)".toUri()
         val geoIntent = Intent(Intent.ACTION_VIEW, geoUri)
         try {
             context.startActivity(geoIntent)
@@ -39,7 +40,7 @@ object ExternalMapNavigator {
         }
 
         // Tier 3: Ultimate Fallback - Open directions in Web Browser
-        val webMapsUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude")
+        val webMapsUri = "https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude".toUri()
         val webIntent = Intent(Intent.ACTION_VIEW, webMapsUri)
         try {
             context.startActivity(webIntent)

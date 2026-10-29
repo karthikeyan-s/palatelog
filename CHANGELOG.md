@@ -5,6 +5,29 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.9] - 2026-10-29
+
+### Fixed & Optimized
+- **Static Analysis & Lint Cleanup (ADR 008)**:
+  - Corrected WorkManager on-demand initialization in `AndroidManifest.xml` with `android:value="androidx.startup"` on the removal tag, resolving the `RemoveWorkManagerInitializer` lint error.
+  - Eliminated Compose primitive boxing in `RestaurantDetailScreen.kt` by switching coordinate state to `mutableDoubleStateOf`.
+  - Added explicit `Locale.getDefault()` to `GeoUtils.kt` distance formatting to prevent implicit locale conversion issues.
+  - Modernized `Channel.values()` to Kotlin 2.0 `Channel.entries` in `VisitEntry.kt` for allocation-free enumeration.
+  - Migrated URL parsing to KTX `.toUri()` in `ExternalMapNavigator.kt` and `SettingsScreen.kt`.
+  - Migrated `SharedPreferences` write calls to KTX `prefs.edit { ... }` in `SyncRepository.kt`.
+  - Quoted Mermaid diagram node strings containing emojis and quotes in `architecture_and_design.md` to resolve parser syntax errors.
+  - Removed dead imports across `DashboardScreen.kt`, `DashboardViewModel.kt`, `MapScreen.kt`, `MapViewModel.kt`, `RestaurantDetailScreen.kt`, and `SettingsScreen.kt`.
+  - Cleaned redundant properties in `.editorconfig`.
+
+### Added & Documented
+- **Lint Configuration & Intentional Suppressions (`app/lint.xml`)**:
+  - Added `app/lint.xml` to globally ignore `UnusedResources` pending the planned full-app UI localization session.
+  - Annotated intentional product design constraints: `UnnecessaryRequiredFeature` on touchscreen requirement in manifest, `@SuppressLint("HardwareIds")` on stable device ID in `SyncRepository.kt`, and `@Suppress("SameParameterValue")` in `SettingsViewModel.kt`.
+- **Architecture Decision Record (ADR 008)**:
+  - Added `ADR 008: Static Analysis & IDE Lint Observation Triage Strategy` to `doc/decisions_and_tradeoffs.md`.
+- **Roadmap Tracked Task**:
+  - Added comprehensive Compose UI localization and hardcoded string migration TODO to `doc/requirements_traceability_and_roadmap.md`.
+
 ## [1.2.8] - 2026-10-21
 
 ### Changed & Fixed
