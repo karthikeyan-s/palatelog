@@ -43,7 +43,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PalateLog">
+        android:theme="@style/Theme.PalateLog"
+        tools:ignore="RemoveWorkManagerInitializer">
 
         <activity
             android:name=".MainActivity"
@@ -60,13 +61,7 @@
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup"
-                tools:node="remove" />
-        </provider>
+            tools:node="remove" />
 
         <!-- FileProvider for capturing camera images securely -->
         <provider
