@@ -103,7 +103,7 @@ fun EntryEditorScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is EntryEditorEvent.SavedSuccessfully -> {
-                    Toast.makeText(context, "Visit & dish learnings saved! ✅", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.entry_editor_saved_toast), Toast.LENGTH_SHORT).show()
                     onNavigateBack()
                 }
                 is EntryEditorEvent.Error -> {
@@ -195,7 +195,7 @@ fun EntryEditorScreen(
                 value = uiState.restaurantName,
                 onValueChange = { viewModel.onRestaurantNameChanged(it) },
                 label = { Text(stringResource(R.string.entry_editor_field_name)) },
-                placeholder = { Text("e.g. Nagarjuna / Sri Krishna Grand") },
+                placeholder = { Text(stringResource(R.string.entry_editor_spot_placeholder)) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -210,7 +210,7 @@ fun EntryEditorScreen(
                     value = uiState.address,
                     onValueChange = { viewModel.onAddressChanged(it) },
                     label = { Text(stringResource(R.string.entry_editor_field_address)) },
-                    placeholder = { Text("e.g. Indiranagar") },
+                    placeholder = { Text(stringResource(R.string.entry_editor_address_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1f)
@@ -220,7 +220,7 @@ fun EntryEditorScreen(
                     value = uiState.city,
                     onValueChange = { viewModel.onCityChanged(it) },
                     label = { Text(stringResource(R.string.entry_editor_field_city)) },
-                    placeholder = { Text("e.g. Bengaluru") },
+                    placeholder = { Text(stringResource(R.string.entry_editor_city_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1f)
@@ -237,8 +237,8 @@ fun EntryEditorScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (uiState.latitude != 0.0 || uiState.longitude != 0.0)
-                            "📍 Pinned: ${String.format(java.util.Locale.US, "%.4f", uiState.latitude)}, ${String.format(java.util.Locale.US, "%.4f", uiState.longitude)}"
-                        else "📍 No location pinned",
+                            stringResource(R.string.entry_editor_pinned_coords, String.format(java.util.Locale.US, "%.4f", uiState.latitude), String.format(java.util.Locale.US, "%.4f", uiState.longitude))
+                        else stringResource(R.string.entry_editor_no_location_pinned),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -250,7 +250,7 @@ fun EntryEditorScreen(
                 ) {
                     Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (uiState.latitude != 0.0 || uiState.longitude != 0.0) "Change on Map" else "Pick on Map")
+                    Text(if (uiState.latitude != 0.0 || uiState.longitude != 0.0) stringResource(R.string.entry_editor_change_on_map) else stringResource(R.string.entry_editor_pick_location_btn))
                 }
             }
 
@@ -270,7 +270,7 @@ fun EntryEditorScreen(
             if (uiState.previousDishes.isNotEmpty()) {
                 Column {
                     Text(
-                        text = "PAST DISHES REMEMBERED (TAP TO ADD):",
+                        text = stringResource(R.string.entry_editor_remembered_dishes_header),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = AmberPrimary
@@ -395,7 +395,7 @@ fun EntryEditorScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No dishes added yet. Tap \"Add Dish\" or tap a remembered dish above to isolate what was good vs soggy/bad!",
+                        text = stringResource(R.string.entry_editor_no_dishes_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -435,7 +435,7 @@ fun EntryEditorScreen(
                         value = uiState.billAmountText,
                         onValueChange = { viewModel.onBillAmountChanged(it) },
                         label = { Text(stringResource(R.string.entry_editor_field_bill_amount)) },
-                        placeholder = { Text("e.g. 1250") },
+                        placeholder = { Text(stringResource(R.string.entry_editor_bill_amount_placeholder)) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -443,7 +443,7 @@ fun EntryEditorScreen(
 
                     // Bill / Receipt / Menu Photo Attachment
                     Text(
-                        text = "ATTACH RECEIPT, MENU CARD, OR VISIT PHOTO",
+                        text = stringResource(R.string.entry_editor_attach_receipt_btn),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -458,7 +458,7 @@ fun EntryEditorScreen(
                         value = uiState.generalNotes,
                         onValueChange = { viewModel.onGeneralNotesChanged(it) },
                         label = { Text(stringResource(R.string.entry_editor_field_notes)) },
-                        placeholder = { Text("e.g. Slow service on weekend, clean AC dining hall") },
+                        placeholder = { Text(stringResource(R.string.entry_editor_notes_placeholder)) },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -480,12 +480,12 @@ fun EntryEditorScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "Share with Family Drive",
+                            text = stringResource(R.string.entry_editor_share_family_title),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = if (uiState.isShared) "Syncs to Family Shared Drive" else "Kept private on this phone",
+                            text = if (uiState.isShared) stringResource(R.string.entry_editor_share_family_syncs) else stringResource(R.string.entry_editor_share_family_private),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -528,13 +528,13 @@ fun EntryEditorScreen(
         var newChannelName by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { viewModel.showAddChannelDialog(false) },
-            title = { Text("Add Order / Visit Option") },
+            title = { Text(stringResource(R.string.entry_editor_add_channel_dialog_title)) },
             text = {
                 OutlinedTextField(
                     value = newChannelName,
                     onValueChange = { newChannelName = it },
-                    label = { Text("Option Name") },
-                    placeholder = { Text("e.g. Ownly, EatClub, Dunzo") },
+                    label = { Text(stringResource(R.string.entry_editor_add_channel_name_label)) },
+                    placeholder = { Text(stringResource(R.string.entry_editor_add_channel_name_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -545,12 +545,12 @@ fun EntryEditorScreen(
                         viewModel.onAddCustomChannel(newChannelName)
                     }
                 }) {
-                    Text("Add")
+                    Text(stringResource(R.string.settings_dialog_add_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.showAddChannelDialog(false) }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -635,7 +635,7 @@ fun PhotoAttachmentBox(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.height(2.dp))
-                Text("Gallery", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.entry_editor_gallery), style = MaterialTheme.typography.labelSmall)
             }
         }
 
@@ -655,7 +655,7 @@ fun PhotoAttachmentBox(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.height(2.dp))
-                Text("Camera", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.entry_editor_camera), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -683,20 +683,20 @@ private fun DishEditorCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Dish #${index + 1}",
+                    text = stringResource(R.string.entry_editor_dish_index_header, index + 1),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
                 IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error)
                 }
             }
 
             OutlinedTextField(
                 value = draft.name,
                 onValueChange = { onUpdate(draft.copy(name = it)) },
-                label = { Text("Dish Name *") },
-                placeholder = { Text("e.g. Nagarjuna Biriyani / Chicken Fry") },
+                label = { Text(stringResource(R.string.entry_editor_dish_name)) },
+                placeholder = { Text(stringResource(R.string.entry_editor_dish_name_placeholder)) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -744,8 +744,8 @@ private fun DishEditorCard(
             OutlinedTextField(
                 value = draft.tagsText,
                 onValueChange = { onUpdate(draft.copy(tagsText = it)) },
-                label = { Text("Dish Remarks / Tags") },
-                placeholder = { Text("e.g. Soggy during delivery, Fragrant rice") },
+                label = { Text(stringResource(R.string.entry_editor_dish_tags_label)) },
+                placeholder = { Text(stringResource(R.string.entry_editor_dish_tags_placeholder)) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -755,8 +755,8 @@ private fun DishEditorCard(
             OutlinedTextField(
                 value = draft.memberReaction,
                 onValueChange = { onUpdate(draft.copy(memberReaction = it)) },
-                label = { Text("Who liked/disliked? (Family Notes)") },
-                placeholder = { Text("e.g. Wife loved it, I disliked (too oily)") },
+                label = { Text(stringResource(R.string.entry_editor_dish_family_notes_label)) },
+                placeholder = { Text(stringResource(R.string.entry_editor_dish_family_notes_placeholder)) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -764,7 +764,7 @@ private fun DishEditorCard(
 
             // Dish Photos Attachment
             Text(
-                text = "DISH PHOTOS",
+                text = stringResource(R.string.entry_editor_dish_photos_header),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

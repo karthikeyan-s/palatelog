@@ -5,6 +5,16 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.12] - 2026-10-31
+
+### Refactored & Localization
+- **Complete Hardcoded UI String Extraction & Localization Support**:
+  - **Comprehensive Audit**: Conducted a project-wide search for hardcoded user-facing strings across all Compose screens (`SettingsScreen`, `QuickCaptureScreen`, `EntryEditorScreen`, `RestaurantDetailScreen`, `DashboardScreen`, `MapScreen`, `LocationPickerDialog`).
+  - **Centralized String Resources**: Extracted over 80+ hardcoded UI strings, dialog titles, placeholders, toast messages, and dynamic format strings into `res/values/strings.xml` to support full app internationalization/localization (i18n).
+  - **Settings & Sync Refactoring**: Converted Google Drive connection statuses (`Google Drive Connected`, `Disconnect`, `Family Sync Setup Mode`, `Shared Account`, `Individual Accounts`), member profile strings, backup import/export labels, and permission pending WhatsApp prompt texts to `stringResource` / `context.getString`.
+  - **Quick Capture & Visit Log Refactoring**: Refactored verdict sublabels (`Never Again!`, `Must Visit!`, `Mixed / Okay`), quick reason chip default suggestions, highway corridor placeholders, remembered dish headers, and dish editor cards to use localized string resources.
+  - **Map & Restaurant Details Refactoring**: Replaced map marker titles, location coordinate readouts, delete confirmation dialog copy, and visit channel section headers with string resources.
+
 ## [1.2.11] - 2026-10-30
 
 ### Added

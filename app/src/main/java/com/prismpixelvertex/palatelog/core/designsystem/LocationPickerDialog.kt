@@ -165,8 +165,8 @@ fun LocationPickerDialog(
 
                             val marker = Marker(map).apply {
                                 position = selectedPoint
-                                title = "Pinned Spot 📍"
-                                snippet = "Tap Confirm below"
+                                title = context.getString(R.string.restaurant_detail_selected_spot_default)
+                                snippet = context.getString(R.string.map_tap_actions_sub)
                                 icon = MapMarkerFactory.getCustomLocationMarker(context)
                                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                             }
@@ -195,7 +195,7 @@ fun LocationPickerDialog(
 
                 // Coordinates readout
                 Text(
-                    text = "📍 Coordinates: ${String.format(Locale.US, "%.5f", selectedPoint.latitude)}, ${String.format(Locale.US, "%.5f", selectedPoint.longitude)}",
+                    text = stringResource(R.string.restaurant_detail_coords_fmt, String.format(Locale.US, "%.5f", selectedPoint.latitude), String.format(Locale.US, "%.5f", selectedPoint.longitude)),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
