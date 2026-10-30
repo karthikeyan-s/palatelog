@@ -249,18 +249,18 @@ fun SettingsScreen(
                             Icon(Icons.Default.People, contentDescription = null, tint = AmberPrimary)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Family Members (${uiState.members.size})",
+                                text = stringResource(R.string.settings_family_members_count, uiState.members.size),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                         IconButton(onClick = { showAddMemberDialog = true }) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Member", tint = AmberPrimary)
+                            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.settings_dialog_add_member_title), tint = AmberPrimary)
                         }
                     }
 
                     Text(
-                        text = "Used for tagging specific food preferences (e.g. \"Wife loved this, Karthik avoided\").",
+                        text = stringResource(R.string.settings_family_members_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -284,7 +284,7 @@ fun SettingsScreen(
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = member.displayName + if (member.isPrimaryUser) " (Primary)" else "",
+                                    text = member.displayName + if (member.isPrimaryUser) stringResource(R.string.settings_primary_badge) else "",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -299,7 +299,7 @@ fun SettingsScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.Edit,
-                                        contentDescription = "Edit Profile Name",
+                                        contentDescription = stringResource(R.string.action_edit),
                                         tint = AmberPrimary,
                                         modifier = Modifier.size(16.dp)
                                     )
@@ -311,7 +311,7 @@ fun SettingsScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
-                                        contentDescription = "Remove",
+                                        contentDescription = stringResource(R.string.action_delete),
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(16.dp)
                                     )
@@ -338,7 +338,7 @@ fun SettingsScreen(
                             Icon(Icons.Default.CloudSync, contentDescription = null, tint = AmberPrimary)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Google Shared Drive Sync",
+                                text = stringResource(R.string.settings_drive_sync_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -349,7 +349,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                                contentDescription = "Sync Help",
+                                contentDescription = stringResource(R.string.help_title),
                                 tint = AmberPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -357,7 +357,7 @@ fun SettingsScreen(
                     }
 
                     Text(
-                        text = "Synchronizes shared food learnings across your family devices via Google Drive with zero server costs.",
+                        text = stringResource(R.string.settings_drive_sync_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -386,7 +386,7 @@ fun SettingsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "Google Drive Connected",
+                                            text = stringResource(R.string.settings_drive_connected),
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = FontWeight.Bold,
                                             maxLines = 1,
@@ -407,7 +407,7 @@ fun SettingsScreen(
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Text(
-                                        text = "Disconnect",
+                                        text = stringResource(R.string.settings_drive_disconnect),
                                         style = MaterialTheme.typography.labelSmall,
                                         maxLines = 1,
                                         softWrap = false
@@ -432,13 +432,13 @@ fun SettingsScreen(
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Text(
-                                        text = "Family Sync Setup Mode",
+                                        text = stringResource(R.string.settings_sync_setup_mode),
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") "(Individual)" else "(Shared)",
+                                        text = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") stringResource(R.string.settings_sync_mode_individual_tag) else stringResource(R.string.settings_sync_mode_shared_tag),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 1,
@@ -447,7 +447,7 @@ fun SettingsScreen(
                                 }
                                 Icon(
                                     imageVector = if (isSyncModeExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (isSyncModeExpanded) "Collapse" else "Expand",
+                                    contentDescription = if (isSyncModeExpanded) stringResource(R.string.help_action_collapse) else stringResource(R.string.help_action_expand),
                                     tint = AmberPrimary,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -475,7 +475,7 @@ fun SettingsScreen(
                                             modifier = Modifier.weight(1f)
                                         ) {
                                             Text(
-                                                text = "Shared Account",
+                                                text = stringResource(R.string.settings_sync_mode_shared_account),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = if (uiState.syncMode == "SHARED_ACCOUNT") AmberPrimary else MaterialTheme.colorScheme.onSurface
                                             )
@@ -493,7 +493,7 @@ fun SettingsScreen(
                                             modifier = Modifier.weight(1f)
                                         ) {
                                             Text(
-                                                text = "Individual Accounts",
+                                                text = stringResource(R.string.settings_sync_mode_individual_accounts),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = if (uiState.syncMode == "INDIVIDUAL_ACCOUNTS") AmberPrimary else MaterialTheme.colorScheme.onSurface
                                             )
@@ -510,14 +510,14 @@ fun SettingsScreen(
                                             verticalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             Text(
-                                                text = "Individual Accounts Management",
+                                                text = stringResource(R.string.settings_individual_mgmt_title),
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
 
                                             if (!uiState.targetFolderId.isNullOrBlank()) {
                                                 Text(
-                                                    text = "Family Folder ID: ${uiState.targetFolderId}",
+                                                    text = stringResource(R.string.settings_family_folder_id, uiState.targetFolderId ?: ""),
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     maxLines = 1,
@@ -534,7 +534,7 @@ fun SettingsScreen(
                                                     shape = RoundedCornerShape(8.dp),
                                                     modifier = Modifier.weight(1f)
                                                 ) {
-                                                    Text("➕ Invite Email", style = MaterialTheme.typography.labelSmall)
+                                                    Text(stringResource(R.string.settings_btn_invite_email), style = MaterialTheme.typography.labelSmall)
                                                 }
 
                                                 OutlinedButton(
@@ -542,7 +542,7 @@ fun SettingsScreen(
                                                     shape = RoundedCornerShape(8.dp),
                                                     modifier = Modifier.weight(1f)
                                                 ) {
-                                                    Text("📱 Share Link", style = MaterialTheme.typography.labelSmall)
+                                                    Text(stringResource(R.string.settings_btn_share_link), style = MaterialTheme.typography.labelSmall)
                                                 }
                                             }
 
@@ -551,7 +551,7 @@ fun SettingsScreen(
                                                 shape = RoundedCornerShape(8.dp),
                                                 modifier = Modifier.fillMaxWidth()
                                             ) {
-                                                Text("🔗 Join via Folder Link / ID", style = MaterialTheme.typography.labelSmall)
+                                                Text(stringResource(R.string.settings_btn_join_folder), style = MaterialTheme.typography.labelSmall)
                                             }
                                         }
                                     }
@@ -577,16 +577,16 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Connect Google Drive for Cloud Sync")
+                            Text(stringResource(R.string.settings_btn_connect_drive))
                         }
                     }
 
                     val syncTimeText = if (uiState.lastSyncedAt > 0) {
                         SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(uiState.lastSyncedAt))
-                    } else "Never"
+                    } else stringResource(R.string.settings_sync_never)
 
                     Text(
-                        text = "Last Synced: $syncTimeText",
+                        text = stringResource(R.string.settings_sync_status, syncTimeText),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -611,7 +611,7 @@ fun SettingsScreen(
                         } else {
                             Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Sync Now")
+                            Text(stringResource(R.string.settings_sync_now))
                         }
                     }
                 }
@@ -625,7 +625,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Offline Backup & Transfer",
+                        text = stringResource(R.string.settings_offline_backup_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -641,7 +641,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Export JSON")
+                            Text(stringResource(R.string.settings_btn_export_json))
                         }
 
                         OutlinedButton(
@@ -651,7 +651,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Import JSON")
+                            Text(stringResource(R.string.settings_btn_import_json))
                         }
                     }
                 }
@@ -717,13 +717,13 @@ fun SettingsScreen(
                         Icon(Icons.Default.Info, contentDescription = null, tint = AmberPrimary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "About PalateLog",
+                            text = stringResource(R.string.settings_about_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Text(
-                        text = "Application ID: ${BuildConfig.APPLICATION_ID}\nVersion: ${BuildConfig.VERSION_NAME}\nLicense: MIT License",
+                        text = stringResource(R.string.settings_about_details, BuildConfig.APPLICATION_ID, BuildConfig.VERSION_NAME),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -738,13 +738,13 @@ fun SettingsScreen(
     if (showAddMemberDialog) {
         AlertDialog(
             onDismissRequest = { showAddMemberDialog = false },
-            title = { Text("Add Family Member") },
+            title = { Text(stringResource(R.string.settings_dialog_add_member_title)) },
             text = {
                 OutlinedTextField(
                     value = newMemberName,
                     onValueChange = { newMemberName = it },
-                    label = { Text("Member Name") },
-                    placeholder = { Text("e.g. Wife, Son, Daughter") },
+                    label = { Text(stringResource(R.string.settings_dialog_member_name_label)) },
+                    placeholder = { Text(stringResource(R.string.settings_dialog_member_name_placeholder)) },
                     singleLine = true
                 )
             },
@@ -756,12 +756,12 @@ fun SettingsScreen(
                         showAddMemberDialog = false
                     }
                 }) {
-                    Text("Add")
+                    Text(stringResource(R.string.settings_dialog_add_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddMemberDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -771,13 +771,13 @@ fun SettingsScreen(
     if (showEditPrimaryDialog) {
         AlertDialog(
             onDismissRequest = { showEditPrimaryDialog = false },
-            title = { Text("Edit Primary Profile Name") },
+            title = { Text(stringResource(R.string.settings_dialog_edit_primary_title)) },
             text = {
                 OutlinedTextField(
                     value = primaryNameInput,
                     onValueChange = { primaryNameInput = it },
-                    label = { Text("Profile Name") },
-                    placeholder = { Text("e.g. Karthik, Priya, Me") },
+                    label = { Text(stringResource(R.string.settings_dialog_profile_name_label)) },
+                    placeholder = { Text(stringResource(R.string.settings_dialog_profile_name_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -789,12 +789,12 @@ fun SettingsScreen(
                         showEditPrimaryDialog = false
                     }
                 }) {
-                    Text("Save")
+                    Text(stringResource(R.string.action_save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEditPrimaryDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -804,7 +804,7 @@ fun SettingsScreen(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text("Import JSON Backup") },
+            title = { Text(stringResource(R.string.settings_dialog_import_title)) },
             text = {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -817,7 +817,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Select Backup File 📁")
+                        Text(stringResource(R.string.settings_dialog_select_backup_file))
                     }
 
                     Row(
@@ -826,7 +826,7 @@ fun SettingsScreen(
                     ) {
                         HorizontalDivider(modifier = Modifier.weight(1f))
                         Text(
-                            text = "  OR PASTE JSON  ",
+                            text = stringResource(R.string.settings_dialog_or_paste),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -836,7 +836,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = importJsonText,
                         onValueChange = { importJsonText = it },
-                        label = { Text("Paste JSON Text") },
+                        label = { Text(stringResource(R.string.settings_dialog_paste_label)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(110.dp)
@@ -854,12 +854,12 @@ fun SettingsScreen(
                     },
                     enabled = importJsonText.isNotBlank()
                 ) {
-                    Text("Restore Text")
+                    Text(stringResource(R.string.settings_dialog_restore_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showImportDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -869,18 +869,18 @@ fun SettingsScreen(
     if (showInviteDialog) {
         AlertDialog(
             onDismissRequest = { showInviteDialog = false },
-            title = { Text("Invite Family Member", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.settings_dialog_invite_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Enter Google Account email addresses to grant access to your family sync folder:",
+                        text = stringResource(R.string.settings_dialog_invite_desc),
                         style = MaterialTheme.typography.bodySmall
                     )
                     OutlinedTextField(
                         value = inviteEmailsInput,
                         onValueChange = { inviteEmailsInput = it },
-                        label = { Text("Email Address(es)") },
-                        placeholder = { Text("e.g. wife@gmail.com, son@gmail.com") },
+                        label = { Text(stringResource(R.string.settings_dialog_invite_emails_label)) },
+                        placeholder = { Text(stringResource(R.string.settings_dialog_invite_emails_placeholder)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -896,12 +896,12 @@ fun SettingsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
                 ) {
-                    Text("Grant Access")
+                    Text(stringResource(R.string.settings_dialog_grant_access_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showInviteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -909,11 +909,13 @@ fun SettingsScreen(
 
     // Share Family Sync Link Dialog
     if (showShareQrDialog) {
-        val folderId = uiState.targetFolderId ?: "Pending Setup"
+        val folderId = uiState.targetFolderId ?: stringResource(R.string.settings_dialog_pending_setup)
         val shareLink = "palatelog://sync?folderId=$folderId"
+        val whatsappShareMsg = stringResource(R.string.settings_dialog_share_whatsapp_text, folderId, shareLink)
+        val shareChooserTitle = stringResource(R.string.settings_dialog_share_chooser_title)
         AlertDialog(
             onDismissRequest = { showShareQrDialog = false },
-            title = { Text("Family Sync Share Link", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.settings_dialog_share_link_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -921,7 +923,7 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Share this link or Folder ID with your family members so they can connect their PalateLog app:",
+                        text = stringResource(R.string.settings_dialog_share_link_desc),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Box(
@@ -932,7 +934,7 @@ fun SettingsScreen(
                             .padding(12.dp)
                     ) {
                         Text(
-                            text = "Folder ID:\n$folderId",
+                            text = stringResource(R.string.settings_dialog_folder_id_label, folderId),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -942,22 +944,22 @@ fun SettingsScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val shareText = "Join our PalateLog Family Sync!\n\nFolder ID: $folderId\nLink: $shareLink"
+                        val shareText = whatsappShareMsg
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, shareText)
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, "Share PalateLog Family Link"))
+                        context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
                         showShareQrDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
                 ) {
-                    Text("Share via WhatsApp")
+                    Text(stringResource(R.string.settings_share_whatsapp))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showShareQrDialog = false }) {
-                    Text("Close")
+                    Text(stringResource(R.string.action_close))
                 }
             }
         )
@@ -967,18 +969,18 @@ fun SettingsScreen(
     if (showJoinFolderDialog) {
         AlertDialog(
             onDismissRequest = { showJoinFolderDialog = false },
-            title = { Text("Join Family Sync Folder", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.settings_dialog_join_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Enter or paste the Family Folder ID shared by your host:",
+                        text = stringResource(R.string.settings_dialog_join_desc),
                         style = MaterialTheme.typography.bodySmall
                     )
                     OutlinedTextField(
                         value = joinFolderIdInput,
                         onValueChange = { joinFolderIdInput = it },
-                        label = { Text("Folder ID") },
-                        placeholder = { Text("e.g. 1a2b3c4d5e...") },
+                        label = { Text(stringResource(R.string.settings_dialog_folder_id_input_label)) },
+                        placeholder = { Text(stringResource(R.string.settings_dialog_folder_id_input_placeholder)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -996,12 +998,12 @@ fun SettingsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
                 ) {
-                    Text("Connect Folder")
+                    Text(stringResource(R.string.settings_dialog_connect_folder_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showJoinFolderDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -1009,6 +1011,9 @@ fun SettingsScreen(
 
     // Permission Pending Dialog
     pendingPermissionDialogEvent?.let { event ->
+        val userEmail = event.userEmail
+        val permPendingMsg = stringResource(R.string.settings_permission_pending_whatsapp_msg, userEmail)
+        val askHostTitle = stringResource(R.string.settings_permission_pending_ask_host_chooser)
         AlertDialog(
             onDismissRequest = { pendingPermissionDialogEvent = null },
             icon = {
@@ -1021,7 +1026,7 @@ fun SettingsScreen(
             },
             title = {
                 Text(
-                    text = "Access Permission Pending",
+                    text = stringResource(R.string.settings_permission_pending_title),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -1029,11 +1034,11 @@ fun SettingsScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Your account (${event.userEmail}) does not have access to this family sync folder yet.",
+                        text = stringResource(R.string.settings_permission_pending_desc, userEmail),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "Please ask the family host to add ${event.userEmail} under Family Sync Settings in their PalateLog app.",
+                        text = stringResource(R.string.settings_permission_pending_ask, userEmail),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1042,7 +1047,7 @@ fun SettingsScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val message = "Hi! I'm trying to join our family's PalateLog sync. Could you please add my email (${event.userEmail}) under Family Sync Settings in your PalateLog app?"
+                        val message = permPendingMsg
                         val waIntent = Intent(Intent.ACTION_VIEW).apply {
                             data = "https://api.whatsapp.com/send?text=${Uri.encode(message)}".toUri()
                         }
@@ -1053,18 +1058,18 @@ fun SettingsScreen(
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_TEXT, message)
                             }
-                            context.startActivity(Intent.createChooser(shareIntent, "Ask Host"))
+                            context.startActivity(Intent.createChooser(shareIntent, askHostTitle))
                         }
                         pendingPermissionDialogEvent = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
                 ) {
-                    Text("Ask Host via WhatsApp")
+                    Text(stringResource(R.string.settings_permission_pending_ask_whatsapp))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { pendingPermissionDialogEvent = null }) {
-                    Text("Dismiss")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )

@@ -91,7 +91,7 @@ fun QuickCaptureScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is QuickCaptureEvent.SavedSuccessfully -> {
-                    Toast.makeText(context, "Logged in 3 seconds! 🎯", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.quick_capture_logged_toast), Toast.LENGTH_SHORT).show()
                     onNavigateBack()
                 }
                 is QuickCaptureEvent.Error -> {
@@ -186,7 +186,7 @@ fun QuickCaptureScreen(
             ) {
                 VerdictChoiceButton(
                     label = stringResource(R.string.verdict_no_go),
-                    sublabel = "Never Again!",
+                    sublabel = stringResource(R.string.quick_capture_verdict_sublabel_no_go),
                     icon = Icons.Default.Block,
                     isSelected = uiState.selectedVerdict == Verdict.NO_GO,
                     selectedColor = VerdictNoGoRed,
@@ -197,7 +197,7 @@ fun QuickCaptureScreen(
 
                 VerdictChoiceButton(
                     label = stringResource(R.string.verdict_go),
-                    sublabel = "Must Visit!",
+                    sublabel = stringResource(R.string.quick_capture_verdict_sublabel_go),
                     icon = Icons.Default.CheckCircle,
                     isSelected = uiState.selectedVerdict == Verdict.GO,
                     selectedColor = VerdictGoGreen,
@@ -208,7 +208,7 @@ fun QuickCaptureScreen(
 
                 VerdictChoiceButton(
                     label = stringResource(R.string.verdict_caution),
-                    sublabel = "Mixed / Okay",
+                    sublabel = stringResource(R.string.quick_capture_verdict_sublabel_caution),
                     icon = Icons.Default.Warning,
                     isSelected = uiState.selectedVerdict == Verdict.CAUTION,
                     selectedColor = VerdictCautionAmber,
@@ -225,7 +225,7 @@ fun QuickCaptureScreen(
                 value = uiState.placeName,
                 onValueChange = { viewModel.onPlaceNameChanged(it) },
                 label = { Text(stringResource(R.string.quick_capture_spot_name_hint)) },
-                placeholder = { Text("e.g. Highway Tea Point / Nagarjuna") },
+                placeholder = { Text(stringResource(R.string.quick_capture_spot_name_placeholder)) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -235,8 +235,8 @@ fun QuickCaptureScreen(
             OutlinedTextField(
                 value = uiState.dishName,
                 onValueChange = { viewModel.onDishNameChanged(it) },
-                label = { Text("Dish / Item (Optional)") },
-                placeholder = { Text("e.g. Masala Tea / Chicken Fry") },
+                label = { Text(stringResource(R.string.quick_capture_dish_label)) },
+                placeholder = { Text(stringResource(R.string.quick_capture_dish_placeholder)) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -248,7 +248,7 @@ fun QuickCaptureScreen(
                     value = uiState.quickReason,
                     onValueChange = { viewModel.onQuickReasonChanged(it) },
                     label = { Text(stringResource(R.string.quick_capture_reason_header)) },
-                    placeholder = { Text("e.g. Terrible watery tea / Soggy side") },
+                    placeholder = { Text(stringResource(R.string.quick_capture_reason_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -257,9 +257,22 @@ fun QuickCaptureScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 val quickChips = if (uiState.selectedVerdict == Verdict.NO_GO) {
-                    listOf("Watery tea", "Soggy food", "Dirty restrooms", "Overpriced", "Stale food", "Too oily")
+                    listOf(
+                        stringResource(R.string.quick_capture_reason_watery_tea),
+                        stringResource(R.string.quick_capture_reason_soggy_food),
+                        stringResource(R.string.quick_capture_reason_dirty_restrooms),
+                        stringResource(R.string.quick_capture_reason_overpriced),
+                        stringResource(R.string.quick_capture_chip_reason_stale_food),
+                        stringResource(R.string.quick_capture_chip_reason_too_oily)
+                    )
                 } else {
-                    listOf("Super crispy", "Fragrant spices", "Clean restrooms", "Great service", "Value for money")
+                    listOf(
+                        stringResource(R.string.quick_capture_chip_reason_super_crispy),
+                        stringResource(R.string.quick_capture_chip_reason_fragrant_spices),
+                        stringResource(R.string.quick_capture_reason_clean_restrooms),
+                        stringResource(R.string.quick_capture_chip_reason_great_service),
+                        stringResource(R.string.quick_capture_chip_reason_value_for_money)
+                    )
                 }
 
                 Row(
@@ -288,7 +301,7 @@ fun QuickCaptureScreen(
 
             // Photo Attachment (Optional)
             Text(
-                text = "ATTACH PHOTO (OPTIONAL)",
+                text = stringResource(R.string.quick_capture_attach_photo),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -318,12 +331,12 @@ fun QuickCaptureScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "Highway Outstation Stop",
+                            text = stringResource(R.string.quick_capture_highway_title),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Save for road trip memory trail",
+                            text = stringResource(R.string.quick_capture_highway_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -339,8 +352,8 @@ fun QuickCaptureScreen(
                 OutlinedTextField(
                     value = uiState.highwayName,
                     onValueChange = { viewModel.onHighwayNameChanged(it) },
-                    label = { Text("Highway / Corridor Name") },
-                    placeholder = { Text("e.g. NH44 / Bangalore-Chennai") },
+                    label = { Text(stringResource(R.string.quick_capture_highway_corridor_label)) },
+                    placeholder = { Text(stringResource(R.string.quick_capture_highway_corridor_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -420,7 +433,7 @@ private fun LocationHeaderCard(
                             CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Acquiring GPS location...",
+                                text = stringResource(R.string.quick_capture_acquiring_gps),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -431,7 +444,7 @@ private fun LocationHeaderCard(
                             uiState.city.ifBlank { null }
                         ).joinToString(", ")
                         Text(
-                            text = locText.ifBlank { "GPS Location Acquired" },
+                            text = locText.ifBlank { stringResource(R.string.quick_capture_gps_acquired) },
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface
@@ -442,7 +455,7 @@ private fun LocationHeaderCard(
                 TextButton(onClick = onOpenMapPicker) {
                     Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Change on Map", fontSize = 12.sp)
+                    Text(stringResource(R.string.quick_capture_change_on_map), fontSize = 12.sp)
                 }
             }
 
@@ -458,19 +471,19 @@ private fun LocationHeaderCard(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Are you at ${nearby.name}?",
+                            text = stringResource(R.string.quick_capture_nearby_prompt, nearby.name),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = "Tap to reuse this spot",
+                            text = stringResource(R.string.quick_capture_nearby_reuse_subtext),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
                     }
                     TextButton(onClick = { onUseNearby(nearby) }) {
-                        Text("Use This", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.quick_capture_use_this_btn), fontWeight = FontWeight.Bold)
                     }
                 }
             }

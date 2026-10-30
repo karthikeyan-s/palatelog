@@ -116,7 +116,7 @@ fun MapScreen(
                 if (uiState.isLocationReady) {
                     val userMarker = Marker(map).apply {
                         position = GeoPoint(uiState.userLatitude, uiState.userLongitude)
-                        title = "Your Location"
+                        title = context.getString(R.string.map_your_location)
                         icon = MapMarkerFactory.getUserLocationMarker(context)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                     }
@@ -127,8 +127,8 @@ fun MapScreen(
                 uiState.selectedCustomLocation?.let { customLoc ->
                     val customMarker = Marker(map).apply {
                         position = GeoPoint(customLoc.latitude, customLoc.longitude)
-                        title = if (customLoc.street.isNotBlank()) customLoc.street else "Selected Spot 📍"
-                        snippet = "Tap actions below to log"
+                        title = if (customLoc.street.isNotBlank()) customLoc.street else context.getString(R.string.map_selected_spot_default)
+                        snippet = context.getString(R.string.map_tap_actions_sub)
                         icon = MapMarkerFactory.getCustomLocationMarker(context)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                     }
@@ -200,9 +200,9 @@ fun MapScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = if (customLoc.isLoadingAddress) "Acquiring Address..."
+                                    text = if (customLoc.isLoadingAddress) stringResource(R.string.map_acquiring_address)
                                     else listOfNotNull(customLoc.street.ifBlank { null }, customLoc.city.ifBlank { null })
-                                        .joinToString(", ").ifBlank { "Selected Location Spot" },
+                                        .joinToString(", ").ifBlank { stringResource(R.string.map_selected_spot_default) },
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f, fill = false)
@@ -218,7 +218,7 @@ fun MapScreen(
 
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "📍 Coordinates: ${String.format(java.util.Locale.US, "%.4f", customLoc.latitude)}, ${String.format(java.util.Locale.US, "%.4f", customLoc.longitude)}",
+                            text = stringResource(R.string.map_coords_fmt, String.format(java.util.Locale.US, "%.4f", customLoc.latitude), String.format(java.util.Locale.US, "%.4f", customLoc.longitude)),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

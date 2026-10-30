@@ -394,7 +394,7 @@ fun RestaurantDetailScreen(
                     restaurantType = type,
                     overallVerdict = verdict
                 )
-                Toast.makeText(context, "Restaurant details updated! ✅", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.restaurant_detail_updated_toast), Toast.LENGTH_SHORT).show()
                 showEditRestaurantDialog = false
             }
         )
@@ -404,8 +404,8 @@ fun RestaurantDetailScreen(
     if (showDeleteConfirmDialog && restaurant != null) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text("Delete Restaurant?") },
-            text = { Text("Are you sure you want to delete '${restaurant.name}'? This will remove it from your log.") },
+            title = { Text(stringResource(R.string.detail_delete_dialog_title)) },
+            text = { Text(stringResource(R.string.detail_delete_dialog_msg)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -414,12 +414,12 @@ fun RestaurantDetailScreen(
                         onNavigateBack()
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -438,7 +438,7 @@ fun RestaurantDetailScreen(
                     visitVerdict = verdict,
                     generalNotes = notes
                 )
-                Toast.makeText(context, "Visit entry updated! ✅", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.restaurant_detail_visit_updated_toast), Toast.LENGTH_SHORT).show()
                 visitToEdit = null
             }
         )
@@ -448,22 +448,22 @@ fun RestaurantDetailScreen(
     visitToDelete?.let { visit ->
         AlertDialog(
             onDismissRequest = { visitToDelete = null },
-            title = { Text("Delete Visit Entry?") },
-            text = { Text("Are you sure you want to delete this visit record?") },
+            title = { Text(stringResource(R.string.restaurant_detail_delete_visit_dialog_title)) },
+            text = { Text(stringResource(R.string.restaurant_detail_delete_visit_dialog_msg)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         viewModel.deleteVisit(visit.id)
-                        Toast.makeText(context, "Visit entry deleted", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.restaurant_detail_visit_deleted_toast), Toast.LENGTH_SHORT).show()
                         visitToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { visitToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -502,7 +502,7 @@ private fun EditRestaurantDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Restaurant Details", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.restaurant_detail_edit_restaurant_title), fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier
@@ -513,7 +513,7 @@ private fun EditRestaurantDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Restaurant Name *") },
+                    label = { Text(stringResource(R.string.entry_editor_field_name)) },
                     singleLine = true,
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -526,7 +526,7 @@ private fun EditRestaurantDialog(
                     OutlinedTextField(
                         value = address,
                         onValueChange = { address = it },
-                        label = { Text("Area / Street") },
+                        label = { Text(stringResource(R.string.restaurant_detail_area_label)) },
                         singleLine = true,
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.weight(1f)
@@ -535,7 +535,7 @@ private fun EditRestaurantDialog(
                     OutlinedTextField(
                         value = city,
                         onValueChange = { city = it },
-                        label = { Text("City") },
+                        label = { Text(stringResource(R.string.restaurant_detail_city_label)) },
                         singleLine = true,
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.weight(1f)
@@ -668,7 +668,7 @@ private fun EditRestaurantDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     VerdictChoiceChip(
-                        label = "GO 🟢",
+                        label = stringResource(R.string.restaurant_detail_verdict_go_badge),
                         isSelected = selectedVerdict == Verdict.GO,
                         color = VerdictGoGreen,
                         containerColor = VerdictGoGreenContainer,
@@ -676,7 +676,7 @@ private fun EditRestaurantDialog(
                         modifier = Modifier.weight(1f)
                     )
                     VerdictChoiceChip(
-                        label = "NO-GO 🔴",
+                        label = stringResource(R.string.restaurant_detail_verdict_no_go_badge),
                         isSelected = selectedVerdict == Verdict.NO_GO,
                         color = VerdictNoGoRed,
                         containerColor = VerdictNoGoRedContainer,
@@ -684,7 +684,7 @@ private fun EditRestaurantDialog(
                         modifier = Modifier.weight(1f)
                     )
                     VerdictChoiceChip(
-                        label = "CAUTION 🟡",
+                        label = stringResource(R.string.restaurant_detail_verdict_caution_badge),
                         isSelected = selectedVerdict == Verdict.CAUTION,
                         color = VerdictCautionAmber,
                         containerColor = VerdictCautionAmberContainer,
@@ -703,12 +703,12 @@ private fun EditRestaurantDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text("Save Changes")
+                Text(stringResource(R.string.restaurant_detail_save_changes_btn))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
@@ -883,7 +883,7 @@ private fun LocationPickerDialog(
                     }
 
                     Text(
-                        text = "Coordinates: ${String.format(Locale.US, "%.5f", selectedLat)}, ${String.format(Locale.US, "%.5f", selectedLng)}",
+                        text = stringResource(R.string.restaurant_detail_coords_fmt, String.format(Locale.US, "%.5f", selectedLat), String.format(Locale.US, "%.5f", selectedLng)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -897,7 +897,7 @@ private fun LocationPickerDialog(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.action_cancel))
                         }
 
                         Button(
@@ -905,7 +905,7 @@ private fun LocationPickerDialog(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Confirm 📍")
+                            Text(stringResource(R.string.location_picker_confirm))
                         }
                     }
                 }
@@ -927,7 +927,7 @@ private fun EditVisitDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Visit Record", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.restaurant_detail_edit_visit_title), fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier
@@ -936,7 +936,7 @@ private fun EditVisitDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "ORDER / VISIT CHANNEL",
+                    text = stringResource(R.string.restaurant_detail_channel_header),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -960,7 +960,7 @@ private fun EditVisitDialog(
                 OutlinedTextField(
                     value = billText,
                     onValueChange = { billText = it },
-                    label = { Text("Total Bill Amount (₹)") },
+                    label = { Text(stringResource(R.string.restaurant_detail_bill_amount_label)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     shape = RoundedCornerShape(10.dp),
@@ -968,7 +968,7 @@ private fun EditVisitDialog(
                 )
 
                 Text(
-                    text = "VISIT VERDICT",
+                    text = stringResource(R.string.restaurant_detail_visit_verdict_header),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -979,7 +979,7 @@ private fun EditVisitDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     VerdictChoiceChip(
-                        label = "GO 🟢",
+                        label = stringResource(R.string.restaurant_detail_verdict_go_badge),
                         isSelected = selectedVerdict == Verdict.GO,
                         color = VerdictGoGreen,
                         containerColor = VerdictGoGreenContainer,
@@ -987,7 +987,7 @@ private fun EditVisitDialog(
                         modifier = Modifier.weight(1f)
                     )
                     VerdictChoiceChip(
-                        label = "NO-GO 🔴",
+                        label = stringResource(R.string.restaurant_detail_verdict_no_go_badge),
                         isSelected = selectedVerdict == Verdict.NO_GO,
                         color = VerdictNoGoRed,
                         containerColor = VerdictNoGoRedContainer,
@@ -995,7 +995,7 @@ private fun EditVisitDialog(
                         modifier = Modifier.weight(1f)
                     )
                     VerdictChoiceChip(
-                        label = "CAUTION 🟡",
+                        label = stringResource(R.string.restaurant_detail_verdict_caution_badge),
                         isSelected = selectedVerdict == Verdict.CAUTION,
                         color = VerdictCautionAmber,
                         containerColor = VerdictCautionAmberContainer,
@@ -1007,7 +1007,7 @@ private fun EditVisitDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Visit Remarks / Notes") },
+                    label = { Text(stringResource(R.string.restaurant_detail_notes_label)) },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1020,12 +1020,12 @@ private fun EditVisitDialog(
                     onSave(channel, bill, selectedVerdict, notes)
                 }
             ) {
-                Text("Save Visit")
+                Text(stringResource(R.string.restaurant_detail_save_visit_btn))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
@@ -1110,7 +1110,7 @@ private fun DishVerdictGroup(
                     if (dish.tags.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Learning: ${dish.tags.joinToString(", ")}",
+                            text = stringResource(R.string.restaurant_detail_learning_prefix, dish.tags.joinToString(", ")),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1183,7 +1183,7 @@ private fun VisitHistoryCard(
                         onClick = onEditVisit,
                         modifier = Modifier.size(28.dp)
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit Visit", modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit), modifier = Modifier.size(16.dp))
                     }
                     IconButton(
                         onClick = onDeleteVisit,
@@ -1191,7 +1191,7 @@ private fun VisitHistoryCard(
                     ) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Delete Visit",
+                            contentDescription = stringResource(R.string.action_delete),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(16.dp)
                         )
@@ -1214,7 +1214,7 @@ private fun VisitHistoryCard(
 
                 if (visit.createdByMemberName.isNotBlank()) {
                     Text(
-                        text = "👤 Logged by ${visit.createdByMemberName}",
+                        text = stringResource(R.string.restaurant_detail_logged_by, visit.createdByMemberName),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = AmberPrimary
@@ -1225,7 +1225,7 @@ private fun VisitHistoryCard(
             if (visit.billAmount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Total Bill: ₹${String.format(Locale.getDefault(), "%.0f", visit.billAmount)}",
+                    text = stringResource(R.string.restaurant_detail_total_bill_fmt, String.format(Locale.getDefault(), "%.0f", visit.billAmount)),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -1257,7 +1257,7 @@ private fun VisitHistoryCard(
             if (visit.generalNotes.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Note: ${visit.generalNotes}",
+                    text = stringResource(R.string.restaurant_detail_note_prefix, visit.generalNotes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -469,7 +469,7 @@ private fun RestaurantCard(
                 ) {
                     if (item.topMustTryDishes.isNotEmpty()) {
                         Text(
-                            text = "🟢 Must Try: ${item.topMustTryDishes.joinToString(", ")}",
+                            text = stringResource(R.string.dashboard_must_try_prefix, item.topMustTryDishes.joinToString(", ")),
                             style = MaterialTheme.typography.bodySmall,
                             color = VerdictGoGreen,
                             fontWeight = FontWeight.Medium,
@@ -478,7 +478,7 @@ private fun RestaurantCard(
                         )
                     } else if (item.topAvoidDishes.isNotEmpty()) {
                         Text(
-                            text = "🔴 Avoid: ${item.topAvoidDishes.joinToString(", ")}",
+                            text = stringResource(R.string.dashboard_avoid_prefix, item.topAvoidDishes.joinToString(", ")),
                             style = MaterialTheme.typography.bodySmall,
                             color = VerdictNoGoRed,
                             fontWeight = FontWeight.Medium,
