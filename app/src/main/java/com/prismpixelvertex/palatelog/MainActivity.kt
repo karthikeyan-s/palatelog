@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,12 +34,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -71,10 +77,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             PalateLogTheme {
                 val permissionLauncher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestMultiplePermissions()
+                    contract = ActivityResultContracts.RequestMultiplePermissions(),
                 ) { /* permissions handled */ }
 
                 val isUpdateDownloaded by updateHelper.isUpdateDownloaded.collectAsState()
+                var showRestartDialog by rememberSaveable { mutableStateOf(value = false) }
+
+                LaunchedEffect(isUpdateDownloaded) {
+                    if (isUpdateDownloaded) {
+                        showRestartDialog = true
+                    }
+                }
 
                 LaunchedEffect(Unit) {
                     val fineLocationGranted = ContextCompat.checkSelfPermission(
@@ -99,6 +112,53 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.fillMaxSize()) {
                         PalateLogNavGraph()
 
+                        if (showRestartDialog && isUpdateDownloaded) {
+                            AlertDialog(
+                                onDismissRequest = { showRestartDialog = false },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.DownloadDone,
+                                        contentDescription = null,
+                                        tint = VerdictGoGreen,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                },
+                                title = {
+                                    Text(
+                                        text = stringResource(R.string.update_downloaded_title),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                },
+                                text = {
+                                    Text(
+                                        text = stringResource(R.string.update_downloaded_msg),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = { updateHelper.completeUpdate() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.update_action_restart_now),
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = { showRestartDialog = false }
+                                    ) {
+                                        Text(text = stringResource(R.string.update_action_later))
+                                    }
+                                }
+                            )
+                        }
+
                         AnimatedVisibility(
                             visible = isUpdateDownloaded,
                             enter = slideInVertically { it },
@@ -106,7 +166,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .navigationBarsPadding()
-                                .padding(16.dp)
+                                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp)
                         ) {
                             Card(
                                 shape = RoundedCornerShape(16.dp),
@@ -132,13 +192,13 @@ class MainActivity : ComponentActivity() {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
                                             Text(
-                                                text = "PalateLog update downloaded! 🟢",
+                                                text = stringResource(R.string.update_downloaded_title),
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                             Text(
-                                                text = "Tap to restart & apply latest version",
+                                                text = stringResource(R.string.update_banner_subtext),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                             )
@@ -150,7 +210,11 @@ class MainActivity : ComponentActivity() {
                                         colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
-                                        Text("Restart App", fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text(
+                                            text = stringResource(R.string.update_action_restart),
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
                                     }
                                 }
                             }
@@ -159,6 +223,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateHelper.checkStatusOnResume(updateLauncher)
     }
 
     override fun onDestroy() {

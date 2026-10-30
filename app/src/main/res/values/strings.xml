@@ -54,8 +54,13 @@
     <string name="update_available_msg">A new version of PalateLog is available.</string>
     <string name="update_action_now">Update Now</string>
     <string name="update_action_later">Later</string>
+    <string name="update_action_restart">Restart App</string>
+    <string name="update_action_restart_now">Restart Now</string>
     <string name="update_downloading">Downloading update…</string>
     <string name="update_ready">Update ready. Restarting to install…</string>
+    <string name="update_downloaded_title">PalateLog Update Ready! 🟢</string>
+    <string name="update_downloaded_msg">The latest update has finished downloading in the background. Would you like to restart the app now to apply the update?</string>
+    <string name="update_banner_subtext">Tap to restart &amp; apply latest version</string>
 
     <!-- Dashboard Screen -->
     <string name="dashboard_title">PalateLog</string>

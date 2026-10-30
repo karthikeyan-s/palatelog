@@ -24,8 +24,8 @@ android {
         applicationId = "com.prismpixelvertex.palatelog"
         minSdk = 26
         targetSdk = 36
-        versionCode = 17
-        versionName = "1.2.9"
+        versionCode = 18
+        versionName = "1.2.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
