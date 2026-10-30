@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Directions
@@ -83,6 +84,7 @@ fun DashboardScreen(
     onNavigateToRestaurantDetail: (String) -> Unit,
     onNavigateToQuickCapture: () -> Unit,
     onNavigateToEntryEditor: (restaurantId: String?) -> Unit,
+    onNavigateToHelpGuide: (String?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -103,6 +105,15 @@ fun DashboardScreen(
                             text = stringResource(R.string.dashboard_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onNavigateToHelpGuide(null) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.help_title),
+                            tint = AmberPrimary
                         )
                     }
                 },

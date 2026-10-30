@@ -5,6 +5,23 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.11] - 2026-10-30
+
+### Added
+- **Help & User Guide Screen with Contextual Deep-Linking**:
+  - **Dedicated Guide Destination (`HelpGuideScreen`)**: Introduced an interactive Material 3 guidebook (`Screen.HelpGuide`) organizing PalateLog's primary paradigms into expandable visual cards with category tags, comparative layouts, and embedded live badge previews (`VerdictBadge`, `DishVerdictBadge`, `ChannelBadge`).
+  - **Google Drive Family Sync Demystified**: Clear side-by-side walkthrough of **Mode A** (Single Shared Family Account: zero-config, 1-tap setup) versus **Mode B** (Individual Accounts: host provisioning, automated permissions API, static QR code, and WhatsApp recovery).
+  - **3-Second Quick Regret Log vs. Full Visit Log**: Explains when to use speed capture (highway roadside tea stalls, dirty restrooms, immediate regret) versus full dining/delivery logging (channels, bills, receipt photos).
+  - **The Dish Matrix & Philosophy**: Highlights why high-verdict restaurants can have avoid dishes (e.g., soggy delivery sides) and how family member preferences and remembered dish chips prevent repeat mistakes.
+  - **Interactive Jump Chips**: Horizontal filter chips (`All`, `☁️ Family Sync`, `⚡ Quick Log`, `📝 Full Visit`, `🍽️ Dish Matrix`, `🗺️ Map & Travel`, `🔒 Privacy & Offline`) at the top of the guide for instant auto-scrolling and card expansion.
+  - **Contextual `?` Shortcuts**: Embedded help icon buttons across the app linking directly to the relevant card with auto-scroll and highlight:
+    - Settings: Next to *Google Shared Drive Sync* (`?topic=sync`) and a dedicated *Help & User Guide* card row.
+    - Dashboard: In the TopAppBar for general guide access.
+    - Quick Log: In the TopAppBar (`?topic=quick_log`).
+    - Restaurant Details: Beside the *DISH INSIGHTS & MEMORY MATRIX* header (`?topic=dish_matrix`).
+    - Entry Editor: Beside the *Dishes Breakdown* header (`?topic=dish_matrix`) and in the TopAppBar (`?topic=visit_log`).
+  - **Design System & Localization Refactoring**: Centralized all guide copy in `res/values/strings.xml` for internationalization/localization (i18n), and standardized all layout dimensions, borders, and icon containers in `Dimens.kt` (`HelpIconContainerSize`, `MapPinIndicatorSize`, `BorderThin`, `BorderThick`).
+
 ## [1.2.10] - 2026-10-30
 
 ### Fixed & Enhanced

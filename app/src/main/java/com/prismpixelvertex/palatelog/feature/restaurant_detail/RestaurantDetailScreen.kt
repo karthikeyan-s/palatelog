@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -109,6 +110,7 @@ fun RestaurantDetailScreen(
     viewModel: RestaurantDetailViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToLogVisit: (restaurantId: String) -> Unit,
+    onNavigateToHelpGuide: (String?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -139,6 +141,13 @@ fun RestaurantDetailScreen(
                         IconButton(onClick = { showDeleteConfirmDialog = true }) {
                             Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error)
                         }
+                    }
+                    IconButton(onClick = { onNavigateToHelpGuide("dish_matrix") }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.help_title),
+                            tint = AmberPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -252,12 +261,29 @@ fun RestaurantDetailScreen(
                 }
 
                 // Section: Dish Insights Matrix
-                Text(
-                    text = "DISH INSIGHTS & MEMORY MATRIX",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "DISH INSIGHTS & MEMORY MATRIX",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    IconButton(
+                        onClick = { onNavigateToHelpGuide("dish_matrix") },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = "Dish Matrix Help",
+                            tint = AmberPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
 
                 if (uiState.mustTryDishes.isEmpty() && uiState.avoidDishes.isEmpty() && uiState.neutralDishes.isEmpty()) {
                     Box(
