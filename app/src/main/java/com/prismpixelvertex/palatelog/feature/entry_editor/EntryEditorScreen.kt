@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
@@ -85,12 +86,14 @@ import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Verdict
 import com.prismpixelvertex.palatelog.core.util.MediaUtils
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntryEditorScreen(
     viewModel: EntryEditorViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -123,6 +126,15 @@ fun EntryEditorScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_close))
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onNavigateToHelpGuide(HelpTopicKey.VISIT_LOG) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.help_title),
+                            tint = AmberPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -343,12 +355,26 @@ fun EntryEditorScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.entry_editor_section_dishes),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.entry_editor_section_dishes),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(
+                        onClick = { onNavigateToHelpGuide(HelpTopicKey.DISH_MATRIX) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.restaurant_detail_dish_matrix_help_desc),
+                            tint = AmberPrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
                 OutlinedButton(
                     onClick = { viewModel.addDishDraft() },
                     shape = RoundedCornerShape(12.dp)

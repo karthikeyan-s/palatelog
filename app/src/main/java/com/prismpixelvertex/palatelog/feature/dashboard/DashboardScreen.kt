@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Directions
@@ -36,6 +37,9 @@ import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +52,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -75,6 +80,7 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreen
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +89,7 @@ fun DashboardScreen(
     onNavigateToRestaurantDetail: (String) -> Unit,
     onNavigateToQuickCapture: () -> Unit,
     onNavigateToEntryEditor: (restaurantId: String?) -> Unit,
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -103,6 +110,15 @@ fun DashboardScreen(
                             text = stringResource(R.string.dashboard_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onNavigateToHelpGuide(null) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.help_title),
+                            tint = AmberPrimary
                         )
                     }
                 },
@@ -173,6 +189,56 @@ fun DashboardScreen(
         },
         modifier = modifier
     ) { innerPadding ->
+        if (uiState.showFirstLaunchHelpDialog) {
+            AlertDialog(
+                onDismissRequest = { viewModel.onDismissFirstLaunchHelp() },
+                icon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                        contentDescription = null,
+                        tint = AmberPrimary,
+                        modifier = Modifier.size(Dimens.IconSizeLarge)
+                    )
+                },
+                title = {
+                    Text(
+                        text = stringResource(R.string.help_first_launch_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.help_first_launch_message),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.onAcceptFirstLaunchHelp()
+                            onNavigateToHelpGuide(null)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.help_first_launch_action_view),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.onDismissFirstLaunchHelp() }) {
+                        Text(
+                            text = stringResource(R.string.help_first_launch_action_dismiss),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(Dimens.RadiusDialog)
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

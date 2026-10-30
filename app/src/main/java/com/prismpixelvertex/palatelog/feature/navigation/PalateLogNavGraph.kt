@@ -1,7 +1,9 @@
 package com.prismpixelvertex.palatelog.feature.navigation
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Map
@@ -30,6 +32,8 @@ import com.prismpixelvertex.palatelog.feature.dashboard.DashboardScreen
 import com.prismpixelvertex.palatelog.feature.dashboard.DashboardViewModel
 import com.prismpixelvertex.palatelog.feature.entry_editor.EntryEditorScreen
 import com.prismpixelvertex.palatelog.feature.entry_editor.EntryEditorViewModel
+import com.prismpixelvertex.palatelog.feature.help.HelpGuideScreen
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 import com.prismpixelvertex.palatelog.feature.map.MapScreen
 import com.prismpixelvertex.palatelog.feature.map.MapViewModel
 import com.prismpixelvertex.palatelog.feature.quick_capture.QuickCaptureScreen
@@ -43,6 +47,11 @@ sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: I
     object Dashboard : Screen("dashboard", R.string.nav_dashboard, Icons.Default.Explore)
     object Map : Screen("map", R.string.nav_map, Icons.Default.Map)
     object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
+    object HelpGuide : Screen("help_guide?topic={topic}", R.string.help_title) {
+        fun createRoute(topic: HelpTopicKey? = null): String {
+            return if (topic != null) "help_guide?topic=${topic.id}" else "help_guide"
+        }
+    }
     object QuickCapture : Screen("quick_capture?lat={lat}&lng={lng}&address={address}&city={city}", R.string.nav_quick_log) {
         fun createRoute(
             lat: Double? = null,
@@ -96,6 +105,7 @@ fun PalateLogNavGraph(
     val showBottomBar = currentRoute in bottomBarScreens.map { it.route }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
@@ -122,7 +132,7 @@ fun PalateLogNavGraph(
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+            modifier = Modifier.padding(bottom = if (showBottomBar) innerPadding.calculateBottomPadding() else 0.dp)
         ) {
             // Tab 1: Dashboard
             composable(Screen.Dashboard.route) {
@@ -137,6 +147,9 @@ fun PalateLogNavGraph(
                     },
                     onNavigateToEntryEditor = { restaurantId ->
                         navController.navigate(Screen.EntryEditor.createRoute(restaurantId))
+                    },
+                    onNavigateToHelpGuide = { topic ->
+                        navController.navigate(Screen.HelpGuide.createRoute(topic))
                     }
                 )
             }
@@ -161,7 +174,12 @@ fun PalateLogNavGraph(
             // Tab 3: Settings
             composable(Screen.Settings.route) {
                 val viewModel: SettingsViewModel = hiltViewModel()
-                SettingsScreen(viewModel = viewModel)
+                SettingsScreen(
+                    viewModel = viewModel,
+                    onNavigateToHelpGuide = { topic ->
+                        navController.navigate(Screen.HelpGuide.createRoute(topic))
+                    }
+                )
             }
 
             // Sub-Screen: 3-Second Quick Logger
@@ -177,7 +195,10 @@ fun PalateLogNavGraph(
                 val viewModel: QuickCaptureViewModel = hiltViewModel()
                 QuickCaptureScreen(
                     viewModel = viewModel,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToHelpGuide = { topic ->
+                        navController.navigate(Screen.HelpGuide.createRoute(topic))
+                    }
                 )
             }
 
@@ -199,7 +220,10 @@ fun PalateLogNavGraph(
                 val viewModel: EntryEditorViewModel = hiltViewModel()
                 EntryEditorScreen(
                     viewModel = viewModel,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToHelpGuide = { topic ->
+                        navController.navigate(Screen.HelpGuide.createRoute(topic))
+                    }
                 )
             }
 
@@ -218,7 +242,28 @@ fun PalateLogNavGraph(
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToLogVisit = { restaurantId ->
                         navController.navigate(Screen.EntryEditor.createRoute(restaurantId))
+                    },
+                    onNavigateToHelpGuide = { topic ->
+                        navController.navigate(Screen.HelpGuide.createRoute(topic))
                     }
+                )
+            }
+
+            // Sub-Screen: Help & User Guide
+            composable(
+                route = Screen.HelpGuide.route,
+                arguments = listOf(
+                    navArgument("topic") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { backStackEntry ->
+                val topic = backStackEntry.arguments?.getString("topic")
+                HelpGuideScreen(
+                    initialTopic = topic,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }

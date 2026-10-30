@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -73,12 +74,14 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRedContainer
 import com.prismpixelvertex.palatelog.core.model.Verdict
 import com.prismpixelvertex.palatelog.feature.entry_editor.PhotoAttachmentBox
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuickCaptureScreen(
     viewModel: QuickCaptureViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -120,6 +123,15 @@ fun QuickCaptureScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_close))
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onNavigateToHelpGuide(HelpTopicKey.QUICK_LOG) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.help_title),
+                            tint = VerdictNoGoRed
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

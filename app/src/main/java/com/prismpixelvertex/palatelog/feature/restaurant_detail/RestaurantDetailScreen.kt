@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -92,6 +93,7 @@ import com.prismpixelvertex.palatelog.core.model.RestaurantType
 import com.prismpixelvertex.palatelog.core.model.Verdict
 import com.prismpixelvertex.palatelog.core.model.VisitEntry
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -109,6 +111,7 @@ fun RestaurantDetailScreen(
     viewModel: RestaurantDetailViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToLogVisit: (restaurantId: String) -> Unit,
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -139,6 +142,13 @@ fun RestaurantDetailScreen(
                         IconButton(onClick = { showDeleteConfirmDialog = true }) {
                             Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error)
                         }
+                    }
+                    IconButton(onClick = { onNavigateToHelpGuide(HelpTopicKey.DISH_MATRIX) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.help_title),
+                            tint = AmberPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -185,8 +195,9 @@ fun RestaurantDetailScreen(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
+                        val defaultGeneralDining = stringResource(R.string.restaurant_detail_general_dining)
                         Text(
-                            text = "${restaurant.restaurantType.displayName} • ${restaurant.cuisine.ifBlank { "General Dining" }}",
+                            text = "${restaurant.restaurantType.displayName} • ${restaurant.cuisine.ifBlank { defaultGeneralDining }}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -252,12 +263,29 @@ fun RestaurantDetailScreen(
                 }
 
                 // Section: Dish Insights Matrix
-                Text(
-                    text = "DISH INSIGHTS & MEMORY MATRIX",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.restaurant_detail_dish_matrix_title),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    IconButton(
+                        onClick = { onNavigateToHelpGuide(HelpTopicKey.DISH_MATRIX) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.restaurant_detail_dish_matrix_help_desc),
+                            tint = AmberPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
 
                 if (uiState.mustTryDishes.isEmpty() && uiState.avoidDishes.isEmpty() && uiState.neutralDishes.isEmpty()) {
                     Box(
@@ -269,7 +297,7 @@ fun RestaurantDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No individual dishes logged yet. Log a new visit to record specific dishes (e.g. Biriyani vs soggy sides).",
+                            text = stringResource(R.string.restaurant_detail_no_dishes_logged),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -278,7 +306,7 @@ fun RestaurantDetailScreen(
                     // 🔴 AVOID DISHES (Shown first to prevent repeats!)
                     if (uiState.avoidDishes.isNotEmpty()) {
                         DishVerdictGroup(
-                            title = "AVOID NEXT TIME 🔴",
+                            title = stringResource(R.string.restaurant_detail_dishes_avoid),
                             dishes = uiState.avoidDishes,
                             accentColor = VerdictNoGoRed,
                             onPhotoClick = { selectedPhotoForPreview = it }
@@ -288,7 +316,7 @@ fun RestaurantDetailScreen(
                     // 🟢 MUST TRY DISHES
                     if (uiState.mustTryDishes.isNotEmpty()) {
                         DishVerdictGroup(
-                            title = "FAMILY FAVORITES & MUST TRY 🟢",
+                            title = stringResource(R.string.restaurant_detail_dishes_must_try),
                             dishes = uiState.mustTryDishes,
                             accentColor = VerdictGoGreen,
                             onPhotoClick = { selectedPhotoForPreview = it }
@@ -298,7 +326,7 @@ fun RestaurantDetailScreen(
                     // 🟡 MEH / OK DISHES
                     if (uiState.neutralDishes.isNotEmpty()) {
                         DishVerdictGroup(
-                            title = "NEUTRAL / OKAY DISHES 🟡",
+                            title = stringResource(R.string.restaurant_detail_dishes_neutral),
                             dishes = uiState.neutralDishes,
                             accentColor = VerdictCautionAmber,
                             onPhotoClick = { selectedPhotoForPreview = it }
@@ -311,7 +339,7 @@ fun RestaurantDetailScreen(
                     Icon(Icons.Default.History, contentDescription = null, tint = AmberPrimary, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "VISIT HISTORY (${uiState.visits.size})",
+                        text = stringResource(R.string.restaurant_detail_visit_history_title, uiState.visits.size),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -320,7 +348,7 @@ fun RestaurantDetailScreen(
 
                 if (uiState.visits.isEmpty()) {
                     Text(
-                        text = "No visits logged yet",
+                        text = stringResource(R.string.restaurant_detail_no_visits_logged),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -517,14 +545,14 @@ private fun EditRestaurantDialog(
                 OutlinedTextField(
                     value = highwayOrRoute,
                     onValueChange = { highwayOrRoute = it },
-                    label = { Text("Highway / Route (e.g. NH44)") },
+                    label = { Text(stringResource(R.string.restaurant_detail_highway_label)) },
                     singleLine = true,
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Text(
-                    text = "GEOLOCATION (MAP COORDINATES)",
+                    text = stringResource(R.string.restaurant_detail_geolocation_title),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -537,7 +565,7 @@ private fun EditRestaurantDialog(
                     OutlinedTextField(
                         value = latText,
                         onValueChange = { latText = it },
-                        label = { Text("Latitude") },
+                        label = { Text(stringResource(R.string.restaurant_detail_latitude_label)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(10.dp),
@@ -547,7 +575,7 @@ private fun EditRestaurantDialog(
                     OutlinedTextField(
                         value = lngText,
                         onValueChange = { lngText = it },
-                        label = { Text("Longitude") },
+                        label = { Text(stringResource(R.string.restaurant_detail_longitude_label)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(10.dp),
@@ -581,7 +609,7 @@ private fun EditRestaurantDialog(
                         } else {
                             Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Use GPS", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.restaurant_detail_use_gps), style = MaterialTheme.typography.labelSmall)
                         }
                     }
 
@@ -592,22 +620,22 @@ private fun EditRestaurantDialog(
                     ) {
                         Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Pick on Map", style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(R.string.restaurant_detail_pick_on_map), style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
                 OutlinedTextField(
                     value = cuisine,
                     onValueChange = { cuisine = it },
-                    label = { Text("Cuisine / Category") },
-                    placeholder = { Text("e.g. South Indian, Biriyani") },
+                    label = { Text(stringResource(R.string.restaurant_detail_cuisine_label)) },
+                    placeholder = { Text(stringResource(R.string.restaurant_detail_cuisine_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Text(
-                    text = "RESTAURANT TYPE",
+                    text = stringResource(R.string.restaurant_detail_restaurant_type_title),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -629,7 +657,7 @@ private fun EditRestaurantDialog(
                 }
 
                 Text(
-                    text = "OVERALL VERDICT",
+                    text = stringResource(R.string.restaurant_detail_overall_verdict_title),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -793,18 +821,18 @@ private fun LocationPickerDialog(
                 ) {
                     Column {
                         Text(
-                            text = "Tap Map to Select Location 📍",
+                            text = stringResource(R.string.restaurant_detail_tap_map_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Single tap or long press to move pin",
+                            text = stringResource(R.string.restaurant_detail_tap_map_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close))
                     }
                 }
 
@@ -814,6 +842,7 @@ private fun LocationPickerDialog(
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
+                    val defaultSpotTitle = stringResource(R.string.restaurant_detail_selected_spot_default)
                     AndroidView(
                         factory = { mapView },
                         modifier = Modifier.fillMaxSize(),
@@ -823,7 +852,7 @@ private fun LocationPickerDialog(
 
                             val marker = Marker(map).apply {
                                 position = GeoPoint(selectedLat, selectedLng)
-                                title = selectedStreet.ifBlank { "Selected Spot 📍" }
+                                title = selectedStreet.ifBlank { defaultSpotTitle }
                                 snippet = selectedCity
                                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                             }

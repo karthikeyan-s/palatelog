@@ -196,4 +196,128 @@
 
     <!-- Navigation Intent -->
     <string name="nav_error_no_maps">No navigation or maps application found on device.</string>
+
+    <!-- Help & User Guide -->
+    <string name="help_title">Help &amp; User Guide</string>
+    <string name="help_subtitle">Mastering PalateLog &amp; Family Cloud Sync</string>
+    <string name="help_filter_all">All Topics</string>
+    <string name="help_action_expand">Expand</string>
+    <string name="help_action_collapse">Collapse</string>
+
+    <!-- Help Chips -->
+    <string name="help_chip_sync">☁️ Family Sync</string>
+    <string name="help_chip_quick_log">⚡ Quick Log</string>
+    <string name="help_chip_visit_log">📝 Full Visit</string>
+    <string name="help_chip_dish_matrix">🍽️ Dish Matrix</string>
+    <string name="help_chip_map">🗺️ Map &amp; Travel</string>
+    <string name="help_chip_privacy">🔒 Privacy &amp; Offline</string>
+
+    <!-- Help Category Tags -->
+    <string name="help_tag_sync">FAMILY CLOUD SYNC</string>
+    <string name="help_tag_quick_log">SPEED CAPTURE</string>
+    <string name="help_tag_visit_log">VISITS &amp; ORDERS</string>
+    <string name="help_tag_dish_matrix">CORE PHILOSOPHY</string>
+    <string name="help_tag_map">TRAVEL &amp; MAPS</string>
+    <string name="help_tag_privacy">SECURITY &amp; STORAGE</string>
+
+    <!-- Help Card Titles & Subtitles -->
+    <string name="help_card_sync_title">Google Drive Family Sync</string>
+    <string name="help_card_sync_subtitle">Zero-cost multi-phone sync: Mode A (Shared) vs. Mode B (Host &amp; QR)</string>
+    <string name="help_card_quick_log_title">The 3-Second Quick Log</string>
+    <string name="help_card_quick_log_subtitle">Rapid roadside &amp; highway capture before human memory fades</string>
+    <string name="help_card_visit_log_title">Full Visit &amp; Order Logging</string>
+    <string name="help_card_visit_log_subtitle">Sit-down dinners, Zomato/Swiggy orders, bills, &amp; receipts</string>
+    <string name="help_card_dish_matrix_title">Restaurant Verdict vs. Dish Matrix</string>
+    <string name="help_card_dish_matrix_subtitle">Why a great restaurant can have an avoid dish, and family reactions</string>
+    <string name="help_card_map_title">Interactive Map &amp; Road Trips</string>
+    <string name="help_card_map_subtitle">Color-coded pins along highway corridors to prevent bad stops</string>
+    <string name="help_card_privacy_title">Offline Sovereignty &amp; Privacy</string>
+    <string name="help_card_privacy_subtitle">Local-first SQLite storage with the \'Share with Family\' toggle</string>
+
+    <!-- Help Content: Family Cloud Sync -->
+    <string name="help_sync_intro">PalateLog offers zero-cost cloud sync across family phones using your personal Google Drive with zero external servers. You can choose from two sync modes:</string>
+    <string name="help_sync_mode_a_title">Mode A: Single Shared Family Account</string>
+    <string name="help_sync_mode_a_badge">⚡ Zero Config</string>
+    <string name="help_sync_mode_a_desc">• All family members sign in with the same designated Gmail (e.g. ourfamily.palatelog@gmail.com).\n• PalateLog automatically finds or creates the PalateLog_Family folder in Google Drive.\n• 1-tap sign in on each phone — no QR codes or invitations needed!</string>
+    <string name="help_sync_mode_b_title">Mode B: Individual Google Accounts</string>
+    <string name="help_sync_mode_b_badge">👥 Multi-User</string>
+    <string name="help_sync_mode_b_desc">• Each family member signs in with their personal Gmail account.\n• Step 1 (Host): One person creates the permanent family sync folder.\n• Step 2 (Invite): Host enters member emails inside PalateLog. PalateLog automatically grants write permissions via Google Drive API.\n• Step 3 (Connect): Host shares a static QR code or WhatsApp link (palatelog://sync?folderId=…). Family members scan or tap to connect!</string>
+    <string name="help_sync_whatsapp_tip">Permission Pending Safety Net: If a family member scans the QR code before the host adds their email, PalateLog catches the error and offers a 1-tap \'Ask Host via WhatsApp\' button with a prefilled message.</string>
+
+    <!-- Help Content: Quick Log -->
+    <string name="help_quick_log_intro">Have you ever stopped at a highway tea stall, had terrible watery tea or dirty restrooms, and then stopped there again 6 months later because you forgot? The Quick Log is built to eliminate that.</string>
+    <string name="help_quick_log_steps_title">How to Log in 3 Seconds:</string>
+    <string name="help_quick_log_step_1">1. Tap the floating 🔴 Quick Log button on the Explore screen.</string>
+    <string name="help_quick_log_step_2">2. GPS coordinates &amp; reverse geocoded area name are populated automatically.</string>
+    <string name="help_quick_log_step_3">3. Tap a 1-tap verdict badge:</string>
+    <string name="help_quick_log_step_4">4. Tap quick reason chips: \'Watery tea\', \'Dirty restrooms\', \'Soggy food\', or \'Great chai\'.</string>
+    <string name="help_quick_log_step_5">5. Tap \'Save &amp; Finish\' — complete in 3 seconds!</string>
+    <string name="help_quick_log_reuse_tip">50-Meter Reuse Banner: If you are standing near a spot you previously logged, PalateLog displays a one-tap banner to append notes rather than creating duplicate entries.</string>
+
+    <!-- Help Content: Visit Log -->
+    <string name="help_visit_log_intro">While the Quick Log is for rapid 3-second captures, the Full Visit Log is designed for sit-down dinners, family outings, and online food deliveries (Zomato/Swiggy).</string>
+    <string name="help_visit_log_record_title">What You Can Record in a Visit:</string>
+    <string name="help_visit_log_point_channel">• Dining Channel: Tag whether you dined in, drove through, or ordered via delivery.</string>
+    <string name="help_visit_log_point_bill">• Total Bill &amp; Receipt Photo: Keep track of food expenses and snap receipt photos.</string>
+    <string name="help_visit_log_point_dishes">• Individual Dishes: Add multiple dishes consumed during that specific meal with verdicts.</string>
+    <string name="help_visit_log_point_attribution">• Family Attribution: Mark who attended and logged the visit.</string>
+
+    <!-- Help Content: Dish Matrix -->
+    <string name="help_dish_matrix_intro">The Delivery Dish Dichotomy: You order from a restaurant where the Biriyani is extraordinary, but the chicken fry arrives soggy and cold. PalateLog isolates dish-level performance so you never order the soggy dish again.</string>
+    <string name="help_dish_matrix_example_label">Example Restaurant: </string>
+    <string name="help_dish_matrix_sample_restaurant_name">Nagarjuna Andhra Meals</string>
+    <string name="help_dish_matrix_sample_dish_1_name">Chicken Biriyani</string>
+    <string name="help_dish_matrix_sample_dish_1_desc">Fragrant ghee rice, tender meat. Re-order always!</string>
+    <string name="help_dish_matrix_sample_dish_2_name">Guntur Chicken Fry</string>
+    <string name="help_dish_matrix_sample_dish_2_desc">Arrives completely soggy during delivery.</string>
+    <string name="help_dish_matrix_points">• Avoid Dishes Shown First: The Dish Matrix always bubbles up 🔴 AVOID dishes to the very top so you catch them immediately before confirming a delivery cart.\n• Remembered Dish Chips: When editing subsequent visits, previously ordered dishes appear as 1-tap chips so you never have to retype names.</string>
+
+    <!-- Help Content: Map & Travel -->
+    <string name="help_map_intro">PalateLog features an offline-capable interactive map powered by OpenStreetMap to resurface previous learnings as you travel.</string>
+    <string name="help_map_pins_title">Color-Coded Travel Markers:</string>
+    <string name="help_map_pin_green">🟢 Green Pins: Exceptional spots, clean restrooms, &amp; must-visit dhabas.</string>
+    <string name="help_map_pin_red">🔴 Red Pins: Roadside regrets &amp; tourist traps to strictly avoid.</string>
+    <string name="help_map_pin_amber">🟡 Amber Pins: Mixed experiences or caution spots.</string>
+    <string name="help_map_nav_point">• 1-Tap Navigation: Tap any pin on the map to view a bottom sheet preview, and launch turn-by-turn Google Maps navigation with 1 tap.</string>
+
+    <!-- Help Content: Offline Sovereignty & Privacy -->
+    <string name="help_privacy_intro">PalateLog is designed with local-first data sovereignty. You have complete control over what is shared with family members.</string>
+    <string name="help_privacy_switch_title">The \'Share with Family\' Switch:</string>
+    <string name="help_privacy_points">• Every restaurant, visit, and dish has a \'Share with Family\' checkbox.\n• Unchecked entries stay strictly in your phone\'s private SQLite database and are NEVER uploaded to Google Drive.\n• Only entries with \'Share with Family\' enabled are synced to the shared family folder.</string>
+    <string name="help_privacy_conflict_point">• Distributed Conflict Resolution: Edits across phones are merged using Last-Write-Wins (LWW) timestamps so family updates never overwrite each other.</string>
+    <string name="help_privacy_offline_point">• Offline-First: The app operates 100% without internet. Edits queue locally and sync whenever Wi-Fi or mobile data becomes available.</string>
+
+    <!-- Settings Guides Section -->
+    <string name="help_scroll_more_cards">More topics below</string>
+    <string name="help_first_launch_title">New to PalateLog? 🍽️</string>
+    <string name="help_first_launch_message">Would you like a quick tour? Learn how to rapidly log roadside regrets in 3 seconds, isolate dishes to avoid, and set up Google Drive family sync.\n\nYou can revisit this guide anytime from Settings or by tapping the \'?\' icon in the top bar.</string>
+    <string name="help_first_launch_action_view">View Guide</string>
+    <string name="help_first_launch_action_dismiss">Maybe Later</string>
+    <string name="settings_section_help">Guides &amp; Help</string>
+    <string name="settings_help_user_guide">Help &amp; User Guide</string>
+    <string name="settings_help_user_guide_desc">Learn how to sync across devices, log dishes, and use quick regret capture</string>
+
+    <!-- Restaurant Details Screen -->
+    <string name="restaurant_detail_dish_matrix_title">DISH INSIGHTS &amp; MEMORY MATRIX</string>
+    <string name="restaurant_detail_dish_matrix_help_desc">Dish Matrix Help</string>
+    <string name="restaurant_detail_no_dishes_logged">No individual dishes logged yet. Log a new visit to record specific dishes (e.g. Biriyani vs soggy sides).</string>
+    <string name="restaurant_detail_dishes_avoid">AVOID NEXT TIME 🔴</string>
+    <string name="restaurant_detail_dishes_must_try">FAMILY FAVORITES &amp; MUST TRY 🟢</string>
+    <string name="restaurant_detail_dishes_neutral">NEUTRAL / OKAY DISHES 🟡</string>
+    <string name="restaurant_detail_visit_history_title">VISIT HISTORY (%1$d)</string>
+    <string name="restaurant_detail_no_visits_logged">No visits logged yet</string>
+    <string name="restaurant_detail_geolocation_title">GEOLOCATION (MAP COORDINATES)</string>
+    <string name="restaurant_detail_restaurant_type_title">RESTAURANT TYPE</string>
+    <string name="restaurant_detail_overall_verdict_title">OVERALL VERDICT</string>
+    <string name="restaurant_detail_cuisine_label">Cuisine / Category</string>
+    <string name="restaurant_detail_cuisine_placeholder">e.g. South Indian, Biriyani</string>
+    <string name="restaurant_detail_highway_label">Highway / Route (e.g. NH44)</string>
+    <string name="restaurant_detail_latitude_label">Latitude</string>
+    <string name="restaurant_detail_longitude_label">Longitude</string>
+    <string name="restaurant_detail_use_gps">Use GPS</string>
+    <string name="restaurant_detail_pick_on_map">Pick on Map</string>
+    <string name="restaurant_detail_tap_map_title">Tap Map to Select Location 📍</string>
+    <string name="restaurant_detail_tap_map_subtitle">Single tap or long press to move pin</string>
+    <string name="restaurant_detail_selected_spot_default">Selected Spot 📍</string>
+    <string name="restaurant_detail_general_dining">General Dining</string>
 </resources>
