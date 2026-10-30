@@ -36,7 +36,6 @@ object Dimens {
     val BadgePaddingVertical: Dp = 4.dp
     val LocationDialogHeight: Dp = 540.dp
     val HelpIconContainerSize: Dp = 44.dp
-    val MapPinIndicatorSize: Dp = 12.dp
 
     // Borders
     val BorderThin: Dp = 1.dp

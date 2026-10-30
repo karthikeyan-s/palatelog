@@ -79,6 +79,7 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmber
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmberContainer
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreen
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreenContainer
+import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreenText
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRedContainer
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
@@ -111,13 +112,13 @@ fun HelpGuideScreen(
     val sections = remember {
         listOf(
             HelpSectionItem(
-                key = HelpTopicKey.SYNC,
-                titleRes = R.string.help_card_sync_title,
-                subtitleRes = R.string.help_card_sync_subtitle,
-                categoryTagRes = R.string.help_tag_sync,
-                icon = Icons.Default.CloudSync,
-                iconColor = AmberPrimary,
-                iconBgColor = AmberPrimary.copy(alpha = 0.15f)
+                key = HelpTopicKey.DISH_MATRIX,
+                titleRes = R.string.help_card_dish_matrix_title,
+                subtitleRes = R.string.help_card_dish_matrix_subtitle,
+                categoryTagRes = R.string.help_tag_dish_matrix,
+                icon = Icons.Default.DinnerDining,
+                iconColor = Color(0xFF8B5CF6),
+                iconBgColor = Color(0xFF8B5CF6).copy(alpha = 0.15f)
             ),
             HelpSectionItem(
                 key = HelpTopicKey.QUICK_LOG,
@@ -138,13 +139,13 @@ fun HelpGuideScreen(
                 iconBgColor = VerdictGoGreenContainer
             ),
             HelpSectionItem(
-                key = HelpTopicKey.DISH_MATRIX,
-                titleRes = R.string.help_card_dish_matrix_title,
-                subtitleRes = R.string.help_card_dish_matrix_subtitle,
-                categoryTagRes = R.string.help_tag_dish_matrix,
-                icon = Icons.Default.DinnerDining,
-                iconColor = Color(0xFF8B5CF6),
-                iconBgColor = Color(0xFF8B5CF6).copy(alpha = 0.15f)
+                key = HelpTopicKey.SYNC,
+                titleRes = R.string.help_card_sync_title,
+                subtitleRes = R.string.help_card_sync_subtitle,
+                categoryTagRes = R.string.help_tag_sync,
+                icon = Icons.Default.CloudSync,
+                iconColor = AmberPrimary,
+                iconBgColor = AmberPrimary.copy(alpha = 0.15f)
             ),
             HelpSectionItem(
                 key = HelpTopicKey.MAP_EXPLORE,
@@ -170,7 +171,7 @@ fun HelpGuideScreen(
     var expandedKeys by remember {
         mutableStateOf(
             if (initialTopicKey != null) setOf(initialTopicKey)
-            else setOf(HelpTopicKey.SYNC, HelpTopicKey.QUICK_LOG)
+            else setOf(HelpTopicKey.DISH_MATRIX, HelpTopicKey.QUICK_LOG)
         )
     }
 
@@ -378,10 +379,10 @@ fun HelpGuideScreen(
                                     )
 
                                     when (section.key) {
-                                        HelpTopicKey.SYNC -> SyncTopicContent()
+                                        HelpTopicKey.DISH_MATRIX -> DishMatrixTopicContent()
                                         HelpTopicKey.QUICK_LOG -> QuickLogTopicContent()
                                         HelpTopicKey.VISIT_LOG -> VisitLogTopicContent()
-                                        HelpTopicKey.DISH_MATRIX -> DishMatrixTopicContent()
+                                        HelpTopicKey.SYNC -> SyncTopicContent()
                                         HelpTopicKey.MAP_EXPLORE -> MapExploreTopicContent()
                                         HelpTopicKey.PRIVACY -> PrivacyTopicContent()
                                     }
@@ -396,210 +397,7 @@ fun HelpGuideScreen(
 }
 
 // ---------------------------------------------------------------------------
-// 1. SYNC TOPIC CONTENT
-// ---------------------------------------------------------------------------
-@Composable
-private fun SyncTopicContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingStandard)) {
-        Text(
-            text = stringResource(R.string.help_sync_intro),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        // Comparison Container
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Dimens.RadiusStandard))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                .padding(Dimens.SpacingStandard),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
-        ) {
-            // Mode A Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(Dimens.RadiusMedium),
-                border = BorderStroke(Dimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(Dimens.SpacingStandard), verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.help_sync_mode_a_title),
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = AmberPrimary
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            text = stringResource(R.string.help_sync_mode_a_badge),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = VerdictGoGreen
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.help_sync_mode_a_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // Mode B Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(Dimens.RadiusMedium),
-                border = BorderStroke(Dimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(Dimens.SpacingStandard), verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.help_sync_mode_b_title),
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = AmberPrimary
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            text = stringResource(R.string.help_sync_mode_b_badge),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF8B5CF6)
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.help_sync_mode_b_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        // WhatsApp Recovery Tip Box
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Dimens.RadiusSmall))
-                .background(VerdictCautionAmberContainer)
-                .padding(Dimens.SpacingMedium)
-        ) {
-            Row(verticalAlignment = Alignment.Top) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = VerdictCautionAmber,
-                    modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = Dimens.SpacingXXSmall)
-                )
-                Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
-                Text(
-                    text = stringResource(R.string.help_sync_whatsapp_tip),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// 2. QUICK LOG TOPIC CONTENT
-// ---------------------------------------------------------------------------
-@Composable
-private fun QuickLogTopicContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)) {
-        Text(
-            text = stringResource(R.string.help_quick_log_intro),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Dimens.RadiusMedium))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                .padding(Dimens.SpacingStandard),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.FlashOn, contentDescription = null, tint = VerdictNoGoRed, modifier = Modifier.size(Dimens.IconSizeSmall))
-                Spacer(modifier = Modifier.width(Dimens.SpacingSmall))
-                Text(stringResource(R.string.help_quick_log_steps_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-            }
-            Text(stringResource(R.string.help_quick_log_step_1), style = MaterialTheme.typography.bodySmall)
-            Text(stringResource(R.string.help_quick_log_step_2), style = MaterialTheme.typography.bodySmall)
-            Text(stringResource(R.string.help_quick_log_step_3), style = MaterialTheme.typography.bodySmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)) {
-                VerdictBadge(Verdict.NO_GO)
-                VerdictBadge(Verdict.GO)
-                VerdictBadge(Verdict.CAUTION)
-            }
-            Text(stringResource(R.string.help_quick_log_step_4), style = MaterialTheme.typography.bodySmall)
-            Text(stringResource(R.string.help_quick_log_step_5), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Dimens.RadiusSmall))
-                .background(VerdictGoGreenContainer)
-                .padding(Dimens.SpacingMedium)
-        ) {
-            Row(verticalAlignment = Alignment.Top) {
-                Icon(Icons.Default.Lightbulb, contentDescription = null, tint = VerdictGoGreen, modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = Dimens.SpacingXXSmall))
-                Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
-                Text(
-                    text = stringResource(R.string.help_quick_log_reuse_tip),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// 3. VISIT LOG TOPIC CONTENT
-// ---------------------------------------------------------------------------
-@Composable
-private fun VisitLogTopicContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)) {
-        Text(
-            text = stringResource(R.string.help_visit_log_intro),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Dimens.RadiusMedium))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                .padding(Dimens.SpacingStandard),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
-        ) {
-            Text(stringResource(R.string.help_visit_log_record_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)
-            ) {
-                ChannelBadge("DINE_IN")
-                ChannelBadge("ZOMATO")
-                ChannelBadge("SWIGGY")
-                ChannelBadge("HIGHWAY_STOP")
-                ChannelBadge("TAKEAWAY")
-            }
-            Text(stringResource(R.string.help_visit_log_point_channel), style = MaterialTheme.typography.bodySmall)
-            Text(stringResource(R.string.help_visit_log_point_bill), style = MaterialTheme.typography.bodySmall)
-            Text(stringResource(R.string.help_visit_log_point_dishes), style = MaterialTheme.typography.bodySmall)
-            Text(stringResource(R.string.help_visit_log_point_attribution), style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// 4. DISH MATRIX TOPIC CONTENT
+// 1. DISH MATRIX TOPIC CONTENT (Core Philosophy)
 // ---------------------------------------------------------------------------
 @Composable
 private fun DishMatrixTopicContent() {
@@ -662,7 +460,238 @@ private fun DishMatrixTopicContent() {
 }
 
 // ---------------------------------------------------------------------------
-// 5. MAP EXPLORE TOPIC CONTENT
+// 2. QUICK LOG TOPIC CONTENT (Speed Capture)
+// ---------------------------------------------------------------------------
+@Composable
+private fun QuickLogTopicContent() {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)) {
+        Text(
+            text = stringResource(R.string.help_quick_log_intro),
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Dimens.RadiusMedium))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(Dimens.SpacingStandard),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.FlashOn, contentDescription = null, tint = VerdictNoGoRed, modifier = Modifier.size(Dimens.IconSizeSmall))
+                Spacer(modifier = Modifier.width(Dimens.SpacingSmall))
+                Text(stringResource(R.string.help_quick_log_steps_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+            }
+            Text(stringResource(R.string.help_quick_log_step_1), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_quick_log_step_2), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_quick_log_step_3), style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)) {
+                VerdictBadge(Verdict.NO_GO)
+                VerdictBadge(Verdict.GO)
+                VerdictBadge(Verdict.CAUTION)
+            }
+            Text(stringResource(R.string.help_quick_log_step_4), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_quick_log_step_5), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Dimens.RadiusSmall))
+                .background(VerdictGoGreenContainer)
+                .padding(Dimens.SpacingMedium)
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Icon(Icons.Default.Lightbulb, contentDescription = null, tint = VerdictGoGreen, modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = Dimens.SpacingXXSmall))
+                Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
+                Text(
+                    text = stringResource(R.string.help_quick_log_reuse_tip),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 3. VISIT LOG TOPIC CONTENT (Visits & Orders)
+// ---------------------------------------------------------------------------
+@Composable
+private fun VisitLogTopicContent() {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)) {
+        Text(
+            text = stringResource(R.string.help_visit_log_intro),
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Dimens.RadiusMedium))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(Dimens.SpacingStandard),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
+        ) {
+            Text(stringResource(R.string.help_visit_log_record_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)
+            ) {
+                ChannelBadge("DINE_IN")
+                ChannelBadge("ZOMATO")
+                ChannelBadge("SWIGGY")
+                ChannelBadge("HIGHWAY_STOP")
+                ChannelBadge("TAKEAWAY")
+            }
+            Text(stringResource(R.string.help_visit_log_point_channel), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_visit_log_point_bill), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_visit_log_point_dishes), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_visit_log_point_attribution), style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 4. SYNC TOPIC CONTENT (Family Cloud Sync)
+// ---------------------------------------------------------------------------
+@Composable
+private fun SyncTopicContent() {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingStandard)) {
+        Text(
+            text = stringResource(R.string.help_sync_intro),
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        // Comparison Container
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Dimens.RadiusStandard))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(Dimens.SpacingStandard),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
+        ) {
+            // Mode A Card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(Dimens.RadiusMedium),
+                border = BorderStroke(Dimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(Dimens.SpacingStandard), verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.help_sync_mode_a_title),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = AmberPrimary,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSmall))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(Dimens.RadiusSmall))
+                                .background(VerdictGoGreenContainer)
+                                .padding(horizontal = Dimens.SpacingSmall, vertical = Dimens.SpacingXXSmall)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.help_sync_mode_a_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = VerdictGoGreenText,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.help_sync_mode_a_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Mode B Card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(Dimens.RadiusMedium),
+                border = BorderStroke(Dimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(Dimens.SpacingStandard), verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.help_sync_mode_b_title),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = AmberPrimary,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSmall))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(Dimens.RadiusSmall))
+                                .background(Color(0xFF8B5CF6).copy(alpha = 0.15f))
+                                .padding(horizontal = Dimens.SpacingSmall, vertical = Dimens.SpacingXXSmall)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.help_sync_mode_b_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6D28D9),
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.help_sync_mode_b_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // WhatsApp Recovery Tip Box
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Dimens.RadiusSmall))
+                .background(VerdictCautionAmberContainer)
+                .padding(Dimens.SpacingMedium)
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = VerdictCautionAmber,
+                    modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = Dimens.SpacingXXSmall)
+                )
+                Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
+                Text(
+                    text = stringResource(R.string.help_sync_whatsapp_tip),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 5. MAP EXPLORE TOPIC CONTENT (Travel & Maps)
 // ---------------------------------------------------------------------------
 @Composable
 private fun MapExploreTopicContent() {
@@ -681,28 +710,16 @@ private fun MapExploreTopicContent() {
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
         ) {
             Text(stringResource(R.string.help_map_pins_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(Dimens.MapPinIndicatorSize).clip(CircleShape).background(VerdictGoGreen))
-                Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
-                Text(stringResource(R.string.help_map_pin_green), style = MaterialTheme.typography.bodySmall)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(Dimens.MapPinIndicatorSize).clip(CircleShape).background(VerdictNoGoRed))
-                Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
-                Text(stringResource(R.string.help_map_pin_red), style = MaterialTheme.typography.bodySmall)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(Dimens.MapPinIndicatorSize).clip(CircleShape).background(VerdictCautionAmber))
-                Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
-                Text(stringResource(R.string.help_map_pin_amber), style = MaterialTheme.typography.bodySmall)
-            }
+            Text(stringResource(R.string.help_map_pin_green), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_map_pin_red), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.help_map_pin_amber), style = MaterialTheme.typography.bodySmall)
             Text(stringResource(R.string.help_map_nav_point), style = MaterialTheme.typography.bodySmall)
         }
     }
 }
 
 // ---------------------------------------------------------------------------
-// 6. PRIVACY TOPIC CONTENT
+// 6. PRIVACY TOPIC CONTENT (Security & Storage)
 // ---------------------------------------------------------------------------
 @Composable
 private fun PrivacyTopicContent() {

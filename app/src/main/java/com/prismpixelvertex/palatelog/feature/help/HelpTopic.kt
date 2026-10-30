@@ -4,10 +4,10 @@ import androidx.annotation.StringRes
 import com.prismpixelvertex.palatelog.R
 
 enum class HelpTopicKey(val id: String, @StringRes val chipLabelRes: Int) {
-    SYNC("sync", R.string.help_chip_sync),
+    DISH_MATRIX("dish_matrix", R.string.help_chip_dish_matrix),
     QUICK_LOG("quick_log", R.string.help_chip_quick_log),
     VISIT_LOG("visit_log", R.string.help_chip_visit_log),
-    DISH_MATRIX("dish_matrix", R.string.help_chip_dish_matrix),
+    SYNC("sync", R.string.help_chip_sync),
     MAP_EXPLORE("map_explore", R.string.help_chip_map),
     PRIVACY("privacy", R.string.help_chip_privacy);
 
