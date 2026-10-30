@@ -5,6 +5,16 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.10] - 2026-10-30
+
+### Fixed & Enhanced
+- **In-App Update Background Download Completion & Restart Prompt**:
+  - **Prioritized `InstallStatus.DOWNLOADED` Check**: Reordered update status evaluation in `InAppUpdateHelper` to check `installStatus() == DOWNLOADED` before `updateAvailability() == UPDATE_AVAILABLE`, ensuring downloaded flexible updates are detected and not blocked by the available update check.
+  - **Safe `onResume()` Lifecycle Query (`checkStatusOnResume`)**: Restored `onResume()` in `MainActivity` with a dedicated, loop-safe update check that queries only whether an update has completed downloading or whether an interrupted immediate update needs resuming. It never initiates new flexible update flows, eliminating recursive prompt loops while guaranteeing foreground returns detect completed downloads.
+  - **Explicit Restart Modal Dialog (`AlertDialog`)**: Added a clear Material 3 `AlertDialog` ("PalateLog Update Ready! 🟢") upon download completion, prompting users to restart now to apply the update or postpone for later.
+  - **Collision-Free Bottom Banner Card Layout**: Adjusted bottom banner padding (`padding(bottom = 96.dp)`) so that when the dialog is postponed, the persistent reminder card sits cleanly above the Material 3 `NavigationBar` without overlapping bottom navigation tabs.
+  - **Diagnostic Logging**: Added structured logging for update installation states (`DOWNLOADING`, `DOWNLOADED`, `FAILED`, `CANCELED`) in `InAppUpdateHelper` for runtime visibility.
+
 ## [1.2.9] - 2026-10-29
 
 ### Fixed & Optimized
