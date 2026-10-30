@@ -3,8 +3,14 @@ package com.prismpixelvertex.palatelog.feature.restaurant_detail
 import android.content.Context
 import com.prismpixelvertex.palatelog.core.model.photoUris
 import android.widget.Toast
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -30,6 +37,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.AlertDialog
@@ -46,6 +54,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -58,7 +67,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
+import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -119,6 +135,23 @@ fun RestaurantDetailScreen(
 
     val restaurant = uiState.restaurant
 
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    var isScrollIndicatorVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollState, uiState.visits.size, uiState.isLoading) {
+        snapshotFlow { scrollState.value }
+            .collectLatest {
+                if ((scrollState.canScrollForward) && (scrollState.maxValue > 0)) {
+                    isScrollIndicatorVisible = true
+                    delay(2500.milliseconds)
+                    isScrollIndicatorVisible = false
+                } else {
+                    isScrollIndicatorVisible = false
+                }
+            }
+    }
+
     var showEditRestaurantDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var visitToEdit by remember { mutableStateOf<VisitEntry?>(null) }
@@ -159,19 +192,28 @@ fun RestaurantDetailScreen(
         modifier = modifier
     ) { innerPadding ->
         if (uiState.isLoading || restaurant == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator(color = AmberPrimary)
             }
         } else {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header Card
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 80.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Header Card
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -363,6 +405,41 @@ fun RestaurantDetailScreen(
                     }
                 }
             }
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isScrollIndicatorVisible,
+                enter = fadeIn() + slideInVertically { it / 2 },
+                exit = fadeOut() + slideOutVertically { it / 2 },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp)
+            ) {
+                Surface(
+                    onClick = {
+                        coroutineScope.launch {
+                            scrollState.animateScrollBy(600f)
+                        }
+                    },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
+                    tonalElevation = Dimens.ElevationMedium,
+                    shadowElevation = Dimens.ElevationMedium,
+                    border = BorderStroke(Dimens.BorderThin, AmberPrimary.copy(alpha = 0.6f))
+                ) {
+                    Box(
+                        modifier = Modifier.padding(Dimens.SpacingSmall),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = stringResource(R.string.help_scroll_more_cards),
+                            tint = AmberPrimary,
+                            modifier = Modifier.size(Dimens.IconSizeDefault)
+                        )
+                    }
+                }
+            }
+        }
         }
     }
 
