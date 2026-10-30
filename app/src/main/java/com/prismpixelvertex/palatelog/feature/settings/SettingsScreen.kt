@@ -88,6 +88,7 @@ import androidx.core.net.toUri
 import com.google.android.gms.common.AccountPicker
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -96,7 +97,7 @@ import java.util.Locale
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onNavigateToHelpGuide: (String?) -> Unit = {},
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -343,7 +344,7 @@ fun SettingsScreen(
                             )
                         }
                         IconButton(
-                            onClick = { onNavigateToHelpGuide("sync") },
+                            onClick = { onNavigateToHelpGuide(HelpTopicKey.SYNC) },
                             modifier = Modifier.size(28.dp)
                         ) {
                             Icon(

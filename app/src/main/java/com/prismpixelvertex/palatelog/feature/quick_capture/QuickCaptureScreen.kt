@@ -74,13 +74,14 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRedContainer
 import com.prismpixelvertex.palatelog.core.model.Verdict
 import com.prismpixelvertex.palatelog.feature.entry_editor.PhotoAttachmentBox
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuickCaptureScreen(
     viewModel: QuickCaptureViewModel,
     onNavigateBack: () -> Unit,
-    onNavigateToHelpGuide: (String?) -> Unit = {},
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -125,7 +126,7 @@ fun QuickCaptureScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onNavigateToHelpGuide("quick_log") }) {
+                    IconButton(onClick = { onNavigateToHelpGuide(HelpTopicKey.QUICK_LOG) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                             contentDescription = stringResource(R.string.help_title),

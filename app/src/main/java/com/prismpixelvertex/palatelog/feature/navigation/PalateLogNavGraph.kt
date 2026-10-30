@@ -33,6 +33,7 @@ import com.prismpixelvertex.palatelog.feature.dashboard.DashboardViewModel
 import com.prismpixelvertex.palatelog.feature.entry_editor.EntryEditorScreen
 import com.prismpixelvertex.palatelog.feature.entry_editor.EntryEditorViewModel
 import com.prismpixelvertex.palatelog.feature.help.HelpGuideScreen
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 import com.prismpixelvertex.palatelog.feature.map.MapScreen
 import com.prismpixelvertex.palatelog.feature.map.MapViewModel
 import com.prismpixelvertex.palatelog.feature.quick_capture.QuickCaptureScreen
@@ -47,8 +48,8 @@ sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: I
     object Map : Screen("map", R.string.nav_map, Icons.Default.Map)
     object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
     object HelpGuide : Screen("help_guide?topic={topic}", R.string.help_title) {
-        fun createRoute(topic: String? = null): String {
-            return if (!topic.isNullOrBlank()) "help_guide?topic=${android.net.Uri.encode(topic)}" else "help_guide"
+        fun createRoute(topic: HelpTopicKey? = null): String {
+            return if (topic != null) "help_guide?topic=${topic.id}" else "help_guide"
         }
     }
     object QuickCapture : Screen("quick_capture?lat={lat}&lng={lng}&address={address}&city={city}", R.string.nav_quick_log) {

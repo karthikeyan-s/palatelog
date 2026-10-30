@@ -80,6 +80,7 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreen
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +89,7 @@ fun DashboardScreen(
     onNavigateToRestaurantDetail: (String) -> Unit,
     onNavigateToQuickCapture: () -> Unit,
     onNavigateToEntryEditor: (restaurantId: String?) -> Unit,
-    onNavigateToHelpGuide: (String?) -> Unit = {},
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()

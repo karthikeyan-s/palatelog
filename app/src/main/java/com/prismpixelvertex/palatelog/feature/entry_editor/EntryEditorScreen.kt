@@ -86,13 +86,14 @@ import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Verdict
 import com.prismpixelvertex.palatelog.core.util.MediaUtils
+import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntryEditorScreen(
     viewModel: EntryEditorViewModel,
     onNavigateBack: () -> Unit,
-    onNavigateToHelpGuide: (String?) -> Unit = {},
+    onNavigateToHelpGuide: (HelpTopicKey?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -128,7 +129,7 @@ fun EntryEditorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onNavigateToHelpGuide("visit_log") }) {
+                    IconButton(onClick = { onNavigateToHelpGuide(HelpTopicKey.VISIT_LOG) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                             contentDescription = stringResource(R.string.help_title),
@@ -363,12 +364,12 @@ fun EntryEditorScreen(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     IconButton(
-                        onClick = { onNavigateToHelpGuide("dish_matrix") },
+                        onClick = { onNavigateToHelpGuide(HelpTopicKey.DISH_MATRIX) },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                            contentDescription = "Dish Matrix Help",
+                            contentDescription = stringResource(R.string.restaurant_detail_dish_matrix_help_desc),
                             tint = AmberPrimary,
                             modifier = Modifier.size(16.dp)
                         )

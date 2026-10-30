@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Quick Log: In the TopAppBar (`?topic=quick_log`).
     - Restaurant Details: Beside the *DISH INSIGHTS & MEMORY MATRIX* header (`?topic=dish_matrix`).
     - Entry Editor: Beside the *Dishes Breakdown* header (`?topic=dish_matrix`) and in the TopAppBar (`?topic=visit_log`).
-  - **Design System & Localization Refactoring**: Centralized all guide copy in `res/values/strings.xml` for internationalization/localization (i18n), and standardized all layout dimensions, borders, and icon containers in `Dimens.kt` (`HelpIconContainerSize`, `MapPinIndicatorSize`, `BorderThin`, `BorderThick`).
+  - **Design System & Localization Refactoring**: Centralized all guide copy and `RestaurantDetailScreen` section headers/dialogs into `res/values/strings.xml` for internationalization/localization (i18n), and standardized all layout dimensions, borders, and icon containers in `Dimens.kt` (`HelpIconContainerSize`, `MapPinIndicatorSize`, `BorderThin`, `BorderThick`).
+  - **Type-Safe Topic Navigation (`HelpTopicKey`)**: Refactored `onNavigateToHelpGuide` to accept the `HelpTopicKey` enum rather than raw string literals (`dish_matrix`, `quick_log`, `visit_log`, `sync`), providing compile-time type safety across all navigation triggers.
   - **Scroll Affordance & Inset Optimization**: Eliminated duplicate bottom window insets between the root navigation Scaffold and child screens to reclaim unused dead space, and introduced an animated floating "More topics below ↓" pill that allows 1-tap downward scrolling and auto-hides when users reach the bottom of the list.
   - **First-Launch Onboarding Welcome Dialog**: Added a one-time welcome dialog on the Explore screen for newly installed devices, offering users a quick guided tour to the Help & User Guide or the option to explore later via the Settings menu or top-bar '?' icon.
 

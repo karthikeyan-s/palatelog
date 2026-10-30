@@ -296,4 +296,28 @@
     <string name="settings_section_help">Guides &amp; Help</string>
     <string name="settings_help_user_guide">Help &amp; User Guide</string>
     <string name="settings_help_user_guide_desc">Learn how to sync across devices, log dishes, and use quick regret capture</string>
+
+    <!-- Restaurant Details Screen -->
+    <string name="restaurant_detail_dish_matrix_title">DISH INSIGHTS &amp; MEMORY MATRIX</string>
+    <string name="restaurant_detail_dish_matrix_help_desc">Dish Matrix Help</string>
+    <string name="restaurant_detail_no_dishes_logged">No individual dishes logged yet. Log a new visit to record specific dishes (e.g. Biriyani vs soggy sides).</string>
+    <string name="restaurant_detail_dishes_avoid">AVOID NEXT TIME 🔴</string>
+    <string name="restaurant_detail_dishes_must_try">FAMILY FAVORITES &amp; MUST TRY 🟢</string>
+    <string name="restaurant_detail_dishes_neutral">NEUTRAL / OKAY DISHES 🟡</string>
+    <string name="restaurant_detail_visit_history_title">VISIT HISTORY (%1$d)</string>
+    <string name="restaurant_detail_no_visits_logged">No visits logged yet</string>
+    <string name="restaurant_detail_geolocation_title">GEOLOCATION (MAP COORDINATES)</string>
+    <string name="restaurant_detail_restaurant_type_title">RESTAURANT TYPE</string>
+    <string name="restaurant_detail_overall_verdict_title">OVERALL VERDICT</string>
+    <string name="restaurant_detail_cuisine_label">Cuisine / Category</string>
+    <string name="restaurant_detail_cuisine_placeholder">e.g. South Indian, Biriyani</string>
+    <string name="restaurant_detail_highway_label">Highway / Route (e.g. NH44)</string>
+    <string name="restaurant_detail_latitude_label">Latitude</string>
+    <string name="restaurant_detail_longitude_label">Longitude</string>
+    <string name="restaurant_detail_use_gps">Use GPS</string>
+    <string name="restaurant_detail_pick_on_map">Pick on Map</string>
+    <string name="restaurant_detail_tap_map_title">Tap Map to Select Location 📍</string>
+    <string name="restaurant_detail_tap_map_subtitle">Single tap or long press to move pin</string>
+    <string name="restaurant_detail_selected_spot_default">Selected Spot 📍</string>
+    <string name="restaurant_detail_general_dining">General Dining</string>
 </resources>
