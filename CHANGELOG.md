@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Smart Content-Awareness**: Guarantees that the indicator is only shown when there is more content extending beyond the bottom of the visible screen (`canScrollForward == true`). Hides automatically when the user reaches the bottom or if the content fits entirely on screen.
   - **1-Tap Scroll Down**: Tapping the indicator smoothly scrolls down to reveal more items or visit history cards.
 
+### Fixed
+- **Restaurant Detail Screen System Navigation Bar Padding**:
+  - **Safe Insets & Clear Space**: Applied `Scaffold`'s `innerPadding` directly to the root `Box` container on `RestaurantDetailScreen` so the floating scroll indicator floats cleanly above the Android system 3-button navigation bar.
+  - **Bottom Content Clearance**: Added `bottom = 80.dp` internal scroll padding to the main detail column so that visit cards and action buttons are never obscured by system navigation bars or floating controls when scrolled to the end.
+
 ## [1.2.13] - 2026-10-31
 
 ### Fixed
