@@ -5,6 +5,15 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.14] - 2026-10-31
+
+### Added
+- **Main Explore Screen Floating Scroll Indicator**:
+  - **Semi-Transparent Floating Down-Arrow**: Introduced a subtle, semi-transparent circular indicator (`Icons.Default.KeyboardArrowDown`) floating at the bottom center of the Explore restaurant list.
+  - **Auto-Hide & Scroll Re-Trigger**: Automatically fades out after 2.5 seconds of inactivity to keep card content completely unblocked, and reappears whenever the user scrolls or new search/filter results load.
+  - **Smart Bottom-Awareness**: Automatically hides when the user reaches the bottom of the list or when no further scrolling is possible.
+  - **1-Tap Scroll Down**: Tapping the indicator smoothly scrolls the list down to reveal more restaurant cards.
+
 ## [1.2.13] - 2026-10-31
 
 ### Fixed

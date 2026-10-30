@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.ui.draw.rotate
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -26,7 +27,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
@@ -34,6 +37,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Search
@@ -51,17 +55,25 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -95,6 +107,23 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var isFabExpanded by remember { mutableStateOf(false) }
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    var isScrollIndicatorVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(listState, uiState.restaurants.size) {
+        snapshotFlow { Pair(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) }
+            .collectLatest {
+                if ((listState.canScrollForward) && (uiState.restaurants.size > 1)) {
+                    isScrollIndicatorVisible = true
+                    delay(2500.milliseconds)
+                    isScrollIndicatorVisible = false
+                } else {
+                    isScrollIndicatorVisible = false
+                }
+            }
+    }
 
     Scaffold(
         topBar = {
@@ -338,23 +367,63 @@ fun DashboardScreen(
                     }
                 }
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    items(uiState.restaurants, key = { it.restaurant.id }) { item ->
-                        RestaurantCard(
-                            item = item,
-                            onClick = { onNavigateToRestaurantDetail(item.restaurant.id) },
-                            onNavigateClick = {
-                                ExternalMapNavigator.navigateTo(
-                                    context = context,
-                                    latitude = item.restaurant.latitude,
-                                    longitude = item.restaurant.longitude,
-                                    label = item.restaurant.name
+                    LazyColumn(
+                        state = listState,
+                        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.restaurants, key = { it.restaurant.id }) { item ->
+                            RestaurantCard(
+                                item = item,
+                                onClick = { onNavigateToRestaurantDetail(item.restaurant.id) },
+                                onNavigateClick = {
+                                    ExternalMapNavigator.navigateTo(
+                                        context = context,
+                                        latitude = item.restaurant.latitude,
+                                        longitude = item.restaurant.longitude,
+                                        label = item.restaurant.name
+                                    )
+                                }
+                            )
+                        }
+                    }
+
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = isScrollIndicatorVisible,
+                        enter = fadeIn() + slideInVertically { it / 2 },
+                        exit = fadeOut() + slideOutVertically { it / 2 },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 24.dp)
+                    ) {
+                        Surface(
+                            onClick = {
+                                coroutineScope.launch {
+                                    val nextIndex = (listState.firstVisibleItemIndex + 2).coerceAtMost(uiState.restaurants.lastIndex)
+                                    listState.animateScrollToItem(nextIndex)
+                                }
+                            },
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
+                            tonalElevation = Dimens.ElevationMedium,
+                            shadowElevation = Dimens.ElevationMedium,
+                            border = BorderStroke(Dimens.BorderThin, AmberPrimary.copy(alpha = 0.6f))
+                        ) {
+                            Box(
+                                modifier = Modifier.padding(Dimens.SpacingSmall),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = stringResource(R.string.help_scroll_more_cards),
+                                    tint = AmberPrimary,
+                                    modifier = Modifier.size(Dimens.IconSizeDefault)
                                 )
                             }
-                        )
+                        }
                     }
                 }
             }
