@@ -1,5 +1,7 @@
 package com.prismpixelvertex.palatelog.feature.dashboard
 
+import android.content.Context
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.DishFeedbackDao
@@ -15,6 +17,7 @@ import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Restaurant
 import com.prismpixelvertex.palatelog.core.model.Verdict
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -51,20 +54,33 @@ data class DashboardUiState(
     val noGoCount: Int = 0,
     val userLatitude: Double? = null,
     val userLongitude: Double? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val showFirstLaunchHelpDialog: Boolean = false
 )
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
     private val dishDao: DishFeedbackDao,
     private val locationClient: LocationClient
 ) : ViewModel() {
 
+    companion object {
+        private const val PREFS_NAME = "palatelog_prefs"
+        private const val KEY_FIRST_LAUNCH_HELP = "has_seen_first_launch_help"
+    }
+
+    private val prefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+
     private val _searchQuery = MutableStateFlow("")
     private val _selectedFilter = MutableStateFlow(DashboardFilter.ALL)
     private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
+    private val _showFirstLaunchHelpDialog = MutableStateFlow(
+        !context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(KEY_FIRST_LAUNCH_HELP, false)
+    )
 
     val uiState: StateFlow<DashboardUiState> = combine(
         restaurantDao.getAllRestaurants(),
@@ -72,7 +88,8 @@ class DashboardViewModel @Inject constructor(
         dishDao.getAllDishes(),
         _searchQuery,
         _selectedFilter,
-        _userLocation
+        _userLocation,
+        _showFirstLaunchHelpDialog
     ) { flows ->
         @Suppress("UNCHECKED_CAST")
         val restaurantEntities = flows[0] as List<RestaurantEntity>
@@ -84,6 +101,7 @@ class DashboardViewModel @Inject constructor(
         val filter = flows[4] as DashboardFilter
         @Suppress("UNCHECKED_CAST")
         val location = flows[5] as Pair<Double, Double>?
+        val showHelpDialog = flows[6] as Boolean
 
         val domainRestaurants = restaurantEntities.map { it.toDomain() }
         val domainDishes = dishEntities.map { it.toDomain() }
@@ -211,7 +229,8 @@ class DashboardViewModel @Inject constructor(
             goCount = domainRestaurants.count { it.overallVerdict == Verdict.GO },
             noGoCount = domainRestaurants.count { it.overallVerdict == Verdict.NO_GO },
             userLatitude = location?.first,
-            userLongitude = location?.second
+            userLongitude = location?.second,
+            showFirstLaunchHelpDialog = showHelpDialog
         )
     }.stateIn(
         scope = viewModelScope,
@@ -221,6 +240,16 @@ class DashboardViewModel @Inject constructor(
 
     init {
         refreshLocation()
+    }
+
+    fun onDismissFirstLaunchHelp() {
+        prefs.edit { putBoolean(KEY_FIRST_LAUNCH_HELP, true) }
+        _showFirstLaunchHelpDialog.value = false
+    }
+
+    fun onAcceptFirstLaunchHelp() {
+        prefs.edit { putBoolean(KEY_FIRST_LAUNCH_HELP, true) }
+        _showFirstLaunchHelpDialog.value = false
     }
 
     fun onSearchQueryChanged(newQuery: String) {

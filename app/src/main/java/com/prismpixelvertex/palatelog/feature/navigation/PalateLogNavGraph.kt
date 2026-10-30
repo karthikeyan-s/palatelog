@@ -1,7 +1,9 @@
 package com.prismpixelvertex.palatelog.feature.navigation
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Map
@@ -102,6 +104,7 @@ fun PalateLogNavGraph(
     val showBottomBar = currentRoute in bottomBarScreens.map { it.route }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
@@ -128,7 +131,7 @@ fun PalateLogNavGraph(
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+            modifier = Modifier.padding(bottom = if (showBottomBar) innerPadding.calculateBottomPadding() else 0.dp)
         ) {
             // Tab 1: Dashboard
             composable(Screen.Dashboard.route) {

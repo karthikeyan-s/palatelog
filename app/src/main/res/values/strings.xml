@@ -288,6 +288,11 @@
     <string name="help_privacy_offline_point">• Offline-First: The app operates 100% without internet. Edits queue locally and sync whenever Wi-Fi or mobile data becomes available.</string>
 
     <!-- Settings Guides Section -->
+    <string name="help_scroll_more_cards">More topics below</string>
+    <string name="help_first_launch_title">New to PalateLog? 🍽️</string>
+    <string name="help_first_launch_message">Would you like a quick tour? Learn how to rapidly log roadside regrets in 3 seconds, isolate dishes to avoid, and set up Google Drive family sync.\n\nYou can revisit this guide anytime from Settings or by tapping the \'?\' icon in the top bar.</string>
+    <string name="help_first_launch_action_view">View Guide</string>
+    <string name="help_first_launch_action_dismiss">Maybe Later</string>
     <string name="settings_section_help">Guides &amp; Help</string>
     <string name="settings_help_user_guide">Help &amp; User Guide</string>
     <string name="settings_help_user_guide_desc">Learn how to sync across devices, log dishes, and use quick regret capture</string>

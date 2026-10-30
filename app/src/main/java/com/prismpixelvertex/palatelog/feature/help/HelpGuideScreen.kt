@@ -8,6 +8,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.filled.DinnerDining
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Map
@@ -51,11 +54,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,6 +111,7 @@ fun HelpGuideScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
+    val canScrollForward by remember { derivedStateOf { listState.canScrollForward } }
 
     val initialTopicKey = remember(initialTopic) { HelpTopicKey.fromId(initialTopic) }
 
@@ -282,112 +288,169 @@ fun HelpGuideScreen(
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-            LazyColumn(
-                state = listState,
-                contentPadding = PaddingValues(Dimens.SpacingDefault),
-                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingDefault),
-                modifier = Modifier.fillMaxSize()
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
             ) {
-                itemsIndexed(sections, key = { _, item -> item.key.name }) { _, section ->
-                    val isExpanded = expandedKeys.contains(section.key)
-                    val isHighlighted = highlightedKey == section.key
+                LazyColumn(
+                    state = listState,
+                    contentPadding = PaddingValues(
+                        start = Dimens.SpacingDefault,
+                        top = Dimens.SpacingDefault,
+                        end = Dimens.SpacingDefault,
+                        bottom = Dimens.SpacingLarge
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingDefault),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    itemsIndexed(sections, key = { _, item -> item.key.name }) { _, section ->
+                        val isExpanded = expandedKeys.contains(section.key)
+                        val isHighlighted = highlightedKey == section.key
 
-                    val borderColor by animateColorAsState(
-                        targetValue = if (isHighlighted) AmberPrimary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                        label = "cardBorder"
-                    )
+                        val borderColor by animateColorAsState(
+                            targetValue = if (isHighlighted) AmberPrimary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            label = "cardBorder"
+                        )
 
-                    Card(
-                        shape = RoundedCornerShape(Dimens.RadiusLarge),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        border = BorderStroke(if (isHighlighted) Dimens.BorderThick else Dimens.BorderThin, borderColor),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            // Clickable Header
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { toggleCard(section.key) }
-                                    .padding(Dimens.SpacingDefault),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(Dimens.HelpIconContainerSize)
-                                        .clip(CircleShape)
-                                        .background(section.iconBgColor),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = section.icon,
-                                        contentDescription = null,
-                                        tint = section.iconColor,
-                                        modifier = Modifier.size(Dimens.IconSizeDefault)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(Dimens.SpacingStandard))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(section.categoryTagRes),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = section.iconColor
-                                    )
-                                    Text(
-                                        text = stringResource(section.titleRes),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = stringResource(section.subtitleRes),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                val rotationAngle by animateFloatAsState(
-                                    targetValue = if (isExpanded) 180f else 0f,
-                                    label = "chevronRotation"
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.ExpandMore,
-                                    contentDescription = stringResource(if (isExpanded) R.string.help_action_collapse else R.string.help_action_expand),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.rotate(rotationAngle)
-                                )
-                            }
-
-                            // Expandable Body
-                            AnimatedVisibility(
-                                visible = isExpanded,
-                                enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically()
-                            ) {
-                                Column(
+                        Card(
+                            shape = RoundedCornerShape(Dimens.RadiusLarge),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = BorderStroke(if (isHighlighted) Dimens.BorderThick else Dimens.BorderThin, borderColor),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                // Clickable Header
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(start = Dimens.SpacingDefault, end = Dimens.SpacingDefault, bottom = Dimens.SpacingDefault),
-                                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingStandard)
+                                        .clickable { toggleCard(section.key) }
+                                        .padding(Dimens.SpacingDefault),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    HorizontalDivider(
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(Dimens.HelpIconContainerSize)
+                                            .clip(CircleShape)
+                                            .background(section.iconBgColor),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = section.icon,
+                                            contentDescription = null,
+                                            tint = section.iconColor,
+                                            modifier = Modifier.size(Dimens.IconSizeDefault)
+                                        )
+                                    }
 
-                                    when (section.key) {
-                                        HelpTopicKey.DISH_MATRIX -> DishMatrixTopicContent()
-                                        HelpTopicKey.QUICK_LOG -> QuickLogTopicContent()
-                                        HelpTopicKey.VISIT_LOG -> VisitLogTopicContent()
-                                        HelpTopicKey.SYNC -> SyncTopicContent()
-                                        HelpTopicKey.MAP_EXPLORE -> MapExploreTopicContent()
-                                        HelpTopicKey.PRIVACY -> PrivacyTopicContent()
+                                    Spacer(modifier = Modifier.width(Dimens.SpacingStandard))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(section.categoryTagRes),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = section.iconColor
+                                        )
+                                        Text(
+                                            text = stringResource(section.titleRes),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = stringResource(section.subtitleRes),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    val rotationAngle by animateFloatAsState(
+                                        targetValue = if (isExpanded) 180f else 0f,
+                                        label = "chevronRotation"
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.ExpandMore,
+                                        contentDescription = stringResource(if (isExpanded) R.string.help_action_collapse else R.string.help_action_expand),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.rotate(rotationAngle)
+                                    )
+                                }
+
+                                // Expandable Body
+                                AnimatedVisibility(
+                                    visible = isExpanded,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = Dimens.SpacingDefault, end = Dimens.SpacingDefault, bottom = Dimens.SpacingDefault),
+                                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingStandard)
+                                    ) {
+                                        HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                        )
+
+                                        when (section.key) {
+                                            HelpTopicKey.DISH_MATRIX -> DishMatrixTopicContent()
+                                            HelpTopicKey.QUICK_LOG -> QuickLogTopicContent()
+                                            HelpTopicKey.VISIT_LOG -> VisitLogTopicContent()
+                                            HelpTopicKey.SYNC -> SyncTopicContent()
+                                            HelpTopicKey.MAP_EXPLORE -> MapExploreTopicContent()
+                                            HelpTopicKey.PRIVACY -> PrivacyTopicContent()
+                                        }
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                // Floating indicator showing more cards below
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = canScrollForward,
+                    enter = fadeIn() + slideInVertically { it / 2 },
+                    exit = fadeOut() + slideOutVertically { it / 2 },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = Dimens.SpacingMedium)
+                ) {
+                    Surface(
+                        onClick = {
+                            coroutineScope.launch {
+                                val nextIndex = (listState.firstVisibleItemIndex + 1).coerceAtMost(sections.lastIndex)
+                                listState.animateScrollToItem(nextIndex)
+                            }
+                        },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        tonalElevation = Dimens.ElevationMedium,
+                        shadowElevation = Dimens.ElevationMedium,
+                        border = BorderStroke(Dimens.BorderThin, AmberPrimary.copy(alpha = 0.6f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(
+                                horizontal = Dimens.SpacingMedium,
+                                vertical = Dimens.SpacingSmall
+                            ),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.help_scroll_more_cards),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = AmberPrimary,
+                                modifier = Modifier.size(Dimens.IconSizeSmall)
+                            )
                         }
                     }
                 }
