@@ -47,6 +47,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.util.Log
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.PalateLogTheme
@@ -54,11 +60,13 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreen
 import com.prismpixelvertex.palatelog.core.update.InAppUpdateHelper
 import com.prismpixelvertex.palatelog.feature.navigation.PalateLogNavGraph
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private lateinit var updateHelper: InAppUpdateHelper
+    private var debugUpdateReceiver: BroadcastReceiver? = null
 
     private val updateLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult(),
@@ -73,6 +81,41 @@ class MainActivity : ComponentActivity() {
         updateHelper = InAppUpdateHelper(applicationContext)
         updateHelper.registerListener()
         updateHelper.checkForAppUpdate(updateLauncher)
+
+        if (BuildConfig.DEBUG) {
+            debugUpdateReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    val state = (intent?.getStringExtra("state")
+                        ?: intent?.getStringExtra("action")
+                        ?: intent?.getStringExtra("status"))?.uppercase(Locale.ROOT)
+                    Log.i("MainActivity", "Received debug update broadcast with state: $state")
+                    when (state) {
+                        "DOWNLOADED" -> {
+                            updateHelper.setUpdateDownloadedForTesting(downloaded = true)
+                            Toast.makeText(this@MainActivity, "Debug: Update DOWNLOADED simulated", Toast.LENGTH_SHORT).show()
+                        }
+                        "RESET", "CLEAR" -> {
+                            updateHelper.setUpdateDownloadedForTesting(downloaded = false)
+                            Toast.makeText(this@MainActivity, "Debug: Update state RESET", Toast.LENGTH_SHORT).show()
+                        }
+                        "RESUME" -> {
+                            updateHelper.checkStatusOnResume(updateLauncher)
+                            Toast.makeText(this@MainActivity, "Debug: checkStatusOnResume() triggered", Toast.LENGTH_SHORT).show()
+                        }
+                        "AVAILABLE" -> {
+                            Toast.makeText(this@MainActivity, "Debug: Update AVAILABLE received (use DOWNLOADED to test install prompt)", Toast.LENGTH_LONG).show()
+                        }
+                        else -> Log.w("MainActivity", "Unknown debug update state: $state (use --es state DOWNLOADED or --es action DOWNLOADED)")
+                    }
+                }
+            }
+            ContextCompat.registerReceiver(
+                this,
+                debugUpdateReceiver,
+                IntentFilter("com.prismpixelvertex.palatelog.TEST_UPDATE"),
+                ContextCompat.RECEIVER_EXPORTED,
+            )
+        }
 
         setContent {
             PalateLogTheme {
@@ -99,7 +142,7 @@ class MainActivity : ComponentActivity() {
                         permissionLauncher.launch(
                             arrayOf(
                                 Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
                             )
                         )
                     }
@@ -138,7 +181,12 @@ class MainActivity : ComponentActivity() {
                                 },
                                 confirmButton = {
                                     Button(
-                                        onClick = { updateHelper.completeUpdate() },
+                                        onClick = {
+                                            updateHelper.completeUpdate()
+                                            if (BuildConfig.DEBUG) {
+                                                Toast.makeText(this@MainActivity, "Debug: completeUpdate() invoked", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
                                         colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
@@ -206,7 +254,12 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     Button(
-                                        onClick = { updateHelper.completeUpdate() },
+                                        onClick = {
+                                            updateHelper.completeUpdate()
+                                            if (BuildConfig.DEBUG) {
+                                                Toast.makeText(this@MainActivity, "Debug: completeUpdate() invoked", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
                                         colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
@@ -232,6 +285,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (BuildConfig.DEBUG) {
+            debugUpdateReceiver?.let { unregisterReceiver(it) }
+        }
         updateHelper.unregisterListener()
     }
 }

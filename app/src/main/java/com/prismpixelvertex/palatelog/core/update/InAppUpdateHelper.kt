@@ -128,7 +128,7 @@ class InAppUpdateHelper(private val context: Context) {
                         appUpdateManager.startUpdateFlowForResult(
                             appUpdateInfo,
                             updateLauncher,
-                            AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
+                            AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
                         )
                     } catch (e: Exception) {
                         Log.w(TAG, "Failed to resume immediate update in onResume", e)
@@ -142,7 +142,19 @@ class InAppUpdateHelper(private val context: Context) {
 
     fun completeUpdate() {
         Log.i(TAG, "Completing update and requesting app restart")
-        appUpdateManager.completeUpdate()
+        try {
+            appUpdateManager.completeUpdate()
+        } catch (e: Exception) {
+            Log.w(TAG, "completeUpdate: ${e.message}")
+        }
+    }
+
+    /**
+     * Testing hook to simulate the downloaded state directly (via ADB broadcast or unit test).
+     */
+    fun setUpdateDownloadedForTesting(downloaded: Boolean) {
+        Log.i(TAG, "Test hook: setUpdateDownloadedForTesting($downloaded)")
+        _isUpdateDownloaded.value = downloaded
     }
 
     fun getStalenessThresholdDays(): Int {
