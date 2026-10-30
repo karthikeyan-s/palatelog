@@ -5,6 +5,16 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.13] - 2026-10-31
+
+### Fixed
+- **Dark Theme Help Screen Tip Box Contrast**:
+  - **High-Contrast Callout Styling**: Updated text and icon colors in `HelpGuideScreen` tip boxes (`help_quick_log_reuse_tip` and `help_sync_whatsapp_tip`) to use dedicated dark contrast text colors (`VerdictGoGreenText` and `VerdictCautionAmberText`) matching light green/amber container backgrounds.
+  - **Dark Mode Mode B Badge Legibility**: Enhanced Mode B sync badge text color (`0xFF8B5CF6`) for high legibility across both dark and light surfaces.
+- **Map Screen Preview Card Button Layout & Text Wrapping**:
+  - **Single-Line Button Layout**: Adjusted `contentPadding` on map preview action buttons (`New Visit`, `Navigate`, `View Details`) to `PaddingValues(horizontal = 6.dp, vertical = 8.dp)` and added `maxLines = 1` with `TextOverflow.Ellipsis`.
+  - **Eliminated Awkward Text Breaks**: Reclaimed 36dp internal horizontal width per button, preventing "Navigate" from breaking across lines ("Navig ate") on narrow phone displays.
+
 ## [1.2.12] - 2026-10-31
 
 ### Refactored & Localization

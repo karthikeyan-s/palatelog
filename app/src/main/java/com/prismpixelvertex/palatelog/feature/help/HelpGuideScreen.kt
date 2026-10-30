@@ -80,8 +80,8 @@ import com.prismpixelvertex.palatelog.core.designsystem.ChannelBadge
 import com.prismpixelvertex.palatelog.core.designsystem.Dimens
 import com.prismpixelvertex.palatelog.core.designsystem.DishVerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
-import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmber
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmberContainer
+import com.prismpixelvertex.palatelog.core.designsystem.VerdictCautionAmberText
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreen
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreenContainer
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictGoGreenText
@@ -566,12 +566,17 @@ private fun QuickLogTopicContent() {
                 .padding(Dimens.SpacingMedium)
         ) {
             Row(verticalAlignment = Alignment.Top) {
-                Icon(Icons.Default.Lightbulb, contentDescription = null, tint = VerdictGoGreen, modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = Dimens.SpacingXXSmall))
+                Icon(
+                    Icons.Default.Lightbulb,
+                    contentDescription = null,
+                    tint = VerdictGoGreenText,
+                    modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = Dimens.SpacingXXSmall)
+                )
                 Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
                 Text(
                     text = stringResource(R.string.help_quick_log_reuse_tip),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = VerdictGoGreenText
                 )
             }
         }
@@ -712,7 +717,7 @@ private fun SyncTopicContent() {
                                 text = stringResource(R.string.help_sync_mode_b_badge),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6D28D9),
+                                color = Color(0xFF8B5CF6),
                                 maxLines = 1,
                                 softWrap = false
                             )
@@ -739,14 +744,14 @@ private fun SyncTopicContent() {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
-                    tint = VerdictCautionAmber,
+                    tint = VerdictCautionAmberText,
                     modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = Dimens.SpacingXXSmall)
                 )
                 Spacer(modifier = Modifier.width(Dimens.SpacingMedium))
                 Text(
                     text = stringResource(R.string.help_sync_whatsapp_tip),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = VerdictCautionAmberText
                 )
             }
         }
