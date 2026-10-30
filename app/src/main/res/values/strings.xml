@@ -146,7 +146,7 @@
     <string name="detail_total_visits">Total Visits: %1$d</string>
     <string name="detail_last_visit">Last Visit: %1$s</string>
     <string name="detail_highway">Route: %1$s</string>
-    <string name="detail_action_new_visit">+ New Visit</string>
+    <string name="detail_action_new_visit">New Visit</string>
     <string name="detail_action_navigate">Navigate</string>
     <string name="detail_dish_matrix_header">Dish Matrix</string>
     <string name="detail_tab_all">All (%1$d)</string>
