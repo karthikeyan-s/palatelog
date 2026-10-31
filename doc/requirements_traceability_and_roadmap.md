@@ -23,7 +23,7 @@ This document maps all original user requirements against the current codebase i
 
 ---
 
-## 2. Prioritized Roadmap & Next Steps
+## 2. Prioritized Roadmap & Completed Milestones
 
 Based on the gap analysis, here are the completed phases and recommended next steps in order of priority:
 
@@ -38,18 +38,25 @@ Based on the gap analysis, here are the completed phases and recommended next st
    - Single Shared Account (Mode A) and Individual Accounts with automated in-app invitations (Mode B).
    - Static QR code / WhatsApp link sharing (`palatelog://sync?folderId=<folderId>`).
 
-### Phase 2C: Code Hygiene & Design System Quality (Completed ✅)
-4. **UI Strings & Localization (`strings.xml`) (Completed ✅)**:
-   - Centralized all hardcoded Compose UI strings into `res/values/strings.xml` for internationalization (i18n) and TalkBack accessibility.
+### Phase 2C: Code Hygiene, Design System & In-App Updates (Completed ✅)
+4. **In-App Google Play Updates (Completed ✅)**:
+   - Flexible updates, background progress tracking, loop-safe `onResume` status checks, and explicit restart prompt dialogs (`InAppUpdateHelper`).
 5. **Design System Tokens & Non-Transitive R (`Dimens.kt`) (Completed ✅)**:
    - Created `Dimens.kt` for spacing, corner radii, icon sizes, and button heights.
    - Enabled `android.nonTransitiveRClass=true` in `gradle.properties`.
 
+### Phase 2D: User Onboarding, Localization & Navigation Polish (Completed ✅)
+6. **Interactive Help & User Guide (`HelpGuideScreen`) (Completed ✅)**:
+   - Material 3 user guidebook with category filter chips, onboarding welcome dialog, and type-safe `HelpTopicKey` deep-linking shortcuts across screens (`?` buttons).
+7. **Comprehensive UI Localization & Hardcoded String Extraction (Completed ✅)**:
+   - Extracted 80+ hardcoded Compose UI strings into `res/values/strings.xml` for internationalization (i18n) and TalkBack accessibility.
+8. **Dark Theme High-Contrast Polish & Layout Fixes (Completed ✅)**:
+   - Fixed text contrast in Dark Theme tip callouts and eliminated awkward button text wrapping ("Navigate") in map preview cards.
+9. **Content-Aware Floating Scroll Indicators (Completed ✅)**:
+   - Auto-fading circular down-arrow indicators on Explore and Restaurant Detail screens with 1-tap scroll down and bottom navigation bar inset protection.
+
 ### Phase 3: Advanced Travel Features (Upcoming)
-6. **Highway Route Corridor Search**:
-   - Allow entering an Origin and Destination (e.g. Bangalore to Chennai) to query all logged stops within 5-10 km along that highway corridor.
-7. **Proximity Regret Warning Notification (Optional Geofence)**:
-   - When driving within 200m of a restaurant previously marked **NO-GO 🔴**, pop up a friendly reminder: *"Heads up! You marked [Highway Tea Stall] as NO-GO (Terrible watery tea) on May 2024."*
-8. **Comprehensive UI Localization & Hardcoded String Migration (TODO)**:
-   - Perform an exhaustive audit across all Compose UI screens (e.g. Quick Capture reason chips, photo dialogs, empty states, filter badges) to wire remaining hardcoded Kotlin strings into `res/values/strings.xml`.
-   - Prune obsolete string keys and prepare the app for full multi-language locale support.
+10. **Highway Route Corridor Search**:
+    - Allow entering an Origin and Destination (e.g. Bangalore to Chennai) to query all logged stops within 5-10 km along that highway corridor.
+11. **Proximity Regret Warning Notification (Optional Geofence)**:
+    - When driving within 200m of a restaurant previously marked **NO-GO 🔴**, pop up a friendly reminder: *"Heads up! You marked [Highway Tea Stall] as NO-GO (Terrible watery tea) on May 2024."*

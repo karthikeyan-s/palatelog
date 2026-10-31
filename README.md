@@ -18,12 +18,17 @@
 
 - ⚡ **3-Second Speed Capture**: 1-tap floating action automatically grabs GPS coordinates, geocodes the place name, and records an immediate **NO-GO 🔴** or **GO 🟢** verdict with a quick note.
 - 🍲 **Granular Food-Level Verdicts**: Rate restaurants as a whole, or isolate specific dishes (*Must Try / Avoid / Neutral*).
+- 🔍 **Dish-Aware Unified Search**: Tokenized multi-field search matching across restaurant names, cuisines, cities, routes, tags, and specific dish names with relevance ranking.
+- 📖 **Interactive Help & User Guide**: Contextual deep-linked Material 3 user guidebook with category filter chips, onboarding welcome dialog, and instant `?` shortcuts across screens.
+- ⏬ **Floating Scroll Indicators**: Content-aware floating down-arrow indicators on Explore and Restaurant Detail screens signaling off-screen content with 1-tap scroll down.
 - 👨‍👩‍👧 **Family Member Preferences**: Track who loved or hated what (e.g. *"Wife loved Mutton Pepper Fry; Karthik found Chicken Fry soggy"*).
 - 🛣️ **Highway & Route Search**: Search logged spots by proximity radius ("Near Me") or along highway travel corridors.
-- 🗺️ **Free Interactive Map**: Integrated with OpenStreetMap / MapLibre (zero API keys, zero cloud billing) + 1-tap handoff to native Google Maps for turn-by-turn driving navigation.
-- 🔄 **Google Shared Drive Two-Way Sync**: Offline-first synchronization with family members via a shared Google Drive folder (`PalateLog_Sync/`). Zero monthly server costs.
+- 🗺️ **Free Interactive Map**: Integrated with OpenStreetMap / MapLibre (zero API keys, zero cloud billing) with custom color-coded pins + 1-tap handoff to native Google Maps for turn-by-turn driving navigation.
+- 🔄 **Google Shared Drive Two-Way Sync**: Offline-first dual-mode synchronization (Mode A: Single Shared Account / Mode B: Individual Accounts with automated REST API invites, static QR code, and WhatsApp recovery).
+- 📲 **In-App Google Play Updates**: Automatic background flexible update detection, progress tracking, and explicit restart prompts.
 - 🔒 **Private vs. Shared Isolation**: Keep personal entries strictly private or share them seamlessly with family.
-- 🧾 **Bills, Prices & Photos**: Store receipts, total bill amounts, and dish photos with automated WebP compression.
+- 🧾 **Bills, Prices & Photos**: Store receipts, total bill amounts, and dish photos with automated WebP compression and 2-way family photo sync.
+- 🌐 **Full String Localization**: 100% extracted UI string resources (`res/values/strings.xml`) supporting internationalization (i18n).
 
 ---
 
@@ -49,8 +54,8 @@ PalateLog follows Google's recommended **Clean Architecture** with MVVM / MVI Un
 palatelog/
 ├── app/                        # Main Android application module
 │   ├── src/main/java/com/prismpixelvertex/palatelog/
-│   │   ├── core/               # Database, Location, Sync, Design System
-│   │   └── feature/            # Quick Capture, Map, Explore, Details, Settings
+│   │   ├── core/               # Database, Location, Sync, Update, Design System, Util
+│   │   └── feature/            # Dashboard, Details, Editor, Help, Map, Navigation, Quick Capture, Settings
 │   └── build.gradle.kts
 ├── doc/                        # Technical design & architecture documentation
 │   ├── architecture_and_design.md
@@ -71,7 +76,7 @@ palatelog/
 
 Comprehensive documentation is available in the [`doc/`](doc/) directory:
 * [Architecture & Technical Design](doc/architecture_and_design.md): Deep dive into Clean Architecture, Room schemas, and UDF patterns.
-* [Decisions & Trade-offs (ADRs)](doc/decisions_and_tradeoffs.md): Why we chose OpenStreetMap + Google Maps intent, 3-second quick logging, serverless Drive sync, and OpenJDK 21 LTS.
+* [Decisions & Trade-offs (ADRs)](doc/decisions_and_tradeoffs.md): Why we chose OpenStreetMap + Google Maps intent, 3-second quick logging, serverless Drive sync, OpenJDK 21 LTS, and deep-linked user guide architecture.
 * [Requirements Traceability & Roadmap](doc/requirements_traceability_and_roadmap.md): Complete traceability matrix mapping original user requirements against the code, with next-step priorities.
 
 ---
