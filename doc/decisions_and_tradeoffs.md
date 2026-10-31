@@ -148,9 +148,9 @@ A comprehensive IDE code inspection audit (351 reported items in `index.html`) w
 6. **Domain Vernacular & Programmatic Pluralization**:
    - *Decision*: Retained "Drive-Thru" and singular/plural visits strings with `tools:ignore="Typos,Spelling,PluralsCandidate"`.
    - *Rationale*: "Drive-Thru" is standard industry vernacular. Plural formatting is already handled deterministically in Kotlin Compose code (`if (item.totalVisits == 1)`).
-7. **Deferred String Pruning for Localization**:
-   - *Decision*: Retained all pre-allocated string resources in `strings.xml` and suppressed `UnusedResources` via module-level `app/lint.xml`.
-   - *Rationale*: Hardcoded strings in Compose screens will be systematically migrated to `strings.xml` in a dedicated localization session (tracked in Roadmap Phase 3).
+7. **Complete String Extraction & Localization Support (Completed in v1.2.12)**:
+   - *Decision*: Successfully extracted 80+ hardcoded Compose strings into `res/values/strings.xml`.
+   - *Rationale*: Achieved 100% localization readiness across all Compose screens and dialogs while eliminating `HardcodedText` warnings.
 
 ### Genuine Fixes Applied
 - Quoted Mermaid node strings containing emojis and quotes in `architecture_and_design.md` to resolve AST parser errors.
@@ -164,3 +164,41 @@ A comprehensive IDE code inspection audit (351 reported items in `index.html`) w
 - Removed redundant `xmlns:android` namespace declaration from `file_paths.xml`.
 - Cleaned dead imports across Compose screens/ViewModels and removed redundant `.editorconfig` properties.
 
+---
+
+## ADR 009: Interactive Help & User Guide Architecture with Contextual Deep-Linking (`HelpTopicKey`)
+
+### Context
+PalateLog incorporates unique paradigms—such as Dual-Mode Family Sync (Mode A vs Mode B), 3-Second Quick Capture vs Full Visit Editor, and the Dish Matrix. Users need immediate, in-context explanations without leaving their current task flow.
+
+### Decision & Trade-offs
+* **Type-Safe `HelpTopicKey` Enum**: Defined a type-safe enum (`HelpTopicKey.SYNC`, `HelpTopicKey.QUICK_LOG`, `HelpTopicKey.VISIT_LOG`, `HelpTopicKey.DISH_MATRIX`, `HelpTopicKey.MAP_TRAVEL`, `HelpTopicKey.PRIVACY_OFFLINE`) to drive deep-linking navigation.
+* **Contextual `?` Shortcuts**: Embedded subtle help icons beside complex section headers across screens (Settings, Quick Log, Entry Editor, Restaurant Details) navigating directly to `Screen.HelpGuide(topicKey)`.
+* **Auto-Scroll & Expand**: Upon receiving a `topicKey`, `HelpGuideScreen` automatically expands the target guide card and scrolls it into view.
+* **First-Launch Onboarding Welcome Dialog**: Added a one-time onboarding welcome dialog on newly installed devices offering a guided tour or deferred exploration.
+
+---
+
+## ADR 010: In-App Update Lifecycle & User Prompt Strategy
+
+### Context
+Google Play In-App Updates allow notifying users when a new version is published. However, aggressive update dialogs during app startup can cause background loops or disrupt the user's primary workflow.
+
+### Decision & Trade-offs
+* **Prioritized `InstallStatus.DOWNLOADED` Check**: Reordered update evaluation in `InAppUpdateHelper` to verify completed downloads before checking availability.
+* **Loop-Safe `onResume()` Query**: Restored `onResume()` update checking restricted solely to completed flexible downloads or interrupted immediate updates.
+* **Explicit Restart Modal (`AlertDialog`)**: Prompts the user to restart now or postpone when an update completes downloading in the background.
+* **Non-Overlapping Banner Card**: Positioned bottom update banners (`padding(bottom = 96.dp)`) safely above bottom navigation bars.
+
+---
+
+## ADR 011: Content-Aware Floating Scroll Indicator UI Pattern
+
+### Context
+On long scrollable lists (such as Explore restaurant cards or Restaurant Detail visit timelines), users may not realize additional cards exist below the fold.
+
+### Decision & Trade-offs
+* **Content-Aware Scroll Detection**: Evaluates `LazyListState.canScrollForward` or `ScrollState.canScrollForward` so the down-arrow indicator only appears when additional off-screen content actually exists.
+* **Auto-Hide Inactivity Timer**: Fades out after 2.5 seconds of scroll inactivity to avoid obscuring card details or action buttons, reappearing when scrolling resumes.
+* **1-Tap Action**: Tapping the floating indicator smoothly scrolls down to reveal hidden content.
+* **Inset Clearance**: Insets and bottom scroll padding (`bottom = 80.dp`) guarantee floating indicators sit cleanly above system 3-button navigation bars.

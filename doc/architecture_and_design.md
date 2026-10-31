@@ -32,7 +32,7 @@ app/src/main/java/com/prismpixelvertex/palatelog/
 │   │   ├── DishFeedback.kt     # Dish feedback, verdicts (Must Try, Avoid, Meh), family reactions
 │   │   └── FamilyMember.kt     # Family member profiles for taste attribution
 │   ├── database/               # Room SQLite persistence layer
-│   │   ├── PalateLogDatabase.kt# Room DB definition (Version 1)
+│   │   ├── PalateLogDatabase.kt# Room DB definition
 │   │   ├── *Entity.kt          # Room entities mapping domain models
 │   │   ├── *Dao.kt             # DAOs with spatial queries, FTS search, reactive Flows
 │   │   └── Converters.kt       # kotlinx.serialization TypeConverters for lists & maps
@@ -44,19 +44,28 @@ app/src/main/java/com/prismpixelvertex/palatelog/
 │   ├── sync/                   # Offline-first synchronization & distributed conflict resolution
 │   │   ├── SyncModels.kt       # Serializable JSON delta payload schemas
 │   │   ├── SyncRepository.kt   # Delta export, LWW conflict-merging, JSON backup
+│   │   ├── GoogleDriveSyncClient.kt # Drive REST API client for Mode A & Mode B sync
 │   │   └── SyncWorker.kt       # WorkManager CoroutineWorker for background sync
+│   ├── update/                 # Google Play In-App Updates
+│   │   └── InAppUpdateHelper.kt# Flexible & immediate update manager
+│   ├── util/                   # Storage & media utilities
+│   │   └── MediaUtils.kt       # Internal image persistence & compression
 │   └── designsystem/           # Material 3 UI design system
 │       ├── Color.kt            # Curated gourmet color palette (Amber, Emerald, Crimson)
+│       ├── Dimens.kt           # Centralized spacing, radii, icon, and button tokens
 │       ├── Theme.kt            # Material 3 dark/light theme definitions
 │       ├── Type.kt             # Typography scale
+│       ├── LocationPickerDialog.kt # Map location selection dialog
+│       ├── MapMarkerFactory.kt # Color-coded map pin generator
 │       └── Components.kt       # Badges (VerdictBadge, DishVerdictBadge, ChannelBadge, etc.)
 ├── feature/                    # UI Feature modules
 │   ├── navigation/             # App navigation graph & bottom navigation bar
-│   ├── dashboard/              # Home explore screen, search, category filters, restaurant cards
+│   ├── dashboard/              # Home explore screen, unified search, category filters, cards
 │   ├── quick_capture/          # The 3-second rapid regret logger
 │   ├── entry_editor/           # Full visit editor with prefilled remembered dish chips
 │   ├── restaurant_detail/      # Dish Matrix (Avoid vs Must Try) & visit history timeline
 │   ├── map/                    # Interactive OpenStreetMap with color-coded markers & preview
+│   ├── help/                   # Help & User Guide screen with deep linking (HelpTopicKey)
 │   └── settings/               # Family profiles, sync controls, and backup export/restore
 └── di/                         # Hilt Dependency Injection modules
     ├── DatabaseModule.kt
@@ -156,9 +165,18 @@ graph TD
     F --> G[Dishes pre-filled as selectable chips for instant 1-tap re-logging]
 ```
 
+### C. Contextual Help & User Guide Navigation
+```mermaid
+graph TD
+    A["Tap '?' Shortcut Icon on Any Screen"] --> B["Navigate to Screen.HelpGuide with HelpTopicKey"]
+    B --> C["HelpGuideScreen expands target card & auto-scrolls"]
+    C --> D["User reviews visual paradigms (Sync Mode A/B, Quick Log vs Full Log, Dish Matrix)"]
+    D --> E["Tap '← Back' to return seamlessly to previous screen"]
+```
+
 ---
 
-## 5. Security, Privacy & Sync Architecture (v1.2.5)
+## 5. Security, Privacy & Sync Architecture (v1.2.14)
 
 - **Private vs. Shared Isolation**: Each entity carries an `isShared: Boolean` flag. Private entries remain strictly in the local SQLite database. Only shared entries are synchronized to the shared family storage.
 - **Offline-First & Sovereign**: The app operates 100% offline. All writes go directly to Room SQLite.
@@ -177,5 +195,5 @@ graph TD
   - **Static QR Code & Deep Link Sharing**: The host shares a static QR code or WhatsApp deep link (`palatelog://sync?folderId=<folderId>`). Family members scan or tap the link to store the target `folderId` in their app.
   - **Graceful Error Recovery & WhatsApp Request**: If an uninvited user scans the QR code before the host adds their email, Google Drive API returns an authorization error (HTTP 404/403). PalateLog catches this error and presents a friendly *Permission Pending* screen with a 1-tap **"Ask Host via WhatsApp"** pre-filled request message.
 
-- **Sync Payload Format**: Data is synchronized as compact canonical JSON delta files (`changes_<deviceId>.json`) updated in-place via Google Drive `PATCH` API.
+- **Sync Payload Format**: Data is synchronized as compact canonical JSON delta files (`changes_<deviceId>.json`) updated in-place via Google Drive `PATCH` API. Photos are synchronized to `PalateLog_Family/Photos/`.
 - **Conflict Resolution**: UUID primary keys prevent collisions. Conflicts across devices are resolved using Last-Write-Wins (LWW) based on `updatedAt` timestamps. Soft-deleted records (`isDeleted = true`) act as tombstones so deletions propagate cleanly across all family phones.
