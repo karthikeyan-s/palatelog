@@ -44,6 +44,11 @@ jobs:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
 
+    - name: Setup Mock Credentials for CI
+      run: |
+        touch app/ci-mock.a.olf
+        echo '{"client_id":"mock","client_secret":"mock"}' > app/ci-mock.a.conf
+
     - name: Build Android App for CodeQL
       if: matrix.build-mode == 'manual'
       run: |

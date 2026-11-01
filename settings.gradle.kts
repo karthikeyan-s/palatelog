@@ -11,6 +11,9 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven {
+            url = uri("https://maven.mappls.com/repository/mappls/")
+        }
     }
 }
 plugins {
@@ -21,6 +24,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri("https://maven.mappls.com/repository/mappls/")
+        }
     }
 }
 

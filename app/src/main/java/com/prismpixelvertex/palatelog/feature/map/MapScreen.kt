@@ -1,6 +1,5 @@
 package com.prismpixelvertex.palatelog.feature.map
 
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,10 +37,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,7 +49,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.MapMarkerFactory
@@ -56,13 +56,9 @@ import com.prismpixelvertex.palatelog.core.designsystem.VerdictBadge
 import com.prismpixelvertex.palatelog.core.designsystem.VerdictNoGoRed
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
-import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.MapEventsOverlay
-import org.osmdroid.views.overlay.Marker
+import com.prismpixelvertex.palatelog.core.designsystem.PalateInteractiveMap
+import com.prismpixelvertex.palatelog.core.designsystem.PalateMapMarker
+import com.prismpixelvertex.palatelog.core.designsystem.rememberPalateMapState
 
 @Composable
 fun MapScreen(
@@ -75,84 +71,82 @@ fun MapScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    val mapView = remember {
-        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
-            controller.setZoom(13.0)
-            controller.setCenter(GeoPoint(uiState.userLatitude, uiState.userLongitude))
+    val mapState = rememberPalateMapState(
+        latitude = uiState.userLatitude,
+        longitude = uiState.userLongitude,
+        zoom = 13.0
+    )
+
+    LaunchedEffect(uiState.userLatitude, uiState.userLongitude) {
+        if (uiState.isLocationReady) {
+            mapState.animateCamera(uiState.userLatitude, uiState.userLongitude, mapState.zoom)
         }
     }
 
-    val eventsOverlay = remember {
-        MapEventsOverlay(object : MapEventsReceiver {
-            override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
-                viewModel.onMapTapped(p.latitude, p.longitude)
-                return true
-            }
+    val markers = remember(uiState.isLocationReady, uiState.userLatitude, uiState.userLongitude, uiState.selectedCustomLocation, uiState.restaurants) {
+        val list = mutableListOf<PalateMapMarker>()
 
-            override fun longPressHelper(p: GeoPoint): Boolean {
-                viewModel.onMapTapped(p.latitude, p.longitude)
-                return true
-            }
-        })
-    }
-
-    DisposableEffect(Unit) {
-        mapView.onResume()
-        onDispose {
-            mapView.onPause()
+        if (uiState.isLocationReady) {
+            list.add(
+                PalateMapMarker(
+                    id = "USER_LOCATION",
+                    latitude = uiState.userLatitude,
+                    longitude = uiState.userLongitude,
+                    title = context.getString(R.string.map_your_location),
+                    customIcon = MapMarkerFactory.getUserLocationMarker(context)
+                )
+            )
         }
+
+        uiState.selectedCustomLocation?.let { customLoc ->
+            list.add(
+                PalateMapMarker(
+                    id = "CUSTOM_LOCATION",
+                    latitude = customLoc.latitude,
+                    longitude = customLoc.longitude,
+                    title = if (customLoc.street.isNotBlank()) customLoc.street else context.getString(R.string.map_selected_spot_default),
+                    snippet = context.getString(R.string.map_tap_actions_sub),
+                    customIcon = MapMarkerFactory.getCustomLocationMarker(context)
+                )
+            )
+        }
+
+        uiState.restaurants.forEach { r ->
+            list.add(
+                PalateMapMarker(
+                    id = r.id,
+                    latitude = r.latitude,
+                    longitude = r.longitude,
+                    title = r.name,
+                    snippet = "${r.overallVerdict.name} • ${r.cuisine}",
+                    customIcon = MapMarkerFactory.getRestaurantMarker(context, r.overallVerdict, r.restaurantType)
+                )
+            )
+        }
+
+        list
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        AndroidView(
-            factory = { mapView },
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
+        PalateInteractiveMap(
             modifier = Modifier.fillMaxSize(),
-            update = { map ->
-                map.overlays.clear()
-                map.overlays.add(eventsOverlay)
-
-                // Add User Location Marker
-                if (uiState.isLocationReady) {
-                    val userMarker = Marker(map).apply {
-                        position = GeoPoint(uiState.userLatitude, uiState.userLongitude)
-                        title = context.getString(R.string.map_your_location)
-                        icon = MapMarkerFactory.getUserLocationMarker(context)
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                    }
-                    map.overlays.add(userMarker)
+            state = mapState,
+            markers = markers,
+            onSingleTap = { lat, lng ->
+                viewModel.onMapTapped(lat, lng)
+            },
+            onLongPress = { lat, lng ->
+                viewModel.onMapTapped(lat, lng)
+            },
+            onMarkerClick = { markerId ->
+                val clickedRestaurant = uiState.restaurants.firstOrNull { it.id == markerId }
+                if (clickedRestaurant != null) {
+                    viewModel.onMarkerSelected(clickedRestaurant)
                 }
-
-                // Add Selected Custom Location Marker
-                uiState.selectedCustomLocation?.let { customLoc ->
-                    val customMarker = Marker(map).apply {
-                        position = GeoPoint(customLoc.latitude, customLoc.longitude)
-                        title = if (customLoc.street.isNotBlank()) customLoc.street else context.getString(R.string.map_selected_spot_default)
-                        snippet = context.getString(R.string.map_tap_actions_sub)
-                        icon = MapMarkerFactory.getCustomLocationMarker(context)
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    }
-                    map.overlays.add(customMarker)
-                }
-
-                // Add Restaurant Markers
-                uiState.restaurants.forEach { r ->
-                    val marker = Marker(map).apply {
-                        position = GeoPoint(r.latitude, r.longitude)
-                        title = r.name
-                        snippet = "${r.overallVerdict.name} • ${r.cuisine}"
-                        icon = MapMarkerFactory.getRestaurantMarker(context, r.overallVerdict, r.restaurantType)
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        setOnMarkerClickListener { _, _ ->
-                            viewModel.onMarkerSelected(r)
-                            true
-                        }
-                    }
-                    map.overlays.add(marker)
-                }
-                map.invalidate()
             }
         )
 
@@ -160,7 +154,7 @@ fun MapScreen(
         FloatingActionButton(
             onClick = {
                 viewModel.loadLocation()
-                mapView.controller.animateTo(GeoPoint(uiState.userLatitude, uiState.userLongitude))
+                mapState.animateCamera(uiState.userLatitude, uiState.userLongitude, 13.0)
             },
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.primary,

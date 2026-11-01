@@ -1,6 +1,5 @@
 package com.prismpixelvertex.palatelog.feature.restaurant_detail
 
-import android.content.Context
 import com.prismpixelvertex.palatelog.core.model.photoUris
 import android.widget.Toast
 import androidx.compose.animation.fadeIn
@@ -107,16 +106,12 @@ import com.prismpixelvertex.palatelog.core.model.DishFeedback
 import com.prismpixelvertex.palatelog.core.model.Restaurant
 import com.prismpixelvertex.palatelog.core.model.RestaurantType
 import com.prismpixelvertex.palatelog.core.model.Verdict
+import com.prismpixelvertex.palatelog.core.designsystem.MapMarkerFactory
+import com.prismpixelvertex.palatelog.core.designsystem.PalateInteractiveMap
+import com.prismpixelvertex.palatelog.core.designsystem.PalateMapMarker
 import com.prismpixelvertex.palatelog.core.model.VisitEntry
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
 import com.prismpixelvertex.palatelog.feature.help.HelpTopicKey
-import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.MapEventsOverlay
-import org.osmdroid.views.overlay.Marker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -835,47 +830,6 @@ private fun LocationPickerDialog(
         }
     }
 
-    val mapView = remember {
-        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
-            controller.setZoom(16.0)
-            controller.setCenter(GeoPoint(initialLat, initialLng))
-        }
-    }
-
-    val eventsOverlay = remember {
-        MapEventsOverlay(object : MapEventsReceiver {
-            override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
-                selectedLat = p.latitude
-                selectedLng = p.longitude
-                onReverseGeocode(p.latitude, p.longitude) { _, street, city ->
-                    selectedStreet = street
-                    selectedCity = city
-                }
-                return true
-            }
-
-            override fun longPressHelper(p: GeoPoint): Boolean {
-                selectedLat = p.latitude
-                selectedLng = p.longitude
-                onReverseGeocode(p.latitude, p.longitude) { _, street, city ->
-                    selectedStreet = street
-                    selectedCity = city
-                }
-                return true
-            }
-        })
-    }
-
-    DisposableEffect(Unit) {
-        mapView.onResume()
-        onDispose {
-            mapView.onPause()
-        }
-    }
-
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -920,21 +874,38 @@ private fun LocationPickerDialog(
                         .weight(1f)
                 ) {
                     val defaultSpotTitle = stringResource(R.string.restaurant_detail_selected_spot_default)
-                    AndroidView(
-                        factory = { mapView },
-                        modifier = Modifier.fillMaxSize(),
-                        update = { map ->
-                            map.overlays.clear()
-                            map.overlays.add(eventsOverlay)
+                    val customMarkerIcon = remember { MapMarkerFactory.getCustomLocationMarker(context) }
 
-                            val marker = Marker(map).apply {
-                                position = GeoPoint(selectedLat, selectedLng)
-                                title = selectedStreet.ifBlank { defaultSpotTitle }
-                                snippet = selectedCity
-                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    PalateInteractiveMap(
+                        modifier = Modifier.fillMaxSize(),
+                        centerLatitude = selectedLat,
+                        centerLongitude = selectedLng,
+                        zoomLevel = 16.0,
+                        markers = listOf(
+                            PalateMapMarker(
+                                id = "SELECTED_SPOT",
+                                latitude = selectedLat,
+                                longitude = selectedLng,
+                                title = selectedStreet.ifBlank { defaultSpotTitle },
+                                snippet = selectedCity,
+                                customIcon = customMarkerIcon
+                            )
+                        ),
+                        onSingleTap = { lat, lng ->
+                            selectedLat = lat
+                            selectedLng = lng
+                            onReverseGeocode(lat, lng) { _, street, city ->
+                                selectedStreet = street
+                                selectedCity = city
                             }
-                            map.overlays.add(marker)
-                            map.invalidate()
+                        },
+                        onLongPress = { lat, lng ->
+                            selectedLat = lat
+                            selectedLng = lng
+                            onReverseGeocode(lat, lng) { _, street, city ->
+                                selectedStreet = street
+                                selectedCity = city
+                            }
                         }
                     )
                 }

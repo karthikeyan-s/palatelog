@@ -27,3 +27,6 @@
 # osmdroid map engine
 -dontwarn org.osmdroid.**
 
+# Mappls Map Engine
+-dontwarn com.mappls.**
+
