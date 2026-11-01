@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prismpixelvertex.palatelog.core.database.RestaurantDao
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
-import com.prismpixelvertex.palatelog.core.location.LocationClient
+import com.prismpixelvertex.palatelog.core.location.LocationService
 import com.prismpixelvertex.palatelog.core.model.Restaurant
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +37,7 @@ data class MapUiState(
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val restaurantDao: RestaurantDao,
-    private val locationClient: LocationClient
+    private val locationService: LocationService
 ) : ViewModel() {
 
     private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
@@ -76,7 +76,7 @@ class MapViewModel @Inject constructor(
 
     fun loadLocation() {
         viewModelScope.launch {
-            val loc = locationClient.getCurrentLocation()
+            val loc = locationService.getCurrentLocation()
             if (loc != null) {
                 _userLocation.value = Pair(loc.latitude, loc.longitude)
             }
@@ -99,7 +99,7 @@ class MapViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            val geocoded = locationClient.reverseGeocode(latitude, longitude)
+            val geocoded = locationService.reverseGeocode(latitude, longitude)
             if (_selectedCustomLocation.value?.latitude == latitude &&
                 _selectedCustomLocation.value?.longitude == longitude) {
                 _selectedCustomLocation.value = SelectedCustomLocation(

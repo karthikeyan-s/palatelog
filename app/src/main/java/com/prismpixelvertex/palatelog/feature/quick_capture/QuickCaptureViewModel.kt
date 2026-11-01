@@ -11,7 +11,7 @@ import com.prismpixelvertex.palatelog.core.database.RestaurantEntity
 import com.prismpixelvertex.palatelog.core.database.VisitDao
 import com.prismpixelvertex.palatelog.core.database.VisitEntryEntity
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
-import com.prismpixelvertex.palatelog.core.location.LocationClient
+import com.prismpixelvertex.palatelog.core.location.LocationService
 import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishCategory
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
@@ -53,7 +53,7 @@ sealed interface QuickCaptureEvent {
 @HiltViewModel
 class QuickCaptureViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val locationClient: LocationClient,
+    private val locationService: LocationService,
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
     private val dishDao: DishFeedbackDao,
@@ -100,7 +100,7 @@ class QuickCaptureViewModel @Inject constructor(
     fun acquireLocation() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLocationLoading = true)
-            val loc = locationClient.getCurrentLocation()
+            val loc = locationService.getCurrentLocation()
             if (loc != null) {
                 val bbox = GeoUtils.getBoundingBox(loc.latitude, loc.longitude, 0.1) // 100m
                 val nearby = restaurantDao.getRestaurantsInBoundingBox(bbox.minLat, bbox.maxLat, bbox.minLng, bbox.maxLng)
@@ -130,7 +130,7 @@ class QuickCaptureViewModel @Inject constructor(
                 longitude = lng,
                 isLocationLoading = false
             )
-            val geocoded = locationClient.reverseGeocode(lat, lng)
+            val geocoded = locationService.reverseGeocode(lat, lng)
             _uiState.value = _uiState.value.copy(
                 streetOrArea = if (geocoded.second.isNotBlank()) geocoded.second else _uiState.value.streetOrArea,
                 city = if (geocoded.third.isNotBlank()) geocoded.third else _uiState.value.city

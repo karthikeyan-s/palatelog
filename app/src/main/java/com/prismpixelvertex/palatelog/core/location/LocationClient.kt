@@ -30,10 +30,10 @@ data class LocationResult(
 class LocationClient @Inject constructor(
     @ApplicationContext private val context: Context,
     private val fusedLocationClient: FusedLocationProviderClient
-) {
+) : LocationService {
 
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentLocation(): LocationResult? = withContext(Dispatchers.IO) {
+    override suspend fun getCurrentLocation(): LocationResult? = withContext(Dispatchers.IO) {
         val cancellationTokenSource = CancellationTokenSource()
 
         val location: Location? = suspendCancellableCoroutine { continuation ->
@@ -74,7 +74,7 @@ class LocationClient @Inject constructor(
         }
     }
 
-    suspend fun reverseGeocode(latitude: Double, longitude: Double): Triple<String, String, String> =
+    override suspend fun reverseGeocode(latitude: Double, longitude: Double): Triple<String, String, String> =
         withContext(Dispatchers.IO) {
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())

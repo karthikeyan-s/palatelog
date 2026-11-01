@@ -5,17 +5,29 @@ import android.content.Context
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.UserRecoverableAuthException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import java.io.IOException
-import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -57,14 +69,9 @@ class GoogleAuthException(
 
 @Singleton
 class GoogleDriveSyncClient @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val httpClient: HttpClient
 ) {
-
-    private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -92,22 +99,19 @@ class GoogleDriveSyncClient @Inject constructor(
         val folderName = "PalateLog_Family"
         // 1. Search for existing folder
         val query = "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-        val searchUrl = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name)"
 
-        val request = Request.Builder()
-            .url(searchUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
-            throw IOException("Failed to search Drive folder: HTTP ${response.code} - $responseBody")
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("q", query)
+            parameter("fields", "files(id,name)")
         }
 
-        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to search Drive folder: HTTP ${response.status.value} - $responseText")
+        }
+
+        val fileList = json.decodeFromString<DriveFileListResponse>(responseText)
         if (fileList.files.isNotEmpty()) {
             return@withContext fileList.files.first().id
         }
@@ -121,23 +125,20 @@ class GoogleDriveSyncClient @Inject constructor(
      */
     suspend fun createNewFamilyFolder(accessToken: String): String = withContext(Dispatchers.IO) {
         val folderName = "PalateLog_Family"
-        val createUrl = "https://www.googleapis.com/drive/v3/files"
         val jsonPayload = """{"name":"$folderName","mimeType":"application/vnd.google-apps.folder"}"""
-        val createRequest = Request.Builder()
-            .url(createUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .addHeader("Content-Type", "application/json")
-            .post(jsonPayload.toRequestBody("application/json".toMediaType()))
-            .build()
 
-        val createResponse = httpClient.newCall(createRequest).execute()
-        val createBody = createResponse.body?.string() ?: ""
-
-        if (!createResponse.isSuccessful) {
-            throw IOException("Failed to create Drive folder: HTTP ${createResponse.code} - $createBody")
+        val response = httpClient.post("https://www.googleapis.com/drive/v3/files") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(jsonPayload)
         }
 
-        val createdFolder = json.decodeFromString<DriveFileItem>(createBody)
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to create Drive folder: HTTP ${response.status.value} - $responseText")
+        }
+
+        val createdFolder = json.decodeFromString<DriveFileItem>(responseText)
         createdFolder.id
     }
 
@@ -150,31 +151,33 @@ class GoogleDriveSyncClient @Inject constructor(
         fileName: String,
         jsonContent: String
     ): Boolean = withContext(Dispatchers.IO) {
-        val uploadUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
-        val boundary = "PalateLogSyncBoundary${System.currentTimeMillis()}"
+        val metadataJson = """{"name":"$fileName","parents":["$folderId"]}"""
 
-        val multipartBody = StringBuilder().apply {
-            append("--$boundary\r\n")
-            append("Content-Type: application/json; charset=UTF-8\r\n\r\n")
-            append("""{"name":"$fileName","parents":["$folderId"]}""")
-            append("\r\n--$boundary\r\n")
-            append("Content-Type: application/json; charset=UTF-8\r\n\r\n")
-            append(jsonContent)
-            append("\r\n--$boundary--\r\n")
-        }.toString()
+        val response = httpClient.submitFormWithBinaryData(
+            url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+            formData = formData {
+                append(
+                    key = "metadata",
+                    value = metadataJson,
+                    headers = Headers.build {
+                        append(HttpHeaders.ContentType, "application/json; charset=UTF-8")
+                    }
+                )
+                append(
+                    key = "file",
+                    value = jsonContent.toByteArray(Charsets.UTF_8),
+                    headers = Headers.build {
+                        append(HttpHeaders.ContentType, "application/json; charset=UTF-8")
+                    }
+                )
+            }
+        ) {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
 
-        val request = Request.Builder()
-            .url(uploadUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .addHeader("Content-Type", "multipart/related; boundary=$boundary")
-            .post(multipartBody.toRequestBody("multipart/related; boundary=$boundary".toMediaType()))
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
-            throw IOException("Failed to upload sync payload: HTTP ${response.code} - $responseBody")
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to upload sync payload: HTTP ${response.status.value} - $responseText")
         }
 
         true
@@ -190,22 +193,19 @@ class GoogleDriveSyncClient @Inject constructor(
     ): DriveFileItem? = withContext(Dispatchers.IO) {
         val targetName = "changes_$deviceId.json"
         val query = "'$folderId' in parents and name = '$targetName' and trashed = false"
-        val url = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name,createdTime,modifiedTime)&pageSize=1"
 
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("q", query)
+            parameter("fields", "files(id,name,createdTime,modifiedTime)")
+            parameter("pageSize", 1)
+        }
 
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
+        if (!response.status.isSuccess()) {
             return@withContext null
         }
 
-        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        val fileList = json.decodeFromString<DriveFileListResponse>(response.bodyAsText())
         fileList.files.firstOrNull()
     }
 
@@ -217,20 +217,15 @@ class GoogleDriveSyncClient @Inject constructor(
         fileId: String,
         jsonContent: String
     ): Boolean = withContext(Dispatchers.IO) {
-        val uploadUrl = "https://www.googleapis.com/upload/drive/v3/files/$fileId?uploadType=media"
+        val response = httpClient.patch("https://www.googleapis.com/upload/drive/v3/files/$fileId?uploadType=media") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            contentType(ContentType.Application.Json.withParameter("charset", "UTF-8"))
+            setBody(jsonContent)
+        }
 
-        val request = Request.Builder()
-            .url(uploadUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .addHeader("Content-Type", "application/json; charset=UTF-8")
-            .patch(jsonContent.toRequestBody("application/json; charset=UTF-8".toMediaType()))
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
-            throw IOException("Failed to update sync payload: HTTP ${response.code} - $responseBody")
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to update sync payload: HTTP ${response.status.value} - $responseText")
         }
 
         true
@@ -262,22 +257,20 @@ class GoogleDriveSyncClient @Inject constructor(
         folderId: String
     ): List<DriveFileItem> = withContext(Dispatchers.IO) {
         val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
-        val url = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name,createdTime,modifiedTime)&pageSize=100"
 
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
-            throw IOException("Failed to list remote sync files: HTTP ${response.code} - $responseBody")
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("q", query)
+            parameter("fields", "files(id,name,createdTime,modifiedTime)")
+            parameter("pageSize", 100)
         }
 
-        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to list remote sync files: HTTP ${response.status.value} - $responseText")
+        }
+
+        val fileList = json.decodeFromString<DriveFileListResponse>(responseText)
         fileList.files
     }
 
@@ -288,22 +281,17 @@ class GoogleDriveSyncClient @Inject constructor(
         accessToken: String,
         fileId: String
     ): String = withContext(Dispatchers.IO) {
-        val downloadUrl = "https://www.googleapis.com/drive/v3/files/$fileId?alt=media"
-
-        val request = Request.Builder()
-            .url(downloadUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
-            throw IOException("Failed to download payload: HTTP ${response.code} - $responseBody")
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files/$fileId") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("alt", "media")
         }
 
-        responseBody
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to download payload: HTTP ${response.status.value} - $responseText")
+        }
+
+        responseText
     }
 
     /**
@@ -315,40 +303,33 @@ class GoogleDriveSyncClient @Inject constructor(
     ): String = withContext(Dispatchers.IO) {
         val folderName = "Photos"
         val query = "'$familyFolderId' in parents and name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-        val searchUrl = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name)"
 
-        val request = Request.Builder()
-            .url(searchUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
-            throw IOException("Failed to search Photos folder: HTTP ${response.code} - $responseBody")
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("q", query)
+            parameter("fields", "files(id,name)")
         }
 
-        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to search Photos folder: HTTP ${response.status.value} - $responseText")
+        }
+
+        val fileList = json.decodeFromString<DriveFileListResponse>(responseText)
         if (fileList.files.isNotEmpty()) {
             return@withContext fileList.files.first().id
         }
 
-        val createUrl = "https://www.googleapis.com/drive/v3/files"
         val jsonPayload = """{"name":"$folderName","mimeType":"application/vnd.google-apps.folder","parents":["$familyFolderId"]}"""
-        val createRequest = Request.Builder()
-            .url(createUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .addHeader("Content-Type", "application/json")
-            .post(jsonPayload.toRequestBody("application/json".toMediaType()))
-            .build()
+        val createResponse = httpClient.post("https://www.googleapis.com/drive/v3/files") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(jsonPayload)
+        }
 
-        val createResponse = httpClient.newCall(createRequest).execute()
-        val createBody = createResponse.body?.string() ?: ""
-
-        if (!createResponse.isSuccessful) {
-            throw IOException("Failed to create Photos folder: HTTP ${createResponse.code} - $createBody")
+        val createBody = createResponse.bodyAsText()
+        if (!createResponse.status.isSuccess()) {
+            throw IOException("Failed to create Photos folder: HTTP ${createResponse.status.value} - $createBody")
         }
 
         val createdFolder = json.decodeFromString<DriveFileItem>(createBody)
@@ -363,22 +344,19 @@ class GoogleDriveSyncClient @Inject constructor(
         photosFolderId: String
     ): List<DriveFileItem> = withContext(Dispatchers.IO) {
         val query = "'$photosFolderId' in parents and trashed = false"
-        val url = "https://www.googleapis.com/drive/v3/files?q=${URLEncoder.encode(query, "UTF-8")}&fields=files(id,name,createdTime,modifiedTime)&pageSize=1000"
 
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("q", query)
+            parameter("fields", "files(id,name,createdTime,modifiedTime)")
+            parameter("pageSize", 1000)
+        }
 
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
+        if (!response.status.isSuccess()) {
             return@withContext emptyList()
         }
 
-        val fileList = json.decodeFromString<DriveFileListResponse>(responseBody)
+        val fileList = json.decodeFromString<DriveFileListResponse>(response.bodyAsText())
         fileList.files
     }
 
@@ -391,32 +369,33 @@ class GoogleDriveSyncClient @Inject constructor(
         fileName: String,
         fileBytes: ByteArray
     ): Boolean = withContext(Dispatchers.IO) {
-        val uploadUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
-        val boundary = "PalateLogPhotoBoundary${System.currentTimeMillis()}"
+        val metadataJson = """{"name":"$fileName","parents":["$photosFolderId"]}"""
 
-        val multipartHeader = StringBuilder().apply {
-            append("--$boundary\r\n")
-            append("Content-Type: application/json; charset=UTF-8\r\n\r\n")
-            append("""{"name":"$fileName","parents":["$photosFolderId"]}""")
-            append("\r\n--$boundary\r\n")
-            append("Content-Type: image/jpeg\r\n\r\n")
-        }.toString().toByteArray(Charsets.UTF_8)
+        val response = httpClient.submitFormWithBinaryData(
+            url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+            formData = formData {
+                append(
+                    key = "metadata",
+                    value = metadataJson,
+                    headers = Headers.build {
+                        append(HttpHeaders.ContentType, "application/json; charset=UTF-8")
+                    }
+                )
+                append(
+                    key = "file",
+                    value = fileBytes,
+                    headers = Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpeg")
+                    }
+                )
+            }
+        ) {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
 
-        val closingBoundary = "\r\n--$boundary--\r\n".toByteArray(Charsets.UTF_8)
-        val fullBodyBytes = multipartHeader + fileBytes + closingBoundary
-
-        val request = Request.Builder()
-            .url(uploadUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .addHeader("Content-Type", "multipart/related; boundary=$boundary")
-            .post(fullBodyBytes.toRequestBody("multipart/related; boundary=$boundary".toMediaType()))
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
-            throw IOException("Failed to upload photo $fileName: HTTP ${response.code} - $responseBody")
+        val responseText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw IOException("Failed to upload photo $fileName: HTTP ${response.status.value} - $responseText")
         }
 
         true
@@ -428,24 +407,17 @@ class GoogleDriveSyncClient @Inject constructor(
     suspend fun downloadPhotoFile(
         accessToken: String,
         fileId: String,
-        destFile: java.io.File
+        destFile: File
     ): Boolean = withContext(Dispatchers.IO) {
-        val downloadUrl = "https://www.googleapis.com/drive/v3/files/$fileId?alt=media"
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files/$fileId") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("alt", "media")
+        }
 
-        val request = Request.Builder()
-            .url(downloadUrl)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        if (response.isSuccessful && response.body != null) {
+        if (response.status.isSuccess()) {
             destFile.parentFile?.let { if (!it.exists()) it.mkdirs() }
-            response.body!!.byteStream().use { input ->
-                destFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
+            val bytes: ByteArray = response.body()
+            destFile.writeBytes(bytes)
             true
         } else {
             false
@@ -459,20 +431,20 @@ class GoogleDriveSyncClient @Inject constructor(
         accessToken: String,
         folderId: String
     ): FolderAccessResult = withContext(Dispatchers.IO) {
-        val url = "https://www.googleapis.com/drive/v3/files/$folderId?fields=id,name"
-
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-
         try {
-            val response = httpClient.newCall(request).execute()
-            when (response.code) {
-                200 -> FolderAccessResult.Success
-                404, 403 -> FolderAccessResult.AccessDenied(folderId, response.code)
-                else -> FolderAccessResult.Error("HTTP ${response.code}: ${response.body?.string()}")
+            val response = httpClient.get("https://www.googleapis.com/drive/v3/files/$folderId") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                parameter("fields", "id,name")
+            }
+
+            when (response.status) {
+                HttpStatusCode.OK -> FolderAccessResult.Success
+                HttpStatusCode.NotFound, HttpStatusCode.Forbidden -> {
+                    FolderAccessResult.AccessDenied(folderId, response.status.value)
+                }
+                else -> {
+                    FolderAccessResult.Error("HTTP ${response.status.value}: ${response.bodyAsText()}")
+                }
             }
         } catch (e: Exception) {
             FolderAccessResult.Error(e.localizedMessage ?: "Network request failed")
@@ -489,23 +461,21 @@ class GoogleDriveSyncClient @Inject constructor(
     ): Boolean = withContext(Dispatchers.IO) {
         val cleanEmail = emailAddress.trim()
         android.util.Log.d("PalateLog_Sync", "grantFolderPermission called for email=$cleanEmail, folderId=$folderId")
-        val url = "https://www.googleapis.com/drive/v3/files/$folderId/permissions?sendNotificationEmail=false"
         val jsonPayload = """{"role":"writer","type":"user","emailAddress":"$cleanEmail"}"""
 
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .addHeader("Content-Type", "application/json")
-            .post(jsonPayload.toRequestBody("application/json".toMediaType()))
-            .build()
+        val response = httpClient.post("https://www.googleapis.com/drive/v3/files/$folderId/permissions") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("sendNotificationEmail", false)
+            contentType(ContentType.Application.Json)
+            setBody(jsonPayload)
+        }
 
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-        android.util.Log.d("PalateLog_Sync", "grantFolderPermission response code: ${response.code}, body: $responseBody")
+        val responseBody = response.bodyAsText()
+        android.util.Log.d("PalateLog_Sync", "grantFolderPermission response code: ${response.status.value}, body: $responseBody")
 
-        if (!response.isSuccessful && response.code != 409) { // 409 Conflict = already granted
-            android.util.Log.e("PalateLog_Sync", "grantFolderPermission failed: HTTP ${response.code} - $responseBody")
-            throw IOException("HTTP ${response.code} - $responseBody")
+        if (!response.status.isSuccess() && response.status != HttpStatusCode.Conflict) { // 409 Conflict = already granted
+            android.util.Log.e("PalateLog_Sync", "grantFolderPermission failed: HTTP ${response.status.value} - $responseBody")
+            throw IOException("HTTP ${response.status.value} - $responseBody")
         }
 
         true
@@ -518,18 +488,13 @@ class GoogleDriveSyncClient @Inject constructor(
         accessToken: String,
         folderId: String
     ): List<DrivePermissionItem> = withContext(Dispatchers.IO) {
-        val url = "https://www.googleapis.com/drive/v3/files/$folderId/permissions?fields=permissions(id,emailAddress,role)"
+        val response = httpClient.get("https://www.googleapis.com/drive/v3/files/$folderId/permissions") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            parameter("fields", "permissions(id,emailAddress,role)")
+        }
 
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-
-        val response = httpClient.newCall(request).execute()
-        val responseBody = response.body?.string() ?: ""
-
-        if (!response.isSuccessful) {
+        val responseBody = response.bodyAsText()
+        if (!response.status.isSuccess()) {
             return@withContext emptyList()
         }
 
