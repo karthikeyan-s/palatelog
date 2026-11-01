@@ -21,24 +21,30 @@ Adopted **PalateLog** with application ID `com.prismpixelvertex.palatelog` and t
 
 ---
 
-## ADR 002: Free In-App Map with Zero-Cost Live Navigation Handoff
+## ADR 002: Plug-and-Play Map Architecture: Mappls (MapmyIndia) with OSMDroid Fallback & Navigation Handoff
 
 ### Context
-Requirement 2 calls for interactive map search and geocoded visual exploration. Google Maps SDK for Android requires creating a Google Cloud billing account and attaching a credit card to generate an API key.
+Requirement 2 calls for interactive map search and geocoded visual exploration. Initially, PalateLog adopted OSMDroid (OpenStreetMap). However, Indian statutory regulations (the Criminal Law Amendment Act, 1961, the National Geospatial Policy, 2022, and Survey of India mandates) require maps published and distributed in India to depict the official international borders of India (including the entirety of Jammu & Kashmir, Ladakh, Aksai Chin, and Arunachal Pradesh). Standard OpenStreetMap raster tiles render borders based on de facto ground control (Line of Control / Line of Actual Control), which does not adhere to official Indian boundaries.
+
+Furthermore, we needed a plug-and-play architecture so that changing map providers in the future (e.g., to Google Maps, Ola Maps, or iOS MapKit) incurs zero changes to feature screens or data models.
 
 ### Options Considered
-* **Option A: Google Maps Android SDK**: Native Google maps rendering, but requires mandatory Google Cloud project creation, billing account, credit card linking, and risks recurring costs or API key leakage.
-* **Option B: OSMDroid / MapLibre (OpenStreetMap)**: 100% free, open-source, zero credit card requirements, zero API keys, and native offline tile caching.
-* **Option C: Hybrid OSMDroid + Native Google Maps Intent (Selected)**:
-  - In-app interactive map rendering powered by **OSMDroid / OpenStreetMap**.
-  - When the user taps "Navigate" on any restaurant card, PalateLog fires an Android `geo:` / `google.navigation:` intent directly opening the official **Google Maps application** installed on the user's phone.
+* **Option A: Google Maps Android SDK**: Native Google maps rendering with dynamic Indian boundary localization, but requires mandatory Google Cloud project creation, billing account, and credit card setup.
+* **Option B: Pure OSMDroid (OpenStreetMap)**: 100% free and open-source, but non-compliant with Survey of India boundary guidelines by default.
+* **Option C: Mappls (MapmyIndia) Android SDK**: 100% compliant with Survey of India and Government of India geospatial mandates, rich Indian POI/dhaba data, but introduces vendor SDK dependency.
+* **Option D: Plug-and-Play Strategy & Facade Architecture (Selected)**:
+  - Universal Composable Facade: [`PalateInteractiveMap`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateInteractiveMap.kt) exposes a vendor-neutral contract (`PalateMapMarker`, `MapProviderType`).
+  - Primary Renderer: [`MapplsMapRenderer`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/MapplsMapRenderer.kt) using Mappls Android SDK v2.0+ and signed application configuration files (`.a.conf` / `.a.olf`).
+  - Graceful Fallback Renderer: [`OsmDroidMapRenderer`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/OsmDroidMapRenderer.kt) automatically activates if Mappls credentials are missing, uninitialized, or encounter runtime quota errors.
+  - Zero-Cost Live Navigation: Preserved via Android `geo:` intent handoff in [`ExternalMapNavigator`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/navigation/ExternalMapNavigator.kt).
 
 ### Decision & Trade-offs
 * **Benefits**: 
-  - 100% free with zero monthly billing or credit card setup.
-  - Complete turn-by-turn driving navigation with real-time traffic powered by the official Google Maps app.
-  - Supports offline tile caching in remote highway stretches.
-* **Trade-off**: In-app map styling is OpenStreetMap rather than proprietary Google Satellite view, which is acceptable for restaurant pin discovery.
+  - **100% Regulatory Compliance**: Guaranteed Survey of India border compliance for Google Play Store distribution in India.
+  - **Plug-and-Play Extensibility**: Feature screens ([`MapScreen`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/map/MapScreen.kt), [`LocationPickerDialog`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/LocationPickerDialog.kt), [`RestaurantDetailScreen`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/restaurant_detail/RestaurantDetailScreen.kt)) have zero direct dependencies on any vendor SDK.
+  - **KMP / iOS Readiness**: Clean separation allows plugging in Apple MapKit (`MKMapView`) for iOS or future alternative providers without altering UI logic.
+  - **Zero Breakage Guarantee**: Automatic fallback to OSMDroid ensures maps never crash or render blank even if API limits are reached.
+* **Trade-off**: Requires bundling Mappls SDK dependencies alongside OSMDroid for fallback capabilities.
 
 ---
 

@@ -16,4 +16,14 @@ class PalateLogApp : Application(), Configuration.Provider {
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+
+    override fun onCreate() {
+        super.onCreate()
+        try {
+            com.mappls.sdk.maps.Mappls.getInstance(this)
+            com.prismpixelvertex.palatelog.core.designsystem.MapProviderConfig.notifyMapplsInitialized(true)
+        } catch (_: Exception) {
+            com.prismpixelvertex.palatelog.core.designsystem.MapProviderConfig.notifyMapplsInitialized(false)
+        }
+    }
 }

@@ -57,6 +57,10 @@ app/src/main/java/com/prismpixelvertex/palatelog/
 │       ├── Type.kt             # Typography scale
 │       ├── LocationPickerDialog.kt # Map location selection dialog
 │       ├── MapMarkerFactory.kt # Color-coded map pin generator
+│       ├── PalateInteractiveMap.kt # Universal plug-and-play composable map facade
+│       ├── MapplsMapRenderer.kt # Mappls (MapmyIndia) Survey-of-India compliant vector renderer
+│       ├── OsmDroidMapRenderer.kt # OpenStreetMap resilient offline/error fallback renderer
+│       ├── PalateMapModels.kt  # MapProviderType & PalateMapMarker data contracts
 │       └── Components.kt       # Badges (VerdictBadge, DishVerdictBadge, ChannelBadge, etc.)
 ├── feature/                    # UI Feature modules
 │   ├── navigation/             # App navigation graph & bottom navigation bar
@@ -64,7 +68,7 @@ app/src/main/java/com/prismpixelvertex/palatelog/
 │   ├── quick_capture/          # The 3-second rapid regret logger
 │   ├── entry_editor/           # Full visit editor with prefilled remembered dish chips
 │   ├── restaurant_detail/      # Dish Matrix (Avoid vs Must Try) & visit history timeline
-│   ├── map/                    # Interactive OpenStreetMap with color-coded markers & preview
+│   ├── map/                    # Interactive Map (Mappls / OSM fallback) with color-coded markers & preview
 │   ├── help/                   # Help & User Guide screen with deep linking (HelpTopicKey)
 │   └── settings/               # Family profiles, sync controls, and backup export/restore
 └── di/                         # Hilt Dependency Injection modules

@@ -57,6 +57,10 @@ keystore.properties
 google-services.json
 oauth_client_secret.json
 
+# Mappls Configuration & License Credentials
+*.a.conf
+*.a.olf
+
 # External native build folder
 .cxx/
 default/
@@ -85,3 +89,7 @@ vcs.xml
 captures/
 device-dump/
 /temp-logs/
+/lint/
+
+# Mappls generated configuration
+mappls-conf.txt

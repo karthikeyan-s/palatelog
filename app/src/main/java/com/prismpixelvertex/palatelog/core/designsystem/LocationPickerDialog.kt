@@ -1,11 +1,11 @@
 package com.prismpixelvertex.palatelog.core.designsystem
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,9 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,17 +38,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.prismpixelvertex.palatelog.R
-import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.MapEventsOverlay
-import org.osmdroid.views.overlay.Marker
 import java.util.Locale
 
 @Composable
@@ -65,38 +56,10 @@ fun LocationPickerDialog(
     val startLat = if (initialLatitude != 0.0) initialLatitude else 12.9716
     val startLng = if (initialLongitude != 0.0) initialLongitude else 77.5946
 
-    var selectedPoint by remember { mutableStateOf(GeoPoint(startLat, startLng)) }
-
-    val mapView = remember {
-        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
-            controller.setZoom(16.0)
-            controller.setCenter(selectedPoint)
-        }
-    }
-
-    val eventsOverlay = remember {
-        MapEventsOverlay(object : MapEventsReceiver {
-            override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
-                selectedPoint = p
-                return true
-            }
-
-            override fun longPressHelper(p: GeoPoint): Boolean {
-                selectedPoint = p
-                return true
-            }
-        })
-    }
-
-    DisposableEffect(Unit) {
-        mapView.onResume()
-        onDispose {
-            mapView.onPause()
-        }
-    }
+    var selectedLat by remember { mutableDoubleStateOf(startLat) }
+    var selectedLng by remember { mutableDoubleStateOf(startLng) }
+    var centerLat by remember { mutableDoubleStateOf(startLat) }
+    var centerLng by remember { mutableDoubleStateOf(startLng) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -156,29 +119,36 @@ fun LocationPickerDialog(
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                 ) {
-                    AndroidView(
-                        factory = { mapView },
-                        modifier = Modifier.fillMaxWidth(),
-                        update = { map ->
-                            map.overlays.clear()
-                            map.overlays.add(eventsOverlay)
-
-                            val marker = Marker(map).apply {
-                                position = selectedPoint
-                                title = context.getString(R.string.restaurant_detail_selected_spot_default)
-                                snippet = context.getString(R.string.map_tap_actions_sub)
-                                icon = MapMarkerFactory.getCustomLocationMarker(context)
-                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            }
-                            map.overlays.add(marker)
-                            map.invalidate()
+                    PalateInteractiveMap(
+                        modifier = Modifier.fillMaxSize(),
+                        centerLatitude = centerLat,
+                        centerLongitude = centerLng,
+                        zoomLevel = 16.0,
+                        markers = listOf(
+                            PalateMapMarker(
+                                id = "SELECTED_PIN",
+                                latitude = selectedLat,
+                                longitude = selectedLng,
+                                title = context.getString(R.string.restaurant_detail_selected_spot_default),
+                                snippet = context.getString(R.string.map_tap_actions_sub),
+                                customIcon = MapMarkerFactory.getCustomLocationMarker(context)
+                            )
+                        ),
+                        onSingleTap = { lat, lng ->
+                            selectedLat = lat
+                            selectedLng = lng
+                        },
+                        onLongPress = { lat, lng ->
+                            selectedLat = lat
+                            selectedLng = lng
                         }
                     )
 
                     // Re-center on pin button
                     FloatingActionButton(
                         onClick = {
-                            mapView.controller.animateTo(selectedPoint)
+                            centerLat = selectedLat
+                            centerLng = selectedLng
                         },
                         containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.primary,
@@ -195,7 +165,7 @@ fun LocationPickerDialog(
 
                 // Coordinates readout
                 Text(
-                    text = stringResource(R.string.restaurant_detail_coords_fmt, String.format(Locale.US, "%.5f", selectedPoint.latitude), String.format(Locale.US, "%.5f", selectedPoint.longitude)),
+                    text = stringResource(R.string.restaurant_detail_coords_fmt, String.format(Locale.US, "%.5f", selectedLat), String.format(Locale.US, "%.5f", selectedLng)),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -210,21 +180,22 @@ fun LocationPickerDialog(
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(Dimens.RadiusMedium)
                     ) {
                         Text(stringResource(R.string.action_cancel))
                     }
 
                     Button(
                         onClick = {
-                            onLocationConfirmed(selectedPoint.latitude, selectedPoint.longitude)
+                            onLocationConfirmed(selectedLat, selectedLng)
+                            onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(Dimens.RadiusMedium),
+                        colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
                     ) {
-                        Text(stringResource(R.string.location_picker_confirm), fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.location_picker_confirm), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
                     }
                 }
             }

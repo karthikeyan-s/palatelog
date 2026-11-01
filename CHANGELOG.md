@@ -5,6 +5,26 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.16] - 2026-11-01
+
+### Added & Refactored (Plug-and-Play Indian-Compliant Map Architecture)
+- **Plug-and-Play Map Architecture (Strategy & Facade Pattern)**:
+  - Defined `MapProviderType` (`MAPPLS`, `OSM_DROID`, `GOOGLE_MAPS`, `OLA_MAPS`) and `MapProviderConfig` in [`PalateMapModels.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateMapModels.kt) for runtime map vendor switching and automated fallback.
+  - Provided metadata contracts (`nameResId`, `attributionResId`, `isGovernmentCompliant`) to support dynamic attribution and regulatory compliance badges across all map vendors.
+  - Implemented [`MapplsMapRenderer.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/MapplsMapRenderer.kt) with Mappls Android SDK v2.0+ (BoM 2.0.0) integrating cryptographically signed configuration files (`.a.conf` / `.a.olf`).
+  - Extracted [`OsmDroidMapRenderer.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/OsmDroidMapRenderer.kt) as a dedicated offline-capable fallback renderer.
+  - Updated universal composable facade [`PalateInteractiveMap.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateInteractiveMap.kt) to dispatch between Mappls and OSMDroid with seamless runtime error recovery.
+  - Initialized Mappls SDK safely in [`PalateLogApp.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/PalateLogApp.kt) with runtime initialization error guards.
+- **Indian Statutory Geospatial Compliance (Survey of India) & Transparent Notices**:
+  - Adhered strictly to the Criminal Law Amendment Act, 1961, National Geospatial Policy (2022), and Survey of India external boundary guidelines for Jammu & Kashmir, Ladakh, and Arunachal Pradesh.
+  - Added dynamic map provider disclosure and attribution to the About section in [`SettingsScreen.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/settings/SettingsScreen.kt): cleanly displays the primary compliant provider when active, or displays primary provider alongside an explicit fallback notice and disclaimer when connectivity/service limits require falling back to OSM.
+- **Presentation Layer Clean Architecture Decoupling**:
+  - Migrated [`MapScreen.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/map/MapScreen.kt), [`LocationPickerDialog.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/LocationPickerDialog.kt), and [`RestaurantDetailScreen.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/restaurant_detail/RestaurantDetailScreen.kt) to consume `PalateInteractiveMap`, completely eliminating vendor-specific `org.osmdroid.views.MapView` instantiations from feature screens.
+- **Security & Build Configuration**:
+  - Added Mappls Gradle Services plugin and Maven repository configuration in `settings.gradle.kts` and root `build.gradle.kts`.
+  - Added `*.a.conf`, `*.a.olf`, and `mappls-conf.txt` to `.gitignore` to prevent credential exposure in version control.
+  - Documented architectural decisions and legal context in [ADR 002 in `decisions_and_tradeoffs.md`](file:///D:/SourceCode/palatelog/palatelog/doc/decisions_and_tradeoffs.md#L30-L55).
+
 ## [1.2.15] - 2026-11-01
 
 ### Added & Refactored (KMP-Ready Architecture Foundation)

@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+apply(plugin = "com.mappls.services.android")
+
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
@@ -24,8 +26,8 @@ android {
         applicationId = "com.prismpixelvertex.palatelog"
         minSdk = 26
         targetSdk = 36
-        versionCode = 23
-        versionName = "1.2.15"
+        versionCode = 24
+        versionName = "1.2.16"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -116,6 +118,8 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.play.services.update)
     implementation(libs.osmdroid.android)
+    implementation(platform(libs.mappls.bom))
+    implementation(libs.mappls.android.sdk)
 
     // Image Loading
     implementation(libs.coil.compose)
