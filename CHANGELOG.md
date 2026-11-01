@@ -5,6 +5,23 @@ All notable changes to PalateLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.15] - 2026-11-01
+
+### Added & Refactored (KMP-Ready Architecture Foundation)
+- **Multiplatform Image Loading Migration (Coil 2 → Coil 3)**:
+  - Upgraded image loading dependency from Android-only `io.coil-kt:coil-compose:2.7.0` to Kotlin Multiplatform `io.coil-kt.coil3:coil-compose:3.1.0` and `coil-network-okhttp:3.1.0`.
+  - Updated Compose `AsyncImage` imports in [`EntryEditorScreen`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/entry_editor/EntryEditorScreen.kt) and [`RestaurantDetailScreen`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/restaurant_detail/RestaurantDetailScreen.kt) with 100% backward compatibility on Android.
+- **Hardware & System Service Interface Abstractions (Interface Segregation)**:
+  - **Location Abstraction**: Extracted pure Kotlin [`LocationService`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/location/LocationService.kt) domain interface; refactored `LocationClient` to implement it, bound via Hilt in [`LocationModule`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/di/LocationModule.kt), and updated all 5 consuming ViewModels (`DashboardViewModel`, `EntryEditorViewModel`, `MapViewModel`, `QuickCaptureViewModel`, `RestaurantDetailViewModel`) to depend solely on the domain interface.
+  - **Navigation Abstraction**: Introduced [`MapNavigator`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/navigation/MapNavigator.kt) and [`AndroidMapNavigator`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/navigation/AndroidMapNavigator.kt), decoupling platform-specific intent handling from caller features.
+  - **Photo Storage Abstraction**: Introduced [`PhotoStorageManager`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/util/PhotoStorageManager.kt) and [`AndroidPhotoStorageManager`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/util/AndroidPhotoStorageManager.kt) to decouple Android `FileProvider` internals from feature presentation.
+- **Multiplatform HTTP Client Migration (OkHttp → Ktor Client)**:
+  - Added Ktor 3.1.1 multiplatform client dependencies (`ktor-client-core`, `ktor-client-okhttp`, `ktor-client-content-negotiation`, `ktor-serialization-kotlinx-json`).
+  - Refactored [`GoogleDriveSyncClient`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/sync/GoogleDriveSyncClient.kt) from raw `OkHttpClient` calls to Ktor `HttpClient`, maintaining exact Google Drive v3 REST API compatibility for Mode A & Mode B sync, folder discovery/creation, multipart sync JSON and photo uploads, and permissions management.
+  - Created [`NetworkModule`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/di/NetworkModule.kt) to provide a centralized singleton `HttpClient`.
+- **Map View Facade**:
+  - Implemented [`PalateInteractiveMap`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateInteractiveMap.kt) composable facade and [`PalateMapMarker`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateMapModels.kt) to isolate underlying OSMDroid Android views from future iOS MapKit rendering.
+
 ## [1.2.14] - 2026-10-31
 
 ### Added

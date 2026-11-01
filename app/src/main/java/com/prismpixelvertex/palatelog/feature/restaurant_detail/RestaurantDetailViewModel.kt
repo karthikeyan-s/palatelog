@@ -8,8 +8,8 @@ import com.prismpixelvertex.palatelog.core.database.RestaurantDao
 import com.prismpixelvertex.palatelog.core.database.RestaurantEntity
 import com.prismpixelvertex.palatelog.core.database.VisitDao
 import com.prismpixelvertex.palatelog.core.database.VisitEntryEntity
-import com.prismpixelvertex.palatelog.core.location.LocationClient
 import com.prismpixelvertex.palatelog.core.location.LocationResult
+import com.prismpixelvertex.palatelog.core.location.LocationService
 import com.prismpixelvertex.palatelog.core.model.DishFeedback
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Restaurant
@@ -39,7 +39,7 @@ class RestaurantDetailViewModel @Inject constructor(
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
     private val dishDao: DishFeedbackDao,
-    private val locationClient: LocationClient
+    private val locationService: LocationService
 ) : ViewModel() {
 
     val restaurantId: String = checkNotNull(savedStateHandle["restaurantId"])
@@ -150,14 +150,14 @@ class RestaurantDetailViewModel @Inject constructor(
 
     fun getCurrentLocation(onResult: (LocationResult?) -> Unit) {
         viewModelScope.launch {
-            val location = locationClient.getCurrentLocation()
+            val location = locationService.getCurrentLocation()
             onResult(location)
         }
     }
 
     fun reverseGeocode(latitude: Double, longitude: Double, onResult: (placeName: String, street: String, city: String) -> Unit) {
         viewModelScope.launch {
-            val (place, street, city) = locationClient.reverseGeocode(latitude, longitude)
+            val (place, street, city) = locationService.reverseGeocode(latitude, longitude)
             onResult(place, street, city)
         }
     }

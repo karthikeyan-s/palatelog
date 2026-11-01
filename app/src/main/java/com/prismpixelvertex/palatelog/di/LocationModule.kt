@@ -3,6 +3,9 @@ package com.prismpixelvertex.palatelog.di
 import android.content.Context
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.prismpixelvertex.palatelog.core.location.LocationClient
+import com.prismpixelvertex.palatelog.core.location.LocationService
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,13 +15,21 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object LocationModule {
+abstract class LocationModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideFusedLocationProviderClient(
-        @ApplicationContext context: Context
-    ): FusedLocationProviderClient {
-        return LocationServices.getFusedLocationProviderClient(context)
+    abstract fun bindLocationService(
+        locationClient: LocationClient
+    ): LocationService
+
+    companion object {
+        @Provides
+        @Singleton
+        fun provideFusedLocationProviderClient(
+            @ApplicationContext context: Context
+        ): FusedLocationProviderClient {
+            return LocationServices.getFusedLocationProviderClient(context)
+        }
     }
 }

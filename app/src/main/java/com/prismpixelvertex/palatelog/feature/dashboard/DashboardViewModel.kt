@@ -11,7 +11,7 @@ import com.prismpixelvertex.palatelog.core.database.RestaurantEntity
 import com.prismpixelvertex.palatelog.core.database.VisitDao
 import com.prismpixelvertex.palatelog.core.database.VisitEntryEntity
 import com.prismpixelvertex.palatelog.core.location.GeoUtils
-import com.prismpixelvertex.palatelog.core.location.LocationClient
+import com.prismpixelvertex.palatelog.core.location.LocationService
 import com.prismpixelvertex.palatelog.core.model.DishFeedback
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
 import com.prismpixelvertex.palatelog.core.model.Restaurant
@@ -64,7 +64,7 @@ class DashboardViewModel @Inject constructor(
     private val restaurantDao: RestaurantDao,
     private val visitDao: VisitDao,
     private val dishDao: DishFeedbackDao,
-    private val locationClient: LocationClient
+    private val locationService: LocationService
 ) : ViewModel() {
 
     companion object {
@@ -262,7 +262,7 @@ class DashboardViewModel @Inject constructor(
 
     fun refreshLocation() {
         viewModelScope.launch {
-            val loc = locationClient.getCurrentLocation()
+            val loc = locationService.getCurrentLocation()
             if (loc != null) {
                 _userLocation.value = Pair(loc.latitude, loc.longitude)
             }

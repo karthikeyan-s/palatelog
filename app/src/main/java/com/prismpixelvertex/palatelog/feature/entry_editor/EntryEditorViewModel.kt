@@ -12,7 +12,7 @@ import com.prismpixelvertex.palatelog.core.database.RestaurantDao
 import com.prismpixelvertex.palatelog.core.database.RestaurantEntity
 import com.prismpixelvertex.palatelog.core.database.VisitDao
 import com.prismpixelvertex.palatelog.core.database.VisitEntryEntity
-import com.prismpixelvertex.palatelog.core.location.LocationClient
+import com.prismpixelvertex.palatelog.core.location.LocationService
 import com.prismpixelvertex.palatelog.core.model.Channel
 import com.prismpixelvertex.palatelog.core.model.DishCategory
 import com.prismpixelvertex.palatelog.core.model.DishVerdict
@@ -81,7 +81,7 @@ class EntryEditorViewModel @Inject constructor(
     private val visitDao: VisitDao,
     private val dishDao: DishFeedbackDao,
     private val memberDao: FamilyMemberDao,
-    private val locationClient: LocationClient
+    private val locationService: LocationService
 ) : ViewModel() {
 
     private val initialRestaurantId: String? = savedStateHandle["restaurantId"]
@@ -140,7 +140,7 @@ class EntryEditorViewModel @Inject constructor(
                     city = navCity ?: ""
                 )
             } else {
-                val loc = locationClient.getCurrentLocation()
+                val loc = locationService.getCurrentLocation()
                 if (loc != null) {
                     _uiState.value = _uiState.value.copy(
                         latitude = loc.latitude,
@@ -222,7 +222,7 @@ class EntryEditorViewModel @Inject constructor(
     fun onLocationPicked(lat: Double, lng: Double) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(latitude = lat, longitude = lng)
-            val geocoded = locationClient.reverseGeocode(lat, lng)
+            val geocoded = locationService.reverseGeocode(lat, lng)
             _uiState.value = _uiState.value.copy(
                 address = if (geocoded.second.isNotBlank()) geocoded.second else _uiState.value.address,
                 city = if (geocoded.third.isNotBlank()) geocoded.third else _uiState.value.city

@@ -24,8 +24,8 @@ android {
         applicationId = "com.prismpixelvertex.palatelog"
         minSdk = 26
         targetSdk = 36
-        versionCode = 22
-        versionName = "1.2.14"
+        versionCode = 23
+        versionName = "1.2.15"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -119,6 +119,7 @@ dependencies {
 
     // Image Loading
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     // Coroutines & Serialization
     implementation(libs.kotlinx.coroutines.android)
@@ -130,6 +131,12 @@ dependencies {
     implementation(libs.google.id)
     implementation(libs.play.services.auth)
     implementation(libs.okhttp)
+
+    // Ktor Client (KMP-ready HTTP networking)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

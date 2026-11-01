@@ -69,7 +69,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.prismpixelvertex.palatelog.R
 import com.prismpixelvertex.palatelog.core.designsystem.AmberPrimary
 import com.prismpixelvertex.palatelog.core.designsystem.Dimens
