@@ -39,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,6 +57,7 @@ import com.prismpixelvertex.palatelog.core.location.GeoUtils
 import com.prismpixelvertex.palatelog.core.navigation.ExternalMapNavigator
 import com.prismpixelvertex.palatelog.core.designsystem.PalateInteractiveMap
 import com.prismpixelvertex.palatelog.core.designsystem.PalateMapMarker
+import com.prismpixelvertex.palatelog.core.designsystem.rememberPalateMapState
 
 @Composable
 fun MapScreen(
@@ -70,14 +70,15 @@ fun MapScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    var mapCenterLat by remember { mutableDoubleStateOf(uiState.userLatitude) }
-    var mapCenterLng by remember { mutableDoubleStateOf(uiState.userLongitude) }
-    var mapZoom by remember { mutableDoubleStateOf(13.0) }
+    val mapState = rememberPalateMapState(
+        latitude = uiState.userLatitude,
+        longitude = uiState.userLongitude,
+        zoom = 13.0
+    )
 
     LaunchedEffect(uiState.userLatitude, uiState.userLongitude) {
         if (uiState.isLocationReady) {
-            mapCenterLat = uiState.userLatitude
-            mapCenterLng = uiState.userLongitude
+            mapState.animateCamera(uiState.userLatitude, uiState.userLongitude, mapState.zoom)
         }
     }
 
@@ -128,9 +129,7 @@ fun MapScreen(
     Box(modifier = modifier.fillMaxSize()) {
         PalateInteractiveMap(
             modifier = Modifier.fillMaxSize(),
-            centerLatitude = mapCenterLat,
-            centerLongitude = mapCenterLng,
-            zoomLevel = mapZoom,
+            state = mapState,
             markers = markers,
             onSingleTap = { lat, lng ->
                 viewModel.onMapTapped(lat, lng)
@@ -150,8 +149,7 @@ fun MapScreen(
         FloatingActionButton(
             onClick = {
                 viewModel.loadLocation()
-                mapCenterLat = uiState.userLatitude
-                mapCenterLng = uiState.userLongitude
+                mapState.animateCamera(uiState.userLatitude, uiState.userLongitude, 13.0)
             },
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.primary,

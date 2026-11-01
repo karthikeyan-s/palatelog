@@ -15,9 +15,10 @@ import androidx.compose.ui.Modifier
 @Composable
 fun PalateInteractiveMap(
     modifier: Modifier = Modifier,
-    centerLatitude: Double,
-    centerLongitude: Double,
+    centerLatitude: Double = 12.9716,
+    centerLongitude: Double = 77.5946,
     zoomLevel: Double = 16.0,
+    state: PalateMapState? = null,
     markers: List<PalateMapMarker> = emptyList(),
     onSingleTap: ((latitude: Double, longitude: Double) -> Unit)? = null,
     onLongPress: ((latitude: Double, longitude: Double) -> Unit)? = null,
@@ -32,13 +33,19 @@ fun PalateInteractiveMap(
         provider
     }
 
+    val targetLat = state?.latitude ?: centerLatitude
+    val targetLng = state?.longitude ?: centerLongitude
+    val targetZoom = state?.zoom ?: zoomLevel
+    val animationTrigger = state?.cameraAnimationTrigger ?: 0L
+
     when (effectiveProvider) {
         MapProviderType.MAPPLS -> {
             MapplsMapRenderer(
                 modifier = modifier,
-                centerLatitude = centerLatitude,
-                centerLongitude = centerLongitude,
-                zoomLevel = zoomLevel,
+                centerLatitude = targetLat,
+                centerLongitude = targetLng,
+                zoomLevel = targetZoom,
+                animationTrigger = animationTrigger,
                 markers = markers,
                 onSingleTap = onSingleTap,
                 onLongPress = onLongPress,
@@ -52,9 +59,10 @@ fun PalateInteractiveMap(
         MapProviderType.OSM_DROID -> {
             OsmDroidMapRenderer(
                 modifier = modifier,
-                centerLatitude = centerLatitude,
-                centerLongitude = centerLongitude,
-                zoomLevel = zoomLevel,
+                centerLatitude = targetLat,
+                centerLongitude = targetLng,
+                zoomLevel = targetZoom,
+                animationTrigger = animationTrigger,
                 markers = markers,
                 onSingleTap = onSingleTap,
                 onLongPress = onLongPress,
@@ -65,9 +73,10 @@ fun PalateInteractiveMap(
             // Future plug-and-play integrations: fallback gracefully to OsmDroid until native renderers are plugged in
             OsmDroidMapRenderer(
                 modifier = modifier,
-                centerLatitude = centerLatitude,
-                centerLongitude = centerLongitude,
-                zoomLevel = zoomLevel,
+                centerLatitude = targetLat,
+                centerLongitude = targetLng,
+                zoomLevel = targetZoom,
+                animationTrigger = animationTrigger,
                 markers = markers,
                 onSingleTap = onSingleTap,
                 onLongPress = onLongPress,

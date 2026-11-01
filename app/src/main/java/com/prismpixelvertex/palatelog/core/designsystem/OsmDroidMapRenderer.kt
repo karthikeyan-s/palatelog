@@ -3,6 +3,7 @@ package com.prismpixelvertex.palatelog.core.designsystem
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,6 +26,7 @@ fun OsmDroidMapRenderer(
     centerLatitude: Double,
     centerLongitude: Double,
     zoomLevel: Double = 16.0,
+    animationTrigger: Long = 0L,
     markers: List<PalateMapMarker> = emptyList(),
     onSingleTap: ((latitude: Double, longitude: Double) -> Unit)? = null,
     onLongPress: ((latitude: Double, longitude: Double) -> Unit)? = null,
@@ -66,6 +68,14 @@ fun OsmDroidMapRenderer(
         onDispose {
             mapView.onPause()
         }
+    }
+
+    LaunchedEffect(mapView, centerLatitude, centerLongitude, zoomLevel, animationTrigger) {
+        mapView.controller.animateTo(
+            GeoPoint(centerLatitude, centerLongitude),
+            zoomLevel,
+            DEFAULT_MAP_CAMERA_ANIMATION_MS.toLong()
+        )
     }
 
     AndroidView(

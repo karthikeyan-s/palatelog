@@ -35,6 +35,7 @@ fun MapplsMapRenderer(
     centerLatitude: Double,
     centerLongitude: Double,
     zoomLevel: Double = 16.0,
+    animationTrigger: Long = 0L,
     markers: List<PalateMapMarker> = emptyList(),
     onSingleTap: ((latitude: Double, longitude: Double) -> Unit)? = null,
     onLongPress: ((latitude: Double, longitude: Double) -> Unit)? = null,
@@ -108,13 +109,14 @@ fun MapplsMapRenderer(
         })
     }
 
-    // Update camera when center coordinates change
-    LaunchedEffect(mapplsMapInstance, centerLatitude, centerLongitude, zoomLevel) {
-        mapplsMapInstance?.moveCamera(
+    // Animate camera smoothly when center coordinates, zoom level, or animationTrigger change
+    LaunchedEffect(mapplsMapInstance, centerLatitude, centerLongitude, zoomLevel, animationTrigger) {
+        mapplsMapInstance?.animateCamera(
             CameraUpdateFactory.newLatLngZoom(
                 LatLng(centerLatitude, centerLongitude),
                 zoomLevel
-            )
+            ),
+            DEFAULT_MAP_CAMERA_ANIMATION_MS
         )
     }
 
