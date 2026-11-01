@@ -78,7 +78,7 @@ The composable signatures (`model`, `contentDescription`, `contentScale`, `modif
 ### Pillar 2: Network Client Modernization (OkHttp → Ktor Client)
 
 #### Motivation
-Currently, [`GoogleDriveSyncClient.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/sync/GoogleDriveSyncClient.kt) uses `okhttp3.OkHttpClient`, `okhttp3.Request`, and `okhttp3.RequestBody`. OkHttp is a JVM/Android library.
+Currently, [`GoogleDriveSyncClient.kt`](../app/src/main/java/com/prismpixelvertex/palatelog/core/sync/GoogleDriveSyncClient.kt) uses `okhttp3.OkHttpClient`, `okhttp3.Request`, and `okhttp3.RequestBody`. OkHttp is a JVM/Android library.
 By refactoring to `io.ktor.client.HttpClient`, the entire sync client becomes multiplatform-ready. On Android today, Ktor will use the OkHttp engine; on iOS tomorrow, it will use the Darwin engine with zero changes to the Google Drive REST calls.
 
 #### Changes in `gradle/libs.versions.toml`:
@@ -141,7 +141,7 @@ Currently, 5 ViewModels (`DashboardViewModel`, `EntryEditorViewModel`, `MapViewM
 4. ViewModels depend solely on `LocationService` (pure domain contract).
 
 #### B. External Turn-by-Turn Map Navigation Abstraction
-Currently, [`ExternalMapNavigator.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/navigation/ExternalMapNavigator.kt) directly creates Android `Intent(Intent.ACTION_VIEW)` with `Uri` schemes.
+Currently, [`ExternalMapNavigator.kt`](../app/src/main/java/com/prismpixelvertex/palatelog/core/navigation/ExternalMapNavigator.kt) directly creates Android `Intent(Intent.ACTION_VIEW)` with `Uri` schemes.
 
 **New Architecture**:
 ```kotlin
@@ -156,7 +156,7 @@ class AndroidMapNavigator @Inject constructor(
 ```
 
 #### C. Photo Storage & File Management Abstraction
-[`MediaUtils.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/util/MediaUtils.kt) relies on Android's `FileProvider` and `context.contentResolver`.
+[`MediaUtils.kt`](../app/src/main/java/com/prismpixelvertex/palatelog/core/util/MediaUtils.kt) relies on Android's `FileProvider` and `context.contentResolver`.
 
 **New Architecture**:
 ```kotlin

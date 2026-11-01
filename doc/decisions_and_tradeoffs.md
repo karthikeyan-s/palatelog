@@ -33,15 +33,15 @@ Furthermore, we needed a plug-and-play architecture so that changing map provide
 * **Option B: Pure OSMDroid (OpenStreetMap)**: 100% free and open-source, but non-compliant with Survey of India boundary guidelines by default.
 * **Option C: Mappls (MapmyIndia) Android SDK**: 100% compliant with Survey of India and Government of India geospatial mandates, rich Indian POI/dhaba data, but introduces vendor SDK dependency.
 * **Option D: Plug-and-Play Strategy & Facade Architecture (Selected)**:
-  - Universal Composable Facade: [`PalateInteractiveMap`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateInteractiveMap.kt) exposes a vendor-neutral contract (`PalateMapMarker`, `MapProviderType`).
-  - Primary Renderer: [`MapplsMapRenderer`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/MapplsMapRenderer.kt) using Mappls Android SDK v2.0+ and signed application configuration files (`.a.conf` / `.a.olf`).
-  - Graceful Fallback Renderer: [`OsmDroidMapRenderer`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/OsmDroidMapRenderer.kt) automatically activates if Mappls credentials are missing, uninitialized, or encounter runtime quota errors.
-  - Zero-Cost Live Navigation: Preserved via Android `geo:` intent handoff in [`ExternalMapNavigator`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/navigation/ExternalMapNavigator.kt).
+  - Universal Composable Facade: [`PalateInteractiveMap`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateInteractiveMap.kt) exposes a vendor-neutral contract (`PalateMapMarker`, `MapProviderType`).
+  - Primary Renderer: [`MapplsMapRenderer`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/MapplsMapRenderer.kt) using Mappls Android SDK v2.0+ and signed application configuration files (`.a.conf` / `.a.olf`).
+  - Graceful Fallback Renderer: [`OsmDroidMapRenderer`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/OsmDroidMapRenderer.kt) automatically activates if Mappls credentials are missing, uninitialized, or encounter runtime quota errors.
+  - Zero-Cost Live Navigation: Preserved via Android `geo:` intent handoff in [`ExternalMapNavigator`](../app/src/main/java/com/prismpixelvertex/palatelog/core/navigation/ExternalMapNavigator.kt).
 
 ### Decision & Trade-offs
 * **Benefits**: 
   - **100% Regulatory Compliance**: Guaranteed Survey of India border compliance for Google Play Store distribution in India.
-  - **Plug-and-Play Extensibility**: Feature screens ([`MapScreen`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/map/MapScreen.kt), [`LocationPickerDialog`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/LocationPickerDialog.kt), [`RestaurantDetailScreen`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/restaurant_detail/RestaurantDetailScreen.kt)) have zero direct dependencies on any vendor SDK.
+  - **Plug-and-Play Extensibility**: Feature screens ([`MapScreen`](../app/src/main/java/com/prismpixelvertex/palatelog/feature/map/MapScreen.kt), [`LocationPickerDialog`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/LocationPickerDialog.kt), [`RestaurantDetailScreen`](../app/src/main/java/com/prismpixelvertex/palatelog/feature/restaurant_detail/RestaurantDetailScreen.kt)) have zero direct dependencies on any vendor SDK.
   - **KMP / iOS Readiness**: Clean separation allows plugging in Apple MapKit (`MKMapView`) for iOS or future alternative providers without altering UI logic.
   - **Zero Breakage Guarantee**: Automatic fallback to OSMDroid ensures maps never crash or render blank even if API limits are reached.
 * **Trade-off**: Requires bundling Mappls SDK dependencies alongside OSMDroid for fallback capabilities.

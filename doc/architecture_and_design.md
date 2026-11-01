@@ -201,3 +201,159 @@ graph TD
 
 - **Sync Payload Format**: Data is synchronized as compact canonical JSON delta files (`changes_<deviceId>.json`) updated in-place via Google Drive `PATCH` API. Photos are synchronized to `PalateLog_Family/Photos/`.
 - **Conflict Resolution**: UUID primary keys prevent collisions. Conflicts across devices are resolved using Last-Write-Wins (LWW) based on `updatedAt` timestamps. Soft-deleted records (`isDeleted = true`) act as tombstones so deletions propagate cleanly across all family phones.
+
+---
+
+## 6. Plug-and-Play Map Architecture & Provider Integration Guide (v1.2.16)
+
+### A. Architectural Philosophy & Strategy Pattern
+PalateLog uses the **Facade & Strategy Design Patterns** for all geospatial visualization. Feature screens ([`MapScreen`](../app/src/main/java/com/prismpixelvertex/palatelog/feature/map/MapScreen.kt), [`LocationPickerDialog`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/LocationPickerDialog.kt), [`RestaurantDetailScreen`](../app/src/main/java/com/prismpixelvertex/palatelog/feature/restaurant_detail/RestaurantDetailScreen.kt)) have **zero direct dependencies** on vendor map libraries (such as Mappls SDK, OpenStreetMap/OSMDroid, or Google Maps Play Services).
+
+Instead, all map interactions pass through a single universal composable facade:
+- **Facade**: [`PalateInteractiveMap`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateInteractiveMap.kt)
+- **Data & State Contracts**: [`PalateMapMarker`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateMapModels.kt), [`PalateMapState`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateMapModels.kt), [`MapProviderType`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateMapModels.kt)
+- **Runtime Orchestrator**: `MapProviderConfig` handles dynamic provider selection, initialization status, and automated runtime error fallback.
+
+```mermaid
+graph TD
+    subgraph UI Feature Layer
+        MS[MapScreen]
+        LPD[LocationPickerDialog]
+        RDS[RestaurantDetailScreen]
+    end
+
+    subgraph Facade and Strategy
+        PIM["PalateInteractiveMap (Composable Facade)"]
+        MPC["MapProviderConfig (Fallback and Status StateFlow)"]
+    end
+
+    subgraph Concrete Renderers
+        MMR["MapplsMapRenderer (Primary: Survey of India Compliant)"]
+        OMR["OsmDroidMapRenderer (Fallback: Offline Capable)"]
+        GMR["GoogleMapsRenderer (Future Plug-and-Play)"]
+        OLR["OlaMapsRenderer (Future Plug-and-Play)"]
+    end
+
+    MS -->|Uses| PIM
+    LPD -->|Uses| PIM
+    RDS -->|Uses| PIM
+
+    PIM -->|Reads active and fallback state| MPC
+    PIM -->|Dispatches to| MMR
+    PIM -->|Fallback on error| OMR
+    PIM -.->|Plugs into| GMR
+    PIM -.->|Plugs into| OLR
+```
+
+---
+
+### B. Developer Guide: Steps to Add a New Map Provider
+
+Follow these 6 steps to add any new map vendor (e.g. Google Maps, Ola Maps, Mapbox, or iOS Apple MapKit for KMP) without touching UI feature code:
+
+#### Step 1: Declare the Provider in `MapProviderType`
+Open [`PalateMapModels.kt`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateMapModels.kt) and add the enum value to `MapProviderType`:
+
+```kotlin
+enum class MapProviderType(
+    @StringRes val nameResId: Int,
+    @StringRes val attributionResId: Int,
+    val isGovernmentCompliant: Boolean,
+) {
+    MAPPLS(...),
+    OSM_DROID(...),
+    GOOGLE_MAPS(
+        nameResId = R.string.map_provider_google_name,
+        attributionResId = R.string.map_provider_google_attr,
+        isGovernmentCompliant = true,
+    ),
+    NEW_PROVIDER(
+        nameResId = R.string.map_provider_new_name,
+        attributionResId = R.string.map_provider_new_attr,
+        isGovernmentCompliant = false, // Set true if compliant with Survey of India boundaries
+    );
+}
+```
+*Add the corresponding strings in `res/values/strings.xml` for provider name and legal attribution.*
+
+#### Step 2: Configure Dependencies & Credentials
+1. **Dependencies**: Add the vendor SDK to `gradle/libs.versions.toml` and implement it in `app/build.gradle.kts`.
+2. **Security**: Ensure vendor API key files or certificate tokens are added to `.gitignore`.
+3. **CI / CodeQL Safeguard**: If the vendor plugin checks for license files at build time (like Mappls does with `.a.olf`), ensure dummy placeholder files are generated automatically via `ensureMapplsConfigFiles` in `app/build.gradle.kts` and `.github/workflows/codeql.yml` so that headless CI builds and open-source contributors can compile without private keys.
+
+#### Step 3: Implement the Concrete Composable Renderer
+Create `app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/<ProviderName>MapRenderer.kt`.
+
+Implement the standard renderer signature:
+```kotlin
+@Composable
+fun NewProviderMapRenderer(
+    modifier: Modifier = Modifier,
+    centerLatitude: Double,
+    centerLongitude: Double,
+    zoomLevel: Double = 16.0,
+    animationTrigger: Long = 0L,
+    markers: List<PalateMapMarker> = emptyList(),
+    onSingleTap: ((latitude: Double, longitude: Double) -> Unit)? = null,
+    onLongPress: ((latitude: Double, longitude: Double) -> Unit)? = null,
+    onMarkerClick: ((markerId: String) -> Unit)? = null,
+    onInitializationFailed: (() -> Unit)? = null,
+)
+```
+
+**Mandatory Implementation Standards**:
+- **Lifecycle Management**: Wrap native view lifecycle in `DisposableEffect` with `LifecycleEventObserver` (handling `ON_START`, `ON_RESUME`, `ON_PAUSE`, `ON_STOP`, `ON_DESTROY`).
+- **Smooth Camera Transitions**: Use `DEFAULT_MAP_CAMERA_ANIMATION_MS` (3000 ms) when animating the camera on `animationTrigger` changes for a smooth, consistent user experience.
+- **Controls & Insets**: Keep built-in overlay controls (compass, scale bars) clear of the top system bar and away from the top-right "My Location" FAB (e.g. position compass at Top-Start with 16dp margins).
+- **Error Handling**: On network quota exhaustion, initialization errors, or missing licenses, trigger:
+  ```kotlin
+  MapProviderConfig.notifyFallbackEngaged()
+  onInitializationFailed?.invoke()
+  ```
+
+#### Step 4: Register the Renderer in `PalateInteractiveMap`
+Open [`PalateInteractiveMap.kt`](../app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/PalateInteractiveMap.kt) and add the dispatch branch:
+
+```kotlin
+when (effectiveProvider) {
+    MapProviderType.MAPPLS -> MapplsMapRenderer(...)
+    MapProviderType.OSM_DROID -> OsmDroidMapRenderer(...)
+    MapProviderType.NEW_PROVIDER -> {
+        NewProviderMapRenderer(
+            modifier = modifier,
+            centerLatitude = targetLat,
+            centerLongitude = targetLng,
+            zoomLevel = targetZoom,
+            animationTrigger = animationTrigger,
+            markers = markers,
+            onSingleTap = onSingleTap,
+            onLongPress = onLongPress,
+            onMarkerClick = onMarkerClick,
+            onInitializationFailed = {
+                fallbackToOsm = true
+                MapProviderConfig.notifyFallbackEngaged()
+            }
+        )
+    }
+}
+```
+
+#### Step 5: Initialize the SDK in `PalateLogApp`
+In [`PalateLogApp.kt`](../app/src/main/java/com/prismpixelvertex/palatelog/PalateLogApp.kt), add safe initialization wrapped in `try/catch`:
+
+```kotlin
+try {
+    NewProviderSdk.initialize(this, apiKey)
+    MapProviderConfig.notifyInitialized(success = true)
+} catch (e: Exception) {
+    Log.w("PalateLogApp", "New provider init failed; falling back to OSM", e)
+    MapProviderConfig.notifyFallbackEngaged()
+}
+```
+
+#### Step 6: Verify Automatic Settings Attribution & Testing
+No UI changes are required on the Settings screen!
+- [`SettingsScreen.kt`](../app/src/main/java/com/prismpixelvertex/palatelog/feature/settings/SettingsScreen.kt) observes `MapProviderConfig.providerState`.
+- It automatically displays the newly configured provider's name, copyright attribution, and **Survey of India Compliant 🇮🇳** badge when active.
+- If fallback engages, it automatically renders the statutory fallback notice and disclaimer.
+
