@@ -1,6 +1,8 @@
 package com.prismpixelvertex.palatelog.core.designsystem
 
 import android.os.Bundle
+import android.view.Gravity
+import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +19,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.mappls.sdk.maps.MapView
 import com.mappls.sdk.maps.MapplsMap
+import com.mappls.sdk.maps.MapplsMapOptions
 import com.mappls.sdk.maps.OnMapReadyCallback
 import com.mappls.sdk.maps.annotations.IconFactory
 import com.mappls.sdk.maps.annotations.Marker
@@ -49,8 +52,24 @@ fun MapplsMapRenderer(
     val markerIdMap = remember { mutableMapOf<Marker, String>() }
 
     val mapView = remember {
-        MapView(context).apply {
+        val marginPx = (16 * context.resources.displayMetrics.density).toInt()
+        val options = MapplsMapOptions.createFromAttributes(context, null)
+            .compassGravity(Gravity.TOP or Gravity.START)
+            .compassMargins(intArrayOf(marginPx, marginPx, marginPx, marginPx))
+        MapView(context, options).apply {
             onCreate(Bundle())
+            post {
+                getCompassView()?.let { compass ->
+                    val params = (compass.layoutParams as? FrameLayout.LayoutParams) ?: FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    params.gravity = Gravity.TOP or Gravity.START
+                    params.setMargins(marginPx, marginPx, marginPx, marginPx)
+                    compass.layoutParams = params
+                    compass.requestLayout()
+                }
+            }
         }
     }
 
@@ -76,6 +95,23 @@ fun MapplsMapRenderer(
         mapView.getMapAsync(object : OnMapReadyCallback {
             override fun onMapReady(mapplsMap: MapplsMap) {
                 mapplsMapInstance = mapplsMap
+                val marginPx = (16 * context.resources.displayMetrics.density).toInt()
+                try {
+                    mapplsMap.uiSettings?.setCompassGravity(Gravity.TOP or Gravity.START)
+                    mapplsMap.uiSettings?.setCompassMargins(marginPx, marginPx, marginPx, marginPx)
+                } catch (_: Exception) {}
+                mapView.post {
+                    mapView.getCompassView()?.let { compass ->
+                        val params = (compass.layoutParams as? FrameLayout.LayoutParams) ?: FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        params.gravity = Gravity.TOP or Gravity.START
+                        params.setMargins(marginPx, marginPx, marginPx, marginPx)
+                        compass.layoutParams = params
+                        compass.requestLayout()
+                    }
+                }
                 mapplsMap.moveCamera(
                     CameraUpdateFactory.newLatLngZoom(
                         LatLng(centerLatitude, centerLongitude),

@@ -12,6 +12,28 @@ plugins {
 
 apply(plugin = "com.mappls.services.android")
 
+// In CI or environments without Mappls portal credentials, generate mock configuration files
+// so that the Mappls Services Gradle task can execute and compile successfully without failing the build.
+val ensureMapplsConfigFiles by tasks.registering {
+    doLast {
+        val hasOlf = projectDir.listFiles { _, name -> name.endsWith(".a.olf") }?.isNotEmpty() == true
+        if (!hasOlf) {
+            val mockOlf = file("mock.a.olf")
+            val mockConf = file("mock.a.conf")
+            if (!mockOlf.exists()) {
+                mockOlf.writeBytes(byteArrayOf(0))
+            }
+            if (!mockConf.exists()) {
+                mockConf.writeText("{\"client_id\":\"mock\",\"client_secret\":\"mock\"}")
+            }
+        }
+    }
+}
+
+tasks.matching { it.name.startsWith("process") && it.name.endsWith("MapplsServices") }.configureEach {
+    dependsOn(ensureMapplsConfigFiles)
+}
+
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {

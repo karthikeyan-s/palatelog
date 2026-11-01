@@ -20,9 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added dynamic map provider disclosure and attribution to the About section in [`SettingsScreen.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/settings/SettingsScreen.kt): cleanly displays the primary compliant provider when active, or displays primary provider alongside an explicit fallback notice and disclaimer when connectivity/service limits require falling back to OSM.
 - **Presentation Layer Clean Architecture Decoupling**:
   - Migrated [`MapScreen.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/map/MapScreen.kt), [`LocationPickerDialog.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/LocationPickerDialog.kt), and [`RestaurantDetailScreen.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/restaurant_detail/RestaurantDetailScreen.kt) to consume `PalateInteractiveMap`, completely eliminating vendor-specific `org.osmdroid.views.MapView` instantiations from feature screens.
-- **Security & Build Configuration**:
+- **Security, CI & Build Configuration**:
   - Added Mappls Gradle Services plugin and Maven repository configuration in `settings.gradle.kts` and root `build.gradle.kts`.
   - Added `*.a.conf`, `*.a.olf`, and `mappls-conf.txt` to `.gitignore` to prevent credential exposure in version control.
+  - Implemented automated placeholder generation task `ensureMapplsConfigFiles` in [`app/build.gradle.kts`](file:///D:/SourceCode/palatelog/palatelog/app/build.gradle.kts) and updated [`.github/workflows/codeql.yml`](file:///D:/SourceCode/palatelog/palatelog/.github/workflows/codeql.yml) to ensure CI analysis and open-source checkouts compile without requiring private developer portal credentials.
+- **UI & UX Refinements**:
+  - Applied `statusBarsPadding()` in [`MapScreen.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/feature/map/MapScreen.kt) to keep the map view and controls neatly below the top system bar.
+  - Repositioned Mappls map compass to Top-Start with 16dp margins in [`MapplsMapRenderer.kt`](file:///D:/SourceCode/palatelog/palatelog/app/src/main/java/com/prismpixelvertex/palatelog/core/designsystem/MapplsMapRenderer.kt) to eliminate overlap with the "My Location" FAB.
+  - Added 3-second smooth cinematic flight recentering animation across map renderers via `DEFAULT_MAP_CAMERA_ANIMATION_MS`.
   - Documented architectural decisions and legal context in [ADR 002 in `decisions_and_tradeoffs.md`](file:///D:/SourceCode/palatelog/palatelog/doc/decisions_and_tradeoffs.md#L30-L55).
 
 ## [1.2.15] - 2026-11-01
